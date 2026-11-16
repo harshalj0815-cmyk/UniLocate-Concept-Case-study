@@ -1,0 +1,2366 @@
+.prototype-canvas {
+  --case-board: #f5f5f7;
+  --font-ui: var(--font-plus-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
+  /* —— Shared UniLocate tokens (see lib/uniLocateTokens.ts) —— */
+  --icon-search: 33px;
+  --ul-control-w: 360px;
+  --ul-control-h: 48px;
+  --ul-control-radius: 16px;
+  --ul-screen-gradient: radial-gradient(
+    ellipse 125.39% 50.305% at 50% 46.45%,
+    #eef8ff 0%,
+    #c9e8ff 56.52%,
+    #79bdef 100%
+  );
+  /* Paper CollegeResults-FirstTime artboard wash */
+  --ul-results-gradient: radial-gradient(
+    ellipse 427.73% 112.96% at 50% 100%,
+    #eef8ff 0%,
+    #c9e8ff 56.52%,
+    #79bdef 100%
+  );
+  --ul-cta-gradient: radial-gradient(
+    ellipse 93.75% 73.02% at 50% 0%,
+    #32a9ff 0%,
+    #008aec 100%
+  );
+  /* CTA press — solid */
+  --ul-cta-press-fill: #35abff;
+  --ul-cta-dash: #76c6ff;
+  --ul-search-placeholder: #9c9c9c;
+  /* Figma drop shadow — x:0 y:1 blur:2 spread:0 #000@15% */
+  --ul-shadow-x: 0px;
+  --ul-shadow-y: 1px;
+  --ul-shadow-blur: 2px;
+  --ul-shadow-spread: 0px;
+  --ul-shadow-color: rgba(0, 0, 0, 0.15);
+  --ul-control-shadow: drop-shadow(
+    var(--ul-shadow-x) var(--ul-shadow-y) var(--ul-shadow-blur)
+      var(--ul-shadow-color)
+  );
+  --ul-control-box-shadow: var(--ul-shadow-x) var(--ul-shadow-y)
+    var(--ul-shadow-blur) var(--ul-shadow-spread) var(--ul-shadow-color);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--case-board);
+  font-family: var(--font-ui);
+}
+
+.prototype-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1100px;
+  box-sizing: border-box;
+}
+
+.iphone-scale {
+  /* Paper artboards are 402×874 = screen content; bezel sits outside */
+  --screen-w: 402px;
+  --screen-h: 874px;
+  --bezel: 12px;
+  --phone-w: calc(var(--screen-w) + 2 * var(--bezel));
+  --phone-h: calc(var(--screen-h) + 2 * var(--bezel));
+  --fit-scale: min(1, calc((100dvh - 32px) / var(--phone-h)));
+  --btn-overhang: 8px;
+  width: calc(
+    (var(--phone-w) + 2 * var(--btn-overhang)) * var(--fit-scale)
+  );
+  height: calc(var(--phone-h) * var(--fit-scale));
+  position: relative;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.iphone-frame {
+  --frame-radius: 67px;
+  --screen-radius: calc(var(--frame-radius) - var(--bezel));
+  width: var(--phone-w);
+  height: var(--phone-h);
+  position: absolute;
+  top: 0;
+  left: calc(var(--btn-overhang) * var(--fit-scale));
+  transform: scale(var(--fit-scale));
+  transform-origin: top left;
+  /* Transparent — black lives on __bezel so buttons aren't clipped */
+  background: transparent;
+  box-sizing: border-box;
+}
+
+/* Black shell: same radius family as screen → no white corner gap */
+.iphone-frame__bezel {
+  position: absolute;
+  inset: 0;
+  padding: var(--bezel);
+  box-sizing: border-box;
+  background: #111113;
+  border-radius: var(--frame-radius);
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.iphone-frame__btn {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    #4a4a50 0%,
+    #2c2c30 35%,
+    #1a1a1c 70%,
+    #3a3a40 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.55),
+    0 0 0 0.5px rgba(0, 0, 0, 0.35);
+}
+
+.iphone-frame__btn--action {
+  left: -5px;
+  top: 148px;
+  width: 5px;
+  height: 34px;
+  border-radius: 2px 1px 1px 2px;
+}
+
+.iphone-frame__btn--vol-up {
+  left: -5px;
+  top: 210px;
+  width: 5px;
+  height: 56px;
+  border-radius: 2px 1px 1px 2px;
+}
+
+.iphone-frame__btn--vol-down {
+  left: -5px;
+  top: 278px;
+  width: 5px;
+  height: 56px;
+  border-radius: 2px 1px 1px 2px;
+}
+
+.iphone-frame__btn--power {
+  right: -5px;
+  top: 230px;
+  width: 5px;
+  height: 92px;
+  border-radius: 1px 2px 2px 1px;
+  background: linear-gradient(
+    270deg,
+    #4a4a50 0%,
+    #2c2c30 35%,
+    #1a1a1c 70%,
+    #3a3a40 100%
+  );
+}
+
+.iphone-frame__screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--screen-radius);
+  overflow: hidden;
+  background: #eef8ff;
+  isolation: isolate;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.iphone-frame__screen img {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.iphone-frame__island {
+  position: absolute;
+  top: 11px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 126px;
+  height: 37px;
+  border-radius: 20px;
+  background: #000;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.iphone-frame__status {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 54px;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 28px 8px;
+  box-sizing: border-box;
+  color: #2c2c2c;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  pointer-events: none;
+}
+
+.iphone-frame__status-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iphone-frame__signal,
+.iphone-frame__wifi,
+.iphone-frame__battery {
+  display: block;
+  fill: currentColor;
+}
+
+.iphone-frame__home-indicator {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  width: 134px;
+  height: 5px;
+  border-radius: 100px;
+  background: rgba(44, 44, 44, 0.35);
+  z-index: 30;
+  pointer-events: none;
+}
+
+/* —— SearchCollege-FirstTime —— */
+.scf {
+  position: absolute;
+  inset: 0;
+  width: 402px;
+  height: 874px;
+  overflow: hidden;
+  background-image: var(--ul-screen-gradient);
+  font-family: var(--font-ui);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.scf__map-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.scf__map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  /* PNG already has alpha baked in — no extra opacity / blend */
+  opacity: 1;
+}
+
+.scf__icon,
+.scf__title,
+.scf__search,
+.scf__divider,
+.scf__cta,
+.polaroid {
+  z-index: 1;
+}
+
+.scf__icon {
+  position: absolute;
+  /* Icon.svg includes 15×5 inset + drop shadow around the 80×80 tile */
+  left: 146px;
+  top: 148px;
+  width: 110px;
+  height: 110px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  /* Final top 148; screen center for 110px icon ≈ 382 → +234px */
+  transform: translateY(234px) scale(0.94);
+  opacity: 0;
+}
+
+.scf__icon img {
+  display: block;
+  width: 110px;
+  height: 110px;
+  max-width: none;
+  pointer-events: none;
+  /* Keep SVG sharp after scale entrance */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.scf__title {
+  position: absolute;
+  left: 50%;
+  /* Home stack (title→CTA, 210px) centered on 874px screen → top 332 */
+  top: 332px;
+  transform: translate(-50%, 8px);
+  margin: 0;
+  width: 320px;
+  color: #2c2c2c;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 32px;
+  text-align: center;
+  white-space: normal;
+  opacity: 0;
+}
+
+/* Return visit — same layout as post-enter, no replay */
+.scf--settled .scf__icon {
+  opacity: 1;
+  transform: translateZ(0);
+  filter: none;
+}
+
+.scf--settled .scf__title,
+.scf--settled .scf__divider {
+  opacity: 1;
+  transform: translateX(-50%);
+}
+
+.scf--settled .scf__search,
+.scf--settled .scf__cta {
+  opacity: 1;
+  transform: none;
+  left: 50%;
+  margin-left: calc(var(--ul-control-w) / -2);
+  filter: none;
+}
+
+.scf--dimmed .scf__icon,
+.scf--dimmed .scf__title,
+.scf--dimmed .scf__divider,
+.scf--dimmed .scf__cta {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms var(--ease-out);
+}
+
+/* Shared search field — shadow on the squircle SVG (box-shadow is rectangular) */
+.ul-search {
+  position: relative;
+  width: var(--ul-control-w);
+  height: var(--ul-control-h);
+}
+
+/*
+ * After enter: drop animation + transform entirely.
+ * Nested transform under .iphone-frame { scale } rasterizes soft text/icons.
+ * Center with margin instead of translateX(-50%).
+ */
+.ul-search.ul-search--crisp {
+  animation: none !important;
+  filter: none !important;
+  opacity: 1;
+  transform: none !important;
+  left: 50%;
+  margin-left: calc(var(--ul-control-w) / -2);
+}
+
+.ul-search__shape {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+  /* Figma x:0 y:1 — follows path alpha (box-shadow is rectangular) */
+  filter: var(--ul-control-shadow);
+}
+
+.ul-search__row {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px 0 8px;
+  box-sizing: border-box;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.ul-search__icon {
+  flex-shrink: 0;
+  width: var(--icon-search);
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.ul-search__placeholder {
+  min-width: 0;
+  color: var(--ul-search-placeholder);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+/* Screen-placed search (entrance targets .scf__search) */
+.scf__search {
+  position: absolute;
+  left: 50%;
+  top: 415px;
+  transform: translate(-50%, 10px) scale(0.97);
+  opacity: 0;
+}
+
+.scf__divider {
+  position: absolute;
+  left: 50%;
+  top: 471px;
+  transform: translate(-50%, 8px);
+  width: 265px;
+  height: 15px;
+  opacity: 0;
+}
+
+.scf__divider-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #c7c7c7;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.scf__divider-line {
+  position: absolute;
+  top: 8px;
+  width: 115px;
+  height: 1px;
+  background: #c7c7c7;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.scf__divider-line--left {
+  left: 0;
+}
+
+.scf__divider-line--right {
+  left: 150px;
+}
+
+/* Shared primary CTA — same Figma shadow as search (follows clip-path) */
+.ul-cta {
+  position: relative;
+  width: var(--ul-control-w);
+  height: var(--ul-control-h);
+  padding: 0;
+  border: none;
+  background-image: var(--ul-cta-gradient);
+  filter: var(--ul-control-shadow);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 20px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  isolation: isolate;
+  transition: transform 160ms var(--ease-out);
+}
+
+.ul-cta:active {
+  transform: scale(0.97);
+}
+
+/* Press glow — soft light on/off via opacity crossfade */
+.ul-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--ul-cta-press-fill);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.ul-cta:active::before,
+.ul-cta--pressed::before {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ul-cta::before {
+    transition: none;
+  }
+}
+
+.ul-cta.ul-cta--crisp {
+  animation: none !important;
+  /* Restore Figma x:0 y:1 shadow after enter blur clears */
+  filter: var(--ul-control-shadow) !important;
+  opacity: 1;
+  transform: none;
+  left: 50%;
+  margin-left: calc(var(--ul-control-w) / -2);
+}
+
+.ul-cta.ul-cta--crisp:active {
+  transform: scale(0.97);
+}
+
+.ul-cta__dash {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.ul-cta__label {
+  position: relative;
+  z-index: 1;
+}
+
+/* Secondary auth CTA — white squircle + Figma shadow */
+.ul-sec-cta {
+  position: relative;
+  width: var(--ul-control-w);
+  height: var(--ul-control-h);
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+}
+
+.ul-sec-cta__shape {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+  filter: var(--ul-control-shadow);
+  transform-origin: center center;
+  transition: transform 160ms var(--ease-out);
+}
+
+.ul-sec-cta__row {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 1;
+  transform-origin: center center;
+  transition: transform 160ms var(--ease-out);
+}
+
+/* Inner scale — outer button keeps enter-animation transform fill */
+.ul-sec-cta:active .ul-sec-cta__shape,
+.ul-sec-cta:active .ul-sec-cta__row {
+  transform: scale(0.97);
+}
+
+.ul-sec-cta__icon {
+  flex-shrink: 0;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 30px;
+  max-height: 30px;
+  object-fit: contain;
+  /* Asset includes shadow padding — show at intrinsic size */
+  transform: translateZ(0);
+}
+
+.ul-sec-cta__label {
+  color: #2c2c2c;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.ul-sec-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: var(--ul-control-radius);
+  background: var(--ul-cta-press-fill);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.ul-sec-cta:active::before {
+  opacity: 0.12;
+}
+
+/* Screen-placed CTA (entrance targets .scf__cta) */
+.scf__cta {
+  position: absolute;
+  left: 50%;
+  top: 494px;
+  transform: translate(-50%, 10px) scale(0.97);
+  opacity: 0;
+}
+
+.polaroid {
+  position: absolute;
+  width: 126px;
+  height: 140px;
+  box-sizing: border-box;
+  transform-origin: center center;
+  z-index: 1;
+  /* Static Paper rotate lives here — keeps photo crisp */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.polaroid__drag {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  /* Shadow here — not on the clipped shell, or it gets eaten */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+  overflow: visible;
+  cursor: grab;
+  touch-action: none;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Squircle clip + fill live here so drop-shadow stays intact */
+.polaroid__shell {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 12px; /* fallback before squircle clip */
+  overflow: hidden;
+}
+
+.polaroid__drag:active {
+  cursor: grabbing;
+}
+
+.polaroid__photo {
+  position: absolute;
+  left: 6.32px;
+  top: 6.32px;
+  width: 112px;
+  height: 112px;
+  border-radius: 8px; /* fallback before squircle clip */
+  overflow: hidden;
+  background: #e5e5e5;
+}
+
+.polaroid__photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+.polaroid--muted {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.polaroid--muted .polaroid__drag {
+  cursor: default;
+  touch-action: auto;
+}
+
+.ul-search--tappable {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Press on inner bits — outer .ul-search--crisp uses transform:none !important */
+.ul-search--tappable .ul-search__shape,
+.ul-search--tappable .ul-search__row {
+  transform-origin: center center;
+  transition: transform 160ms var(--ease-out);
+}
+
+.ul-search--tappable:active .ul-search__shape {
+  transform: scale(0.97);
+}
+
+.ul-search--tappable:active .ul-search__row {
+  transform: translateZ(0) scale(0.97);
+}
+
+.ul-search--focused .ul-search__row--focused {
+  padding: 0 10px 0 15px;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ul-search__value {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.ul-search__query {
+  color: #000;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ul-search__caret {
+  flex-shrink: 0;
+  width: 2px;
+  height: 18px;
+  margin-left: 1px;
+  background: #007aff;
+  border-radius: 1px;
+  animation: ul-caret-blink 1.05s steps(1, end) infinite;
+}
+
+@keyframes ul-caret-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.ul-search__clear {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  -webkit-tap-highlight-color: transparent;
+  /* Cross.svg already has shaped drop-shadow — don't add box-shadow */
+  filter: none;
+  transition: transform 160ms var(--ease-out);
+}
+
+.ul-search__clear img {
+  width: 20px;
+  height: 20px;
+  display: block;
+  object-fit: contain;
+  /* Intrinsic asset shadow follows the X shape */
+  filter: drop-shadow(0 0 0 transparent);
+}
+
+.ul-search__clear:active {
+  transform: scale(0.97);
+  transition: transform 160ms var(--ease-out);
+}
+
+/* —— SearchCollege-OnClick-FirstTime —— */
+.sco {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 402px;
+  height: 874px;
+  overflow: hidden;
+  background-image: var(--ul-screen-gradient);
+  font-family: var(--font-ui);
+}
+
+.sco--exit {
+  pointer-events: none;
+}
+
+.sco__map-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sco__map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  opacity: 1;
+}
+
+.sco__title,
+.sco__search,
+.sco__recs,
+.sco__keyboard,
+.sco .polaroid {
+  z-index: 1;
+}
+
+.sco__title {
+  position: absolute;
+  left: 50%;
+  top: 65px;
+  margin: 0;
+  transform: translateX(-50%);
+  color: #2c2c2c;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 32px;
+  white-space: nowrap;
+}
+
+/* Final top 116; FirstTime search sat at 389 → rise 273px */
+.sco__search {
+  position: absolute;
+  left: 21px;
+  top: 116px;
+  width: var(--ul-control-w);
+  height: var(--ul-control-h);
+}
+
+.sco-recs {
+  position: absolute;
+  left: 21px;
+  top: 172px;
+  width: 360px;
+  height: 240px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 16px; /* fallback before squircle clip */
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+  overflow: hidden;
+  transform-origin: 50% 0%;
+}
+
+.sco-recs__row {
+  position: relative;
+  height: 48px;
+  box-sizing: border-box;
+  border-bottom: 1px solid #eaeaea;
+  background: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 160ms var(--ease-out);
+  transform-origin: center center;
+}
+
+.sco-recs__row:active {
+  transform: scale(0.97);
+}
+
+.sco-recs__row:last-child {
+  border-bottom: none;
+}
+
+.sco-recs__label {
+  position: absolute;
+  left: 16px;
+  top: 12px;
+  width: 322px;
+  color: #2c2c2c;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 20px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sco-recs__nearest-fade {
+  position: absolute;
+  left: 239px;
+  top: 0;
+  width: 121px;
+  height: 48px;
+  background: linear-gradient(270deg, #fff 66%, rgba(255, 255, 255, 0) 100%);
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.sco-recs__nearest {
+  /* Paper Chip 63.6×26.6 @ left 47 top 10 inside fade */
+  position: absolute;
+  left: 47px;
+  top: 10px;
+  width: 64px;
+  height: 27px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 1px solid #ff336d;
+  background-image: radial-gradient(
+    ellipse 111.11% 111.11% at 50% 5.56%,
+    #ff84a7 0%,
+    #dc436f 100%
+  );
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  /* Paper: trim cap/alphabetic so label sits optically centered */
+  text-box-trim: trim-both;
+  text-box-edge: cap alphabetic;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+@supports not (text-box-trim: trim-both) {
+  .sco-recs__nearest {
+    /* Fallback optical nudge when trim isn’t supported */
+    padding-top: 2px;
+  }
+}
+
+/* Keyboard — Screen Images/Keyboard.svg at native 402×332 */
+.sco-kb {
+  position: absolute;
+  left: 0;
+  top: 542px;
+  width: 402px;
+  height: 332px;
+  box-sizing: border-box;
+  z-index: 2;
+  pointer-events: none;
+  background: transparent;
+  overflow: visible;
+}
+
+.sco-kb__img {
+  display: block;
+  width: 402px;
+  height: 332px;
+  object-fit: none;
+  object-position: top left;
+  transform: none;
+}
+
+/* Coordinated home ↔ focused scene */
+.ul-flow {
+  position: absolute;
+  inset: 0;
+  width: 402px;
+  height: 874px;
+  overflow: hidden;
+  background-image: var(--ul-screen-gradient);
+  transition: background-image 220ms var(--ease-out);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Same map illustration; Paper results gradient instead of search wash */
+.ul-flow--results {
+  background-image: var(--ul-results-gradient);
+}
+
+.ul-flow__map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ul-flow__map-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
+.ul-flow__polaroids {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.ul-flow__polaroids .polaroid--scene {
+  pointer-events: auto;
+}
+
+.ul-flow--focused .ul-flow__polaroids .polaroid--scene {
+  pointer-events: none;
+}
+
+/* Full-screen chrome host — none so ScenePolaroids underneath stay draggable */
+.ul-flow__home {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.ul-flow:not(.ul-flow--focused) .ul-flow__home .scf__cta,
+.ul-flow:not(.ul-flow--focused) .ul-flow__home .ul-cta,
+.ul-flow:not(.ul-flow--focused) .ul-flow__home .scf__icon,
+.ul-flow:not(.ul-flow--focused) .ul-flow__home .ul-search {
+  pointer-events: auto;
+}
+
+.polaroid--scene {
+  left: 0;
+  top: 0;
+  will-change: transform, opacity;
+}
+
+.scf--no-map,
+.sco--shell {
+  background: transparent;
+  background-image: none;
+}
+
+.ul-back {
+  position: absolute;
+  left: 16px;
+  top: 68px;
+  z-index: 7;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 160ms var(--ease-out);
+}
+
+.ul-back:active {
+  transform: scale(0.97);
+}
+
+.ul-back img {
+  display: block;
+  width: 20px;
+  height: auto;
+  pointer-events: none;
+}
+
+.ul-shared-title {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 5;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  color: #2c2c2c;
+  font-family: var(--font-ui);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 32px;
+  text-align: center;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.ul-shared-title--home {
+  width: 320px;
+  white-space: normal;
+}
+
+.ul-shared-title--focus {
+  width: max-content;
+  white-space: nowrap;
+}
+
+.ul-shared-title__copy {
+  grid-area: 1 / 1;
+  text-align: center;
+  will-change: filter, opacity;
+}
+
+.ul-shared-search {
+  position: absolute;
+  left: 21px;
+  top: 0;
+  width: var(--ul-control-w);
+  height: var(--ul-control-h);
+  z-index: 6;
+  will-change: transform;
+}
+
+.ul-shared-search__stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.ul-shared-search__face {
+  position: absolute;
+  inset: 0;
+}
+
+.ul-shared-search .ul-search,
+.ul-shared-search .ul-search.ul-search--crisp {
+  left: 0;
+  margin-left: 0;
+  width: 100%;
+}
+
+.ul-shared-recs {
+  position: absolute;
+  left: 21px;
+  top: 172px;
+  width: 360px;
+  z-index: 5;
+  transform-origin: 50% 0%;
+  will-change: transform, opacity;
+}
+
+.ul-shared-recs .sco-recs {
+  position: relative;
+  left: 0;
+  top: 0;
+}
+
+.ul-shared-kb {
+  position: absolute;
+  left: 0;
+  top: 542px;
+  width: 402px;
+  height: 332px;
+  z-index: 7;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.ul-flow--focused .ul-shared-kb {
+  pointer-events: auto;
+}
+
+.ul-shared-kb .sco-kb {
+  position: relative;
+  left: 0;
+  top: 0;
+}
+
+/* College results — Paper 3RR-0 (keep gap under search) */
+.ul-shared-results {
+  position: absolute;
+  left: 21px;
+  top: 188px;
+  width: 360px;
+  /* 188 + 666 = 854 → leaves home-indicator room on 874 screen */
+  height: 666px;
+  z-index: 5;
+  overflow: visible; /* blur band can sit in the gap; cards clip inside .cr-scroll */
+  pointer-events: none;
+  /* Grow with lift so the bottom clip stays put when search tucks up */
+  transition: height 220ms var(--ease-out);
+}
+
+.ul-flow--results .ul-shared-results {
+  pointer-events: auto;
+}
+
+/* Lift is 51px (116→65); grow by the same so last cards aren’t sliced */
+.ul-flow--results-collapsed .ul-shared-results {
+  height: 717px;
+}
+
+/* Animatable 0→1 so blur + mask fade in/out together */
+@property --cr-under {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+/* Host keeps overflow visible so the blur gate can sit in the search gap */
+.cr-scroll {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  touch-action: none;
+  cursor: grab;
+  --cr-under: 0;
+  transition: --cr-under 220ms var(--ease-out);
+}
+
+.cr-scroll[data-under] {
+  --cr-under: 1;
+}
+
+/* Cards clip + fade here; strength tracks --cr-under (fade in with blur) */
+.cr-scroll__clip {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / calc(1 - var(--cr-under))) 0,
+    rgb(0 0 0 / calc(1 - var(--cr-under) * 0.65))
+      calc(var(--cr-fade, 64px) * var(--cr-under) * 0.45),
+    #000 calc(var(--cr-fade, 64px) * var(--cr-under)),
+    #000 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / calc(1 - var(--cr-under))) 0,
+    rgb(0 0 0 / calc(1 - var(--cr-under) * 0.65))
+      calc(var(--cr-fade, 64px) * var(--cr-under) * 0.45),
+    #000 calc(var(--cr-fade, 64px) * var(--cr-under)),
+    #000 100%
+  );
+}
+
+/*
+ * Fixed blur gate in the gap under search.
+ * Opacity fades with --cr-under when data-under toggles.
+ */
+.cr-scroll-blur {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -20px;
+  height: calc(var(--cr-fade, 64px) + 20px);
+  z-index: 6;
+  pointer-events: none;
+  opacity: var(--cr-under);
+}
+
+.cr-scroll-blur__soft,
+.cr-scroll-blur__hard {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  pointer-events: none;
+}
+
+.cr-scroll-blur__soft {
+  height: 100%;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    rgba(0, 0, 0, 0.7) 40%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    rgba(0, 0, 0, 0.7) 40%,
+    transparent 100%
+  );
+}
+
+.cr-scroll-blur__hard {
+  height: 55%;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    rgba(0, 0, 0, 0.85) 35%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    rgba(0, 0, 0, 0.85) 35%,
+    transparent 100%
+  );
+}
+
+.cr-scroll[data-dragging] {
+  cursor: grabbing;
+}
+
+.cr-scroll[data-locked] {
+  cursor: default;
+  touch-action: none;
+}
+
+.cr-results {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  /* Extra bottom so the last chip clears the clip + home indicator */
+  padding-bottom: 48px;
+  touch-action: none;
+  will-change: transform;
+}
+
+.cr-card {
+  position: relative;
+  width: 360px;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  /* Shadow on the SVG path so it follows the squircle */
+  filter: none;
+  overflow: visible;
+  transition: transform 160ms var(--ease-out);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cr-card__shape {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+  overflow: visible;
+  filter: var(--ul-control-shadow);
+}
+
+.cr-card__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  /* Bottom matches chips’ left inset: pad 8 + (344−326)/2 = 17 */
+  padding: 8px 8px 17px;
+  box-sizing: border-box;
+}
+
+.cr-card:active {
+  transform: scale(0.97);
+}
+
+.cr-scroll[data-dragging] .cr-card:active {
+  transform: none;
+}
+
+.cr-card__media {
+  position: relative;
+  width: 344px;
+  height: 168px;
+  flex-shrink: 0;
+  margin: 0 auto;
+  border: none;
+  background: transparent;
+  overflow: hidden;
+}
+
+.cr-card__media-shape {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.cr-card__media img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.cr-card__info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 326px;
+  margin: 0 auto;
+}
+
+.cr-card__name {
+  margin: 0;
+  width: 100%;
+  color: #2c2c2c;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.cr-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Outer shell holds shadow; face holds squircle clip (same fix as polaroids) */
+.cr-chip {
+  display: inline-flex;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+.cr-chip__face {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 27px;
+  padding: 0 8px;
+  border-radius: 8px; /* fallback before squircle clip */
+  border: 1px solid;
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  white-space: nowrap;
+  text-box-trim: trim-both;
+  text-box-edge: cap alphabetic;
+}
+
+@supports not (text-box-trim: trim-both) {
+  .cr-chip__face {
+    padding-top: 2px;
+  }
+}
+
+/* Paper CollegeResultCard-Skeleton (3TG-0) */
+.cr-skel {
+  position: relative;
+  width: 360px;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  overflow: visible;
+  opacity: 0;
+  transform: translate3d(0, 8px, 0);
+  animation: cr-skel-enter 220ms var(--ease-out) both;
+}
+
+.cr-skel__shape {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+  overflow: visible;
+  filter: var(--ul-control-shadow);
+}
+
+/* No stagger on skeletons — keeps shimmer in phase across cards */
+.cr-results--ready .cr-card {
+  opacity: 0;
+  transform: translate3d(0, 8px, 0);
+  animation: cr-skel-enter 220ms var(--ease-out) both;
+}
+
+.cr-results--ready .cr-card:nth-child(1) {
+  animation-delay: 0ms;
+}
+.cr-results--ready .cr-card:nth-child(2) {
+  animation-delay: 50ms;
+}
+.cr-results--ready .cr-card:nth-child(3) {
+  animation-delay: 100ms;
+}
+
+@keyframes cr-skel-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* Paper CardInfo — stretch column, center 326px text/chip stack */
+.cr-skel__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: stretch;
+  gap: 8px;
+  padding: 8px 8px 17px;
+  box-sizing: border-box;
+}
+
+.cr-skel__media {
+  width: 344px;
+  height: 168px;
+  flex-shrink: 0;
+  border: none;
+  box-sizing: border-box;
+}
+
+/* Paper Group 20 — two bars with 9px gap (tops 0 / 21, height 12) */
+.cr-skel__lines {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  width: 326px;
+  flex-shrink: 0;
+}
+
+.cr-skel__line {
+  height: 12px;
+  border-radius: 18px;
+  overflow: clip;
+  flex-shrink: 0;
+}
+
+.cr-skel__line--full {
+  width: 326px;
+}
+
+.cr-skel__line--mid {
+  width: 195px;
+}
+
+.cr-skel__chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 326px;
+  flex-shrink: 0;
+}
+
+.cr-skel__chip {
+  width: 134px;
+  height: 27px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  overflow: clip;
+}
+
+.cr-skel__bone {
+  position: relative;
+  overflow: clip;
+  background: #d9dfe3;
+}
+
+/* Shimmer — clipped to bone radius; transform only */
+.cr-skel__bone::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  transform: translate3d(-100%, 0, 0);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 100%
+  );
+  animation: cr-skel-shine 1.2s linear infinite;
+}
+
+@keyframes cr-skel-shine {
+  to {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cr-scroll {
+    transition: none;
+  }
+
+  .cr-scroll-blur__soft,
+  .cr-scroll-blur__hard {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .cr-scroll[data-under] .cr-scroll-blur__soft {
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.55) 0%,
+      transparent 100%
+    );
+  }
+
+  .cr-skel,
+  .cr-results--ready .cr-card {
+    animation: cr-skel-fade 200ms ease both;
+    animation-delay: 0ms !important;
+    transform: none;
+  }
+
+  @keyframes cr-skel-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .cr-skel__bone::after {
+    animation: none;
+    opacity: 0.35;
+    transform: none;
+    background: rgba(255, 255, 255, 0.35);
+  }
+}
+
+.sco-kb.sco-kb--tappable {
+  pointer-events: auto;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* —— OnClick enter (search → focused) —— */
+.sco--enter .sco__title {
+  animation: sco-title-enter 220ms var(--ease-out) both;
+}
+
+.sco--enter .sco__search {
+  /* Rise from FirstTime search Y (389 → 116) — unused when shared */
+  animation: sco-search-rise 280ms var(--ease-out) both;
+}
+
+.sco--shared-search.sco--enter .sco__search {
+  animation: none;
+}
+
+.sco--enter .sco__recs {
+  animation: sco-recs-enter 240ms var(--ease-out) 70ms both;
+}
+
+.sco--enter .sco-recs__row {
+  animation: sco-row-enter 200ms var(--ease-out) both;
+  animation-delay: calc(90ms + var(--row-i, 0) * 40ms);
+}
+
+.sco--enter .sco__keyboard {
+  animation: sco-kb-rise 280ms var(--ease-drawer) 40ms both;
+}
+
+/* Close — search bar descends via shared motion; chrome exits with it */
+.sco--exit .sco__title {
+  animation: sco-title-enter 200ms var(--ease-out) reverse both;
+}
+
+.sco--exit .sco__recs {
+  animation: sco-recs-enter 200ms var(--ease-out) reverse both;
+}
+
+.sco--exit .sco__keyboard {
+  animation: sco-kb-rise 280ms var(--ease-drawer) reverse both;
+}
+
+@keyframes sco-title-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes sco-search-rise {
+  from {
+    opacity: 0.85;
+    transform: translateY(273px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sco-recs-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes sco-row-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sco-kb-rise {
+  from {
+    opacity: 1;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* —— Entrance (first-time delight) —— */
+.scf--enter .scf__icon:not(.scf__icon--ready) {
+  animation: scf-logo-enter 920ms var(--ease-out) 60ms both;
+}
+
+.scf__icon--ready {
+  opacity: 1;
+  transform: translateZ(0);
+  filter: none;
+}
+
+.scf__icon.scf__icon--tap {
+  animation: scf-logo-tap 340ms var(--ease-out);
+}
+
+.scf--enter .scf__title {
+  animation: scf-ui-center 220ms var(--ease-out) 1120ms both;
+}
+
+.scf--enter .scf__search {
+  animation: scf-search-enter 260ms var(--ease-out) 1200ms both;
+}
+
+.scf--enter .scf__divider {
+  animation: scf-ui-center 200ms var(--ease-out) 1280ms both;
+}
+
+.scf--enter .scf__cta {
+  animation: scf-cta-enter 260ms var(--ease-out) 1340ms both;
+}
+
+/* Logo: bounce in at center, then rise to final top */
+@keyframes scf-logo-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(234px) scale(0.94);
+  }
+  38% {
+    opacity: 1;
+    transform: translateY(234px) scale(1.07);
+  }
+  52% {
+    transform: translateY(234px) scale(0.98);
+  }
+  62% {
+    transform: translateY(234px) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes scf-logo-tap {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.1);
+  }
+  55% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes scf-ui-center {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes scf-ui-center-scale {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+/* Search / CTA: rise + scale + blur → sharp (filter cleared via --crisp after) */
+@keyframes scf-search-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0.97);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes scf-cta-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0.97);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.ul-root-screen {
+  position: absolute;
+  inset: 0;
+}
+
+/*
+ * Park under SignUp without display:none / visibility:hidden —
+ * those zero out layout and kill Framer drag elastic on return.
+ * Opacity keeps the tree alive so polaroid drag still works.
+ */
+.ul-root-screen--parked {
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* —— SignUp (Paper 3OP-0) —— */
+.su {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 402px;
+  height: 874px;
+  overflow: hidden;
+  /* Top wash for map; settles to door fade color at bottom */
+  background-color: #e0f1fe;
+  background-image: radial-gradient(
+    ellipse 90% 70% at 50% 28%,
+    #eef8ff 0%,
+    #c9e8ff 42%,
+    #e0f1fe 78%
+  );
+  font-family: var(--font-ui);
+}
+
+.su__map-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  /* Strong in the top (Paper map wash); gone by the CTA band */
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 38%,
+    rgba(0, 0, 0, 0.45) 55%,
+    transparent 70%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 38%,
+    rgba(0, 0, 0, 0.45) 55%,
+    transparent 70%
+  );
+}
+
+.su__map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  opacity: 1;
+  mix-blend-mode: multiply;
+}
+
+.su__door-wrap {
+  position: absolute;
+  left: 50%;
+  top: 48px;
+  z-index: 1;
+  width: 496px;
+  height: 744px;
+  margin-left: 10px;
+  transform: translate3d(-50%, 0, 0);
+  pointer-events: none;
+}
+
+.su__door {
+  display: block;
+  width: 496px;
+  height: 744px;
+  max-width: none;
+  object-fit: fill;
+  object-position: center top;
+  /* Keep sharp under phone scale */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.su__hanging,
+.su-hang {
+  position: absolute;
+  left: 164px;
+  top: 128px;
+  z-index: 2;
+  width: 80px;
+  height: 124px;
+  /* Pivot at rope apex — swings, stays stuck to rope */
+  transform-origin: 50% 2px;
+  touch-action: none;
+  cursor: grab;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.su-hang:active {
+  cursor: grabbing;
+}
+
+button.su-hang {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+.su-hang__rope {
+  position: absolute;
+  left: 26px;
+  top: 0;
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(1px 0 0.5px rgba(0, 0, 0, 0.25));
+  pointer-events: none;
+}
+
+.su-hang__icon {
+  position: absolute;
+  left: -15px;
+  top: 29px;
+  width: 110px;
+  height: 110px;
+  display: block;
+  max-width: none;
+  pointer-events: none;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.su__back {
+  position: absolute;
+  left: 16px;
+  top: 68px;
+  z-index: 5;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 160ms var(--ease-out);
+}
+
+.su__back:active {
+  transform: scale(0.97);
+}
+
+.su__back img {
+  display: block;
+  width: 20px;
+  height: auto;
+}
+
+.su__title {
+  position: absolute;
+  left: 50%;
+  top: 437px;
+  z-index: 3;
+  margin: 0;
+  transform: translateX(-50%);
+  color: #2c2c2c;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 40px;
+  white-space: nowrap;
+}
+
+.su__badge {
+  position: absolute;
+  left: 50%;
+  top: 491px;
+  z-index: 3;
+  width: 176px;
+  height: 32px;
+  margin-left: -3.5px;
+  transform: translateX(-50%) rotate(-2.98deg);
+  transform-origin: 0% 0%;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(2px 1px 2px rgba(0, 0, 0, 0.25));
+  pointer-events: none;
+}
+
+.su__cta {
+  position: absolute;
+  left: 50%;
+  z-index: 4;
+  margin-left: calc(var(--ul-control-w) / -2);
+}
+
+.su__cta--google {
+  top: 557px;
+}
+
+.su__cta--apple {
+  top: 617px;
+}
+
+.su__cta--email {
+  top: 677px;
+}
+
+.su__footer {
+  position: absolute;
+  left: 50%;
+  top: 741px;
+  z-index: 3;
+  margin: 0;
+  transform: translateX(-50%);
+  color: #9c9c9c;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.su__footer-link {
+  display: inline;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #2c2c2c;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.su--enter .su__door-wrap {
+  animation: su-door-enter 320ms var(--ease-out) both;
+}
+
+.su--enter .su__hanging,
+.su--enter .su-hang {
+  animation: su-fade 240ms var(--ease-out) 60ms both;
+}
+
+.su--enter .su__title {
+  animation: su-center-enter 240ms var(--ease-out) 80ms both;
+}
+
+.su--enter .su__badge {
+  animation: su-badge-enter 240ms var(--ease-out) 100ms both;
+}
+
+.su--enter .su__cta--google {
+  animation: su-cta-enter 240ms var(--ease-out) 120ms both;
+}
+
+.su--enter .su__cta--apple {
+  animation: su-cta-enter 240ms var(--ease-out) 150ms both;
+}
+
+.su--enter .su__cta--email {
+  animation: su-cta-enter 240ms var(--ease-out) 180ms both;
+}
+
+.su--enter .su__footer {
+  animation: su-center-enter 220ms var(--ease-out) 200ms both;
+}
+
+@keyframes su-door-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(-50%, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes su-center-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes su-badge-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) rotate(-2.98deg) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) rotate(-2.98deg) translateY(0);
+  }
+}
+
+@keyframes su-cta-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes su-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scf--enter .scf__icon,
+  .scf--enter .scf__title,
+  .scf--enter .scf__search,
+  .scf--enter .scf__divider,
+  .scf--enter .scf__cta {
+    animation: scf-fade-in 200ms ease both;
+    animation-delay: 0ms;
+  }
+
+  .scf--enter .scf__icon {
+    transform: none;
+  }
+
+  .scf__icon--tap {
+    animation: none;
+  }
+
+  .scf--enter .scf__title,
+  .scf--enter .scf__search,
+  .scf--enter .scf__divider,
+  .scf--enter .scf__cta {
+    transform: translateX(-50%);
+  }
+
+  .sco--enter .sco__title,
+  .sco--enter .sco__search,
+  .sco--enter .sco__recs,
+  .sco--enter .sco-recs__row,
+  .sco--enter .sco__keyboard,
+  .sco--exit .sco__title,
+  .sco--exit .sco__recs,
+  .sco--exit .sco__keyboard {
+    animation: scf-fade-in 200ms ease both;
+    animation-delay: 0ms;
+  }
+
+  .sco--enter .sco__title {
+    transform: translateX(-50%);
+  }
+
+  .sco--enter .sco__search,
+  .sco--enter .sco__recs,
+  .sco--enter .sco__keyboard {
+    transform: none;
+  }
+
+  .scf--dimmed .scf__icon,
+  .scf--dimmed .scf__title,
+  .scf--dimmed .scf__divider,
+  .scf--dimmed .scf__cta,
+  .ul-flow__home {
+    transition: none;
+  }
+
+  .ul-search,
+  .ul-cta,
+  .ul-sec-cta__shape {
+    filter: none !important;
+  }
+
+  .ul-search--tappable:active .ul-search__shape,
+  .ul-search--tappable:active .ul-search__row,
+  .ul-cta:active,
+  .ul-cta.ul-cta--crisp:active,
+  .ul-sec-cta:active .ul-sec-cta__shape,
+  .ul-sec-cta:active .ul-sec-cta__row,
+  .ul-search__clear:active,
+  .ul-back:active,
+  .su__back:active,
+  .sco-recs__row:active,
+  .cr-card:active {
+    transform: none;
+  }
+
+  .su--enter .su__door-wrap,
+  .su--enter .su__hanging,
+  .su--enter .su__title,
+  .su--enter .su__badge,
+  .su--enter .su__cta--google,
+  .su--enter .su__cta--apple,
+  .su--enter .su__cta--email,
+  .su--enter .su__footer {
+    animation: su-fade 200ms ease both;
+    animation-delay: 0ms;
+  }
+
+  .su--enter .su__door-wrap {
+    transform: translate3d(-50%, 0, 0);
+  }
+
+  .su--enter .su__title,
+  .su--enter .su__footer {
+    transform: translateX(-50%);
+  }
+
+  .su--enter .su__badge {
+    transform: translateX(-50%) rotate(-2.98deg);
+  }
+
+  .su--enter .su__cta--google,
+  .su--enter .su__cta--apple,
+  .su--enter .su__cta--email {
+    transform: none;
+  }
+
+  .ul-sec-cta::before {
+    transition: none;
+  }
+
+  .ul-search__caret {
+    animation: none;
+    opacity: 1;
+  }
+
+  .polaroid__drag {
+    cursor: default;
+  }
+
+  @keyframes scf-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}

@@ -1,0 +1,145 @@
+**Participant 1**
+
+-  if uh if I talk about preparation then I don't think I have did any remarkable or any specific preparation for my first day
+- I was just like what can go wrong and with that feeling I went to my first day
+- If I had to describe my first week of college, it was more like uh navigating blindly like I was only relying on people and asking everyone like where this class and where this lab is.
+- there was a time uh during my first year there was this class where which was very located in a right at the corner
+- which if you're walking through the corridor it wouldn't be even its door won't be visible to you there and there is also no sign showing that uh this classroom number is here
+- That particular was very difficult to locate.
+- Uh I didn't find like it was uh kind of I got lucky that I was just passing and finding here and there and looking for class particular class number
+- I went right at the end of quarter and then I saw that there is uh also corridor extension here and there is this class inside.
+- It was more of a luck that I found.
+- I was roaming for here and there for at least 15 to 20 minutes.
+- I was really frustrated because the the classroom was supposed to be in that corridor only
+- and  everyone was telling me their class is there but I wasn't able to locate it.
+- I was asking for lab assistants like who are on the ground floor as was on the first floor.
+- I went to ground floor and asked where where that specific class number was and they said that right at the end of the of that corridor.
+- Actually not because if you are moving to that direction you will just uh end up at the end of corridor
+- but if you are not observant enough and you found that that there's also another route uh you will probably miss it
+- actually my classes are not that hard to find
+- If it was about lab then another case.
+- Actually, it was some meatonics lab that uh took more than enough because it was right at the uh how can I describe it, the building is like U- shaped
+- at the end of the line there is this lab and it was not at that time it was not marked like there is no sign board at right
+- so I was uh moving uh through the corridors and that time there wasn't even anyone there
+- after I think half an hour I found uh some students or seniors and then I asked them and they told me that this is the this lab.
+- Actually no there is no offline or online map of college. There's only one 3D model right at the entrance of our college.
+- Actually no there is no offline or online map of college. There's only one 3D model right at the entrance of our college.
+- That is the only way you can have a bird view of college.
+- No, because that only shows the structure of building
+- you can't just look into the roof and uh check where which class is where there is two floor building then you can't locate the classrooms or anything else.
+- If I had to go for reason the classrooms are the first one
+- because whenever you enter the college you move to the right side and you see the class number of classrooms like board of class number
+- so it is very easy to find it's right at the entrance beside the HOD office
+- no it is the only reason that it was right uh at the entrance
+- It didn't changed, like after one to two weeks uh I pretty much got used to it
+- every route and labs are memorized, like it happened. It happened.
+- It was not one time as I said I'm currently in fourth year. I have seen three batches of juniors coming to college
+- every time we see people like uh frustrations written on their face that they are not been able to find or locate the class
+- I helped them to locate as I know where we face problems which are the labs and classes which are harder to locate.
+- I told them in advance that if you have to find this then you have to go there.
+- I would like to add something. Currently if you're asking me my experience is actually good because my the layout of my college is comparatively easy as it was built very early in 1980s.
+- whenever I have visited another colleges like which were recently built in 2000 their structure is very much more confusing
+- whenever I have visited another colleges like which were recently built in 2000 their structure is very much more confusing
+- the continuous corridors two to three departments within floors. So that's more problematic than ours
+- We have separate building for every department of like so that's the problem I think you should address
+- Yeah. Like recently in two weeks I have visited two colleges for my NPTL exam.
+- KBP College of Engineering Satara and KB University that building was like a complete maze.
+- You can continuously walk through the corridors
+- one way only you will find three departments going by
+- So finding an office or anything like that you will be there and you don't even notice that the transition of between two departments
+- I'll be moving from mechanical department to electronics and I won't even notice.
+- I have visited uh also in Mumbai I have colleges uh visit college like MGM college that's also has the same situation.
+
+**Participant 2**
+
+- in start due to I guess I actually don't know exactly where the campus is. So that's why I got late
+- it was a quite nervous day for me because uh as I changed my campus from Pillai’s and I studied in Pillai’s for 3 years
+- So I thought that the teachers here were professional and all. So it was a quite nervous day for me.
+- Yes. Actually I have some contacts with seniors. So I asked them about the campus, how to reach there, where are my classes and all.
+- So, I reached in college and to be honest after hearing about the classrooms and all from seniors as well, it was difficult for me to reach uh at my classroom.
+- I was very very confused. Uh firstly, I by mistakenly uh uh got into a commerce section.
+- Then I went to engineering section then afterwards  asking nearby students and uh staff faculty I reach at my desired classroom.
+- actual this experience I shared you was about my recent college and apart from this when I completed my 12th and I took admission in Pillai College.
+- So the campus of Pillai College is very very much huge. There are so many wings
+- I remember it was the induction day of my college and  it was very difficult to find the auditorium bro.
+-  I guess it was something in G wing and I was in engineering section.
+- So I was searching where is G wing. I went through many wings six to seven wings
+- I explored and then finally after wasting my 15 to 20 minutes I entered in auditorium
+- At the moment I was thinking that rather college should have done something
+- the faculty members or the nearby students who are leaving the college or who were roaming in the campus
+- actually the students were in their mind itself. they are busy in their own work
+- they guided me verbally I followed their directions and reached about 60-70% on my location
+- actually the faculty members helped me to reach the exact location I don't use my brain to reach there
+- I have experienced during starting days yes I remembered there was a event in Pillai okay in my graduation so  I wasn't able to find the event location there
+- that time yes uh so it was my first event actually and I have to attend that event it was something about tech related event and I reached uh about 5 10 minutes late there.
+- there are many contacts there, seniors and all. So I asked them they are students there
+- I asked students itself I don't think so there are any sign boards or something yes there are the classroom names outside
+- there are the wings name outside the building but uh there are nothing like sign boards to exactly navigate there
+- I think After 2 weeks, I got used to about the wings and all.
+- So I got used to after uh so many weeks reaching various classes and as I'm in committee now so I have to roam here and there so much
+- So slowly slowly I got uh to know about many new places there in campus.
+- yes it was on freshers day uh as the new juniors have arrived in my college  and I saw myself in them
+- they are also struggling to find the classes so I help a few people there but exactly not everyone at that moment
+
+**Participant 3**
+
+- I wasn't quite prepared. I was quite nervous because I had seen the college first before the actual first day.
+- I had visited our college so it was huge and it was I was kind of nervous.
+- The first week was uh it was messy.
+- Because my classes changed I guess three times a week.
+- We didn't have a proper class. So we used to get the time table and over there were classes they used to tell us which class which floor.
+- But it was still quite confusing.
+- Yeah we did struggle during the first week and yeah we did miss I guess one lecture.
+- We had to stand out because our ma'am wouldn't take us in but it was fine.
+- We asked a lot of seniors on the way. 
+- It was like a puzzle. We couldn't find the right corridors and the right wings because our college has a lot of wings.
+- It was confusing and nervous because it was our first week. We didn't wanted to miss lectures or get into the bad side of our teacher.
+- It was during our second semester when our classes changed.
+- it was in the first and second floor but then around the second semester as classes changed completely to other wing and it was on the sixth or seventh floor.
+- So we had quite a time searching for that class.
+- Yeah. So we had maps around the hallways.
+- So we used to find the wings and then we used to go by the lifts or the stairs.
+- yeah the maps were helpful and then later on we just memorized the whole map of our college and then that's how we got used to.
+- It was around that time only during our second semester once we got to know about the map the whole thing we just memorized it and then that's how it got easy.
+- The maps helped a lot. So now it is much more easier for me to identify which wing and which class to go to
+- it also helps me help others and the freshers to help them get to that class.
+- I was in the council. We used to get duties like called freshers. So we used to stand in the corridor and help them out regarding their being and classes.
+
+**Participant 4**
+
+- I dressed up well. I went to the college try to talk to people around me and try to make connection and that's all.
+- the on the first day there were a few senior students who are there to guide us to our classrooms.
+- So it was very it was bit easy to find my class and after I went to the class
+- I started to try to make a connection with the students who sit around me and I eventually become a friend with them
+- college wings are different, room numbers are different, And there was no one with me so it was difficult to find the classroom during my exam times.
+- I asked students who are there nearby and other people to help me find it.
+- like uh 10 to 15 minutes I think.
+- to reach there on time before exam starts. nervousness, tension.
+- sometimes it happens uh our lecture conducted in different classrooms. So that time it might get happen.
+- I uh take help of the maps in the college to find the my classrooms or any other places.
+- It was I think uh auditorium. It was easy to find it because I was with my friends who know where it is actually.
+- I used generally used to ask uh people around me to if they know about anything about this
+- if I know the place I would help him guide him to the place myself or if I don't know then I will just uh tell him that I don't know where it is.
+
+**Participant 5**
+
+- well there was not much preparation needed. I just uh got my books and my stationary and my bag and just came to college.
+- it was a bit difficult because it was a new place and like for one did not know uh where the classrooms were
+- but since there was one classroom that I had to go to every day, so it was easier it was that thing was fine uh
+- but when it came to going to other classrooms for any seminar or uh or like finding the staff room or teachers or then that was very difficult
+- I guess it was uh yeah we went to the college and my friends were trying to find a particular wing
+- we did not know where it was and so we tried to figure it out by looking at the map but that just confused us more.
+- So we had to ask someone and that's how we reached the proper place.
+- It it took us like it it was easier once someone guided us but before when we were figuring it out by ourselves it took us uh 10 to 15 minutes.
+- that we're probably going to be late because it was a seminar and we did not know where uh to go.
+- So we were like we're going to be late and the teacher is going to tell us something that why are you late?
+- Oh well uh once you get the hang of the campus it's not that difficult.
+- but yeah the first week uh or like the first few weeks it was uh difficult to find the allocated classroom
+- but then again since the classroom is the same so it got easier it was not that difficult.
+- like now it's easy to find classroom since I've gotten used to the uh place. I've gotten used to the college.
+- the labs were also our labs were also close by only so that was easy finding uh the auditorium or or some a specific thing that was uh like the canteen or the auditorium that was easy the printer job was easy
+- but when it came to finding classrooms of my friends which were in different wings different floors that was difficult
+- well now I just prefer asking people where it is because uh it's much easier that way
+- when freshers come in they are usually uh not sure about where the classrooms are
+- so often times I can see people standing in front of the map that is printed on near the stairs stairs and just figuring out where which wing is
+- then uh sometimes they ask someone who's passing by like where is it because even they can't figure out just by looking at the map.
