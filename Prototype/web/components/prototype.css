@@ -344,6 +344,7 @@
 .scf--settled .scf__divider {
   opacity: 1;
   transform: translateX(-50%);
+  filter: none;
 }
 
 .scf--settled .scf__search,
@@ -400,6 +401,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  margin: 0;
+  border: none;
   padding: 0 12px 0 8px;
   box-sizing: border-box;
   transform: translateZ(0);
@@ -416,12 +419,77 @@
 
 .ul-search__placeholder {
   min-width: 0;
+  flex: 1;
   color: var(--ul-search-placeholder);
   font-size: 16px;
   font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 20px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ul-search__input {
+  min-width: 0;
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #2c2c2c;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 20px;
+}
+
+.ul-search__input::placeholder {
+  color: var(--ul-search-placeholder);
+}
+
+/* Captures typing; college-style caret is the visible cursor */
+.ul-search__input--ghost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  caret-color: transparent;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.ul-search__trailing {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.ul-search__filter {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ul-search__filter img {
+  display: block;
+  width: 28px;
+  height: auto;
+  max-width: none;
+}
+
+.ul-search__filter:active {
+  transform: scale(0.97);
 }
 
 /* Screen-placed search (entrance targets .scf__search) */
@@ -535,6 +603,14 @@
 
 .ul-cta.ul-cta--crisp:active {
   transform: scale(0.97);
+}
+
+/* Narrow Primary CTA (Map-StairNavigation 112×48) — keep fill/dash, drop home centering */
+.ul-cta.ul-cta--narrow,
+.ul-cta.ul-cta--narrow.ul-cta--crisp {
+  left: auto;
+  margin-left: 0;
+  flex-shrink: 0;
 }
 
 .ul-cta__dash {
@@ -745,6 +821,7 @@
 }
 
 .ul-search__value {
+  position: relative;
   display: flex;
   align-items: center;
   min-width: 0;
@@ -1368,8 +1445,16 @@
   filter: none;
   overflow: visible;
   transition: transform 160ms var(--ease-out);
-  cursor: pointer;
+  cursor: default;
   -webkit-tap-highlight-color: transparent;
+}
+
+.cr-card--tappable {
+  cursor: pointer;
+}
+
+.cr-card--tappable:active {
+  transform: scale(0.985);
 }
 
 .cr-card__shape {
@@ -1795,20 +1880,21 @@
   animation: scf-logo-tap 340ms var(--ease-out);
 }
 
+/* After polaroids (~1375ms) — blur → sharp, 60ms stagger */
 .scf--enter .scf__title {
-  animation: scf-ui-center 220ms var(--ease-out) 1120ms both;
+  animation: scf-ui-blur 240ms var(--ease-out) 1440ms both;
 }
 
 .scf--enter .scf__search {
-  animation: scf-search-enter 260ms var(--ease-out) 1200ms both;
+  animation: scf-search-enter 260ms var(--ease-out) 1500ms both;
 }
 
 .scf--enter .scf__divider {
-  animation: scf-ui-center 200ms var(--ease-out) 1280ms both;
+  animation: scf-ui-blur 220ms var(--ease-out) 1560ms both;
 }
 
 .scf--enter .scf__cta {
-  animation: scf-cta-enter 260ms var(--ease-out) 1340ms both;
+  animation: scf-cta-enter 260ms var(--ease-out) 1620ms both;
 }
 
 /* Logo: bounce in at center, then rise to final top */
@@ -1870,6 +1956,20 @@
   }
 }
 
+/* Title / divider: rise + blur → sharp */
+@keyframes scf-ui-blur {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    filter: blur(0);
+  }
+}
+
 /* Search / CTA: rise + scale + blur → sharp (filter cleared via --crisp after) */
 @keyframes scf-search-enter {
   from {
@@ -1900,10 +2000,11 @@
 .ul-root-screen {
   position: absolute;
   inset: 0;
+  transition: opacity 220ms var(--ease-out);
 }
 
 /*
- * Park under SignUp without display:none / visibility:hidden —
+ * Park under SignUp / Map without display:none / visibility:hidden —
  * those zero out layout and kill Framer drag elastic on return.
  * Opacity keeps the tree alive so polaroid drag still works.
  */
@@ -1911,6 +2012,12 @@
   opacity: 0;
   pointer-events: none;
   z-index: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ul-root-screen {
+    transition: opacity 160ms var(--ease-out);
+  }
 }
 
 /* —— SignUp (Paper 3OP-0) —— */
@@ -1921,13 +2028,14 @@
   width: 402px;
   height: 874px;
   overflow: hidden;
-  /* Top wash for map; settles to door fade color at bottom */
+  /* Door settle at bottom; top matches home mid/edge blue, not #eef8ff wash */
   background-color: #e0f1fe;
-  background-image: radial-gradient(
-    ellipse 90% 70% at 50% 28%,
-    #eef8ff 0%,
-    #c9e8ff 42%,
-    #e0f1fe 78%
+  background-image: linear-gradient(
+    180deg,
+    #79bdef 0%,
+    #c9e8ff 28%,
+    #e0f1fe 58%,
+    #e0f1fe 100%
   );
   font-family: var(--font-ui);
 }
@@ -2091,10 +2199,10 @@ button.su-hang {
 .su__badge {
   position: absolute;
   left: 50%;
-  top: 491px;
+  top: 489px;
   z-index: 3;
-  width: 176px;
-  height: 32px;
+  width: 198px;
+  height: 36px;
   margin-left: -3.5px;
   transform: translateX(-50%) rotate(-2.98deg);
   transform-origin: 0% 0%;
@@ -2362,5 +2470,670 @@ button.su-hang {
     to {
       opacity: 1;
     }
+  }
+}
+
+/* —— Map-FirstTime (Screen Images/Map-FirstTime.png) —— */
+.mf {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 402px;
+  height: 874px;
+  overflow: hidden;
+  background: #ceebff;
+  font-family: var(--font-ui);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.mf__wash {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.55;
+}
+
+.mf__wash-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.mf__header {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 68px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 28px 1fr 40px;
+  align-items: center;
+  height: 28px;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+/* Match .ul-back / .su__back from previous screens */
+.mf__back {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 160ms var(--ease-out);
+}
+
+.mf__kebab {
+  width: 40px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mf__back:active,
+.mf__kebab:active,
+.mf__floors-btn:active {
+  transform: scale(0.97);
+}
+
+.mf__back img {
+  display: block;
+  width: 20px;
+  height: auto;
+}
+
+/* Icon-only — Kebab.svg already has pill stroke + shadow */
+.mf__kebab {
+  justify-self: end;
+}
+
+.mf__kebab img {
+  display: block;
+  width: 20px;
+  height: 27px;
+  max-width: none;
+}
+
+.mf__title {
+  margin: 0;
+  text-align: center;
+  color: #2c2c2c;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 22px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mf__stage {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 112px;
+  bottom: 92px;
+  z-index: 2;
+  transition: bottom 280ms var(--ease-in-out);
+}
+
+/* Map-Search-FirstTime — frame shortens above search + keyboard */
+.mf--searching .mf__stage {
+  bottom: 400px;
+}
+
+/* Map-Navigation-FirstTime — frame shortens above nav card */
+.mf--navigating .mf__stage {
+  bottom: 190px;
+}
+
+.mf--navigating .mf__floors {
+  opacity: 0.4;
+}
+
+/* Map-Success-FirstTime — Paper map 318px tall above 360×386 card */
+.mf--success .mf__stage {
+  bottom: 430px;
+}
+
+.mf--success .mf__floors {
+  opacity: 0.4;
+  z-index: 2;
+}
+
+/* Paper: dim sits above chrome (back / title / kebab), card above dim */
+.mf--success .mf__header {
+  z-index: 2;
+}
+
+.mf__success-dim {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.mf__success {
+  position: absolute;
+  left: 50%;
+  top: 456px;
+  z-index: 5;
+  width: 360px;
+  height: 386px;
+  margin-left: -180px;
+  box-sizing: border-box;
+  border-radius: 16px;
+  border: 1px solid #eaeaea;
+  overflow: hidden;
+  background-image: radial-gradient(
+    ellipse 69.14% 39.565% at 50% 42.75%,
+    #e6f6ff 29.37%,
+    #c5eaff 52.88%,
+    #a4deff 100%
+  );
+  will-change: transform, opacity;
+}
+
+/* Full card so falling stickers keep going under the soft wash / CTA */
+.mf__success-burst {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Soft fade only — no hard opaque band cutting the burst */
+.mf__success-wash {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  height: 168px;
+  pointer-events: none;
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.22) 28%,
+    rgba(255, 255, 255, 0.55) 58%,
+    rgba(255, 255, 255, 0.82) 100%
+  );
+}
+
+.mf__success-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Above the 48px CTA + 12px pad (Paper bottom≈72) */
+  bottom: 68px;
+  z-index: 2;
+  margin: 0;
+  padding: 0 33px;
+  box-sizing: border-box;
+  color: #9c9c9c;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* Wrapper beats PrimaryCta’s inline left/margin centering */
+.mf__success-cta-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* 386 − 48 − 12 pad = 326 — keep CTA inside the card */
+  top: 326px;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+}
+
+.mf__success-cta.ul-cta {
+  position: relative;
+  left: auto;
+  margin-left: 0;
+}
+
+/* White bezel like Map-FirstTime — thinner than first pass */
+.mf__frame {
+  position: absolute;
+  inset: 0;
+  padding: 6px;
+  box-sizing: border-box;
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 14px 32px rgba(45, 110, 170, 0.18);
+}
+
+.mf__frame-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.mf__map-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  will-change: transform, opacity;
+}
+
+.mf__map-layer:last-child {
+  z-index: 1;
+}
+
+.mf__iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #ffffff;
+}
+
+/* Recessed window — inner shadow over the iframe */
+.mf__frame-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 22px;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 1px rgba(30, 60, 90, 0.1),
+    inset 0 3px 10px rgba(20, 40, 70, 0.18),
+    inset 0 -2px 6px rgba(20, 40, 70, 0.1);
+}
+
+.mf__loading {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.72);
+  color: #6a6a6a;
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/*
+ * Floor stepper — LOCKED Paper 44P-0: 56×112
+ * white shell · #556EFF face · original Icons/Plus.svg + Minus.svg (no filters)
+ */
+.mf__floors {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 3;
+  width: 56px;
+  height: 112px;
+  box-sizing: border-box;
+  padding: 3px;
+  border-radius: 16px;
+  border: 1px solid #ffffff;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: opacity 200ms var(--ease-out);
+}
+
+.mf__floors-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  padding: 8px 0;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 12px;
+  background: #556eff;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.mf__floors-btn {
+  width: 40px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.mf__floors-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.mf__floors-btn:disabled:active {
+  transform: none;
+}
+
+/* Original Prototype/Icons assets — do not invert / recolor / shrink */
+.mf__floors-btn img {
+  display: block;
+  width: 29px;
+  height: auto;
+  max-width: none;
+  filter: none;
+}
+
+.mf__floors-label {
+  position: relative;
+  width: 100%;
+  height: 24px;
+  overflow: hidden;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.mf__floors-label-text {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  font-family: var(--font-ui);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 24px;
+}
+
+/* Same shared SearchField shell — map placement only */
+.mf__search {
+  position: absolute;
+  left: 50%;
+  /* Idle: 874 − 28 − 48 control = 798; Paper search ~794 */
+  top: 798px;
+  bottom: auto;
+  z-index: 4;
+  width: var(--ul-control-w);
+  margin-left: calc(var(--ul-control-w) / -2);
+  transition: top 280ms var(--ease-in-out);
+}
+
+/* Map-Search-FirstTime — search sits above keyboard (Paper y≈486) */
+.mf--searching .mf__search {
+  top: 486px;
+}
+
+/* Wrapper already centers — don't let .ul-search--crisp double-offset */
+.mf__search .ul-search,
+.mf__search .ul-search.ul-search--crisp {
+  left: 0;
+  margin-left: 0;
+  width: 100%;
+}
+
+.mf__kb {
+  position: absolute;
+  left: 0;
+  top: 542px;
+  width: 402px;
+  height: 332px;
+  z-index: 5;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.mf--searching .mf__kb {
+  pointer-events: auto;
+}
+
+.mf__kb .sco-kb {
+  position: relative;
+  left: 0;
+  top: 0;
+}
+
+/* Map-Navigation-FirstTime — Paper NavigationCard 360×146 */
+.mf__nav {
+  position: absolute;
+  left: 50%;
+  top: 696px;
+  z-index: 4;
+  width: 360px;
+  height: 146px;
+  margin-left: -180px;
+  box-sizing: border-box;
+  border-radius: 16px;
+  border: 1px solid #eaeaea;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(45, 110, 170, 0.12);
+  overflow: hidden;
+  will-change: transform, opacity;
+}
+
+.mf__nav-dest {
+  position: absolute;
+  left: 17px;
+  top: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 220px;
+}
+
+.mf__nav-pin {
+  display: block;
+  width: 24px;
+  height: 29px;
+  max-width: none;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.mf__nav-dest-name {
+  margin: 0;
+  color: #040404;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Match .ul-search__filter sizing from the map search bar */
+.mf__nav-filter {
+  position: absolute;
+  right: 52px;
+  top: 8px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mf__nav-filter img {
+  display: block;
+  width: 28px;
+  height: auto;
+  max-width: none;
+}
+
+.mf__nav-filter:active {
+  transform: scale(0.97);
+}
+
+.mf__nav-end {
+  position: absolute;
+  right: 17px;
+  top: 15px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #e46565;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 20px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mf__nav-end:active {
+  opacity: 0.75;
+}
+
+.mf__nav-rule {
+  position: absolute;
+  left: 17px;
+  right: 17px;
+  top: 47px;
+  height: 1px;
+  background: #eaeaea;
+}
+
+.mf__nav-step {
+  position: absolute;
+  left: 17px;
+  right: 17px;
+  bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Map-StairNavigation-FirstTime — Paper NavigationCard body */
+.mf__nav-stair {
+  position: absolute;
+  left: 17px;
+  right: 17px;
+  bottom: 15px;
+  top: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mf__nav-stair-copy {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  max-width: 197px;
+  color: #2c2c2c;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.mf__nav-stair-floor {
+  color: #008cff;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+.mf__stair-cta.ul-cta {
+  position: relative;
+  z-index: 2;
+  width: 112px;
+  height: 48px;
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+
+.mf__nav-sign {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid #eaeaea;
+  background: #ffffff;
+  display: grid;
+  place-items: center;
+  /* Same Figma control shadow as .ul-search__shape */
+  filter: var(--ul-control-shadow);
+}
+
+.mf__nav-sign img,
+.mf__nav-sign-svg {
+  display: block;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+}
+
+.mf__nav-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mf__nav-instruction {
+  margin: 0;
+  color: #2c2c2c;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 24px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mf__nav-distance {
+  margin: 0;
+  color: #727272;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf__stage,
+  .mf__search {
+    transition-duration: 160ms;
   }
 }

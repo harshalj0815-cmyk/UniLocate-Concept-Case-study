@@ -17,7 +17,10 @@ import {
 } from "motion/react";
 import CollegeResultCard from "@/components/ui/CollegeResultCard";
 import CollegeResultSkeleton from "@/components/ui/CollegeResultSkeleton";
-import { COLLEGE_RESULTS } from "@/lib/collegeResults";
+import {
+  COLLEGE_RESULTS,
+  type CollegeResult,
+} from "@/lib/collegeResults";
 
 type Props = {
   className?: string;
@@ -25,6 +28,7 @@ type Props = {
   loading?: boolean;
   /** Title/back chrome — false while scrolling down, true while scrolling up */
   onHeaderVisible?: (visible: boolean) => void;
+  onSelectCollege?: (college: CollegeResult) => void;
 };
 
 const SKELETON_COUNT = 3;
@@ -41,6 +45,7 @@ export default function CollegeResultsList({
   className = "",
   loading = false,
   onHeaderVisible,
+  onSelectCollege,
 }: Props) {
   const reduce = useReducedMotion();
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -218,7 +223,15 @@ export default function CollegeResultsList({
                 <CollegeResultSkeleton key={`skel-${i}`} />
               ))
             : COLLEGE_RESULTS.map((result) => (
-                <CollegeResultCard key={result.id} result={result} />
+                <CollegeResultCard
+                  key={result.id}
+                  result={result}
+                  onSelect={
+                    onSelectCollege
+                      ? () => onSelectCollege(result)
+                      : undefined
+                  }
+                />
               ))}
         </motion.div>
       </div>

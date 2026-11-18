@@ -20,13 +20,26 @@ export default function IosKeyboard({
 }: IosKeyboardProps) {
   const live = Boolean(onActivate || onEnter);
 
-  const onClick = (e: ReactMouseEvent<HTMLDivElement>) => {
+  const hitTest = (e: ReactMouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
-    const hitEnter = x > 0.74 && y > 0.68;
-    if (hitEnter && onEnter) {
-      onEnter();
+    /* Return sits bottom-right under the suggestion strip */
+    return x > 0.7 && y > 0.62;
+  };
+
+  const onMouseDown = (e: ReactMouseEvent<HTMLDivElement>) => {
+    if (!onEnter || !hitTest(e)) return;
+    /* Fire before input blur / outside-dismiss can cancel the submit */
+    e.preventDefault();
+    e.stopPropagation();
+    onEnter();
+  };
+
+  const onClick = (e: ReactMouseEvent<HTMLDivElement>) => {
+    if (hitTest(e) && onEnter) {
+      e.preventDefault();
+      e.stopPropagation();
       return;
     }
     onActivate?.();
@@ -36,6 +49,7 @@ export default function IosKeyboard({
     <div
       className={`sco-kb sco-kb--asset ${live ? "sco-kb--tappable" : ""} ${className}`.trim()}
       aria-hidden={!live}
+      onMouseDown={live ? onMouseDown : undefined}
       onClick={live ? onClick : undefined}
       role={live ? "group" : undefined}
       aria-label={live ? "Keyboard" : undefined}

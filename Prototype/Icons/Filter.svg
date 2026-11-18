@@ -1,0 +1,34 @@
+<svg width="30" height="28" viewBox="0 0 30 28" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g filter="url(#filter0_d_386_2245)">
+<use xlink:href="#stroke0_386_2245" fill="#5D88FF"/>
+<mask id="stroke1_386_2245" maskUnits="userSpaceOnUse" x="2" y="2.5" width="26" height="21" fill="black">
+<rect fill="white" x="2" y="2.5" width="26" height="21"/>
+<use xlink:href="#stroke0_386_2245"/>
+</mask>
+<path d="M21.9121 16.5C22.7405 16.5 23.4121 17.1716 23.4121 18C23.4121 18.8284 22.7405 19.5 21.9121 19.5H7.5C6.67157 19.5 6 18.8284 6 18C6 17.1716 6.67157 16.5 7.5 16.5H21.9121ZM21.9121 6.5C22.7405 6.50005 23.4121 7.17161 23.4121 8C23.4121 8.82839 22.7405 9.49995 21.9121 9.5H7.5C6.67157 9.5 6 8.82843 6 8C6 7.17157 6.67157 6.5 7.5 6.5H21.9121Z" stroke-width="8" stroke-linecap="round" stroke="white" mask="url(#stroke1_386_2245)"/>
+<circle cx="10.457" cy="8" r="5" fill="white" stroke-width="4" stroke="white"/>
+<circle cx="18.457" cy="18" r="5" fill="white" stroke-width="4" stroke="white"/>
+</g>
+<use xlink:href="#stroke2_386_2245" fill="#5D88FF"/>
+<mask id="stroke3_386_2245" maskUnits="userSpaceOnUse" x="5" y="5.5" width="20" height="15" fill="black">
+<rect fill="white" x="5" y="5.5" width="20" height="15"/>
+<use xlink:href="#stroke2_386_2245"/>
+</mask>
+<path d="M21.9121 16.5C22.7405 16.5 23.4121 17.1716 23.4121 18C23.4121 18.8284 22.7405 19.5 21.9121 19.5H7.5C6.67157 19.5 6 18.8284 6 18C6 17.1716 6.67157 16.5 7.5 16.5H21.9121ZM21.9121 6.5C22.7405 6.50005 23.4121 7.17161 23.4121 8C23.4121 8.82839 22.7405 9.49995 21.9121 9.5H7.5C6.67157 9.5 6 8.82843 6 8C6 7.17157 6.67157 6.5 7.5 6.5H21.9121Z" stroke-width="2" stroke-linecap="round" stroke="#002488" mask="url(#stroke3_386_2245)"/>
+<circle cx="10.457" cy="8" r="3.5" fill="white" stroke="#002488"/>
+<circle cx="18.457" cy="18" r="3.5" fill="white" stroke="#002488"/>
+<defs>
+<filter id="filter0_d_386_2245" x="0" y="0" width="29.4121" height="28" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="1"/>
+<feGaussianBlur stdDeviation="1"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_386_2245"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_386_2245" result="shape"/>
+</filter>
+<path id="stroke0_386_2245" d="M21.9121 16.5C22.7405 16.5 23.4121 17.1716 23.4121 18C23.4121 18.8284 22.7405 19.5 21.9121 19.5H7.5C6.67157 19.5 6 18.8284 6 18C6 17.1716 6.67157 16.5 7.5 16.5H21.9121ZM21.9121 6.5C22.7405 6.50005 23.4121 7.17161 23.4121 8C23.4121 8.82839 22.7405 9.49995 21.9121 9.5H7.5C6.67157 9.5 6 8.82843 6 8C6 7.17157 6.67157 6.5 7.5 6.5H21.9121Z"/>
+<path id="stroke2_386_2245" d="M21.9121 16.5C22.7405 16.5 23.4121 17.1716 23.4121 18C23.4121 18.8284 22.7405 19.5 21.9121 19.5H7.5C6.67157 19.5 6 18.8284 6 18C6 17.1716 6.67157 16.5 7.5 16.5H21.9121ZM21.9121 6.5C22.7405 6.50005 23.4121 7.17161 23.4121 8C23.4121 8.82839 22.7405 9.49995 21.9121 9.5H7.5C6.67157 9.5 6 8.82843 6 8C6 7.17157 6.67157 6.5 7.5 6.5H21.9121Z"/>
+</defs>
+</svg>

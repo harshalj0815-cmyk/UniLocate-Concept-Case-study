@@ -1,6 +1,12 @@
 "use client";
 
-import type { AnimationEvent, CSSProperties } from "react";
+import type {
+  AnimationEvent,
+  CSSProperties,
+  FormEvent,
+  KeyboardEvent as ReactKeyboardEvent,
+  ReactNode,
+} from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import { paperSquirclePath } from "@/lib/continuousCorner";
@@ -31,6 +37,16 @@ type SearchFieldProps = {
   /** Typewriter cycle through search hints — default on */
   rotatingPlaceholder?: boolean;
   onActivate?: () => void;
+  /** Trailing control — e.g. map Filter.svg */
+  trailing?: ReactNode;
+  /** Editable value — same shell, real input */
+  value?: string;
+  onChange?: (value: string) => void;
+  onSubmit?: () => void;
+  /** College-style blue blink caret (hide native caret) */
+  customCaret?: boolean;
+  /** Focus the field when this flips true (map search open) */
+  autoFocus?: boolean;
 };
 
 /** Shared UniLocate search control — 360×48, radius 16, Paper Search.svg */
@@ -41,16 +57,31 @@ export default function SearchField({
   animate = true,
   rotatingPlaceholder = true,
   onActivate,
+  trailing,
+  value,
+  onChange,
+  onSubmit,
+  customCaret = false,
+  autoFocus = false,
 }: SearchFieldProps) {
   const reduce = useReducedMotion();
+  const editable = onChange != null;
+  const inputRef = useRef<HTMLInputElement>(null);
   const [crisp, setCrisp] = useState(!animate);
+  const [inputFocused, setInputFocused] = useState(false);
   const [typed, setTyped] = useState(
     rotatingPlaceholder && !reduce ? "" : placeholder,
   );
   const indexRef = useRef(0);
   const timerRef = useRef<number | null>(null);
+  const useCustomCaret = editable && customCaret;
 
   const markCrisp = useCallback(() => setCrisp(true), []);
+
+  useEffect(() => {
+    if (!autoFocus || !useCustomCaret) return;
+    inputRef.current?.focus();
+  }, [autoFocus, useCustomCaret]);
 
   const onAnimEnd = useCallback(
     (e: AnimationEvent<HTMLDivElement>) => {
@@ -64,17 +95,21 @@ export default function SearchField({
     [markCrisp],
   );
 
-  /* Fallback if animationend is missed — delay 1200 + duration 260 */
+  /* Fallback if animationend is missed — delay 1500 + duration 260 */
   useEffect(() => {
     if (!animate) return;
-    const t = window.setTimeout(markCrisp, 1600);
+    const t = window.setTimeout(markCrisp, 1860);
     return () => window.clearTimeout(t);
   }, [animate, markCrisp]);
 
   /* Typewriter: type → hold → delete → next (always begins at College Name) */
   useEffect(() => {
-    if (!rotatingPlaceholder || reduce) {
+    if (editable || !rotatingPlaceholder) {
       setTyped(rotatingPlaceholder ? ROTATING_PHRASES[0] : placeholder);
+      return;
+    }
+    if (reduce) {
+      setTyped(ROTATING_PHRASES[0]);
       return;
     }
 
@@ -128,7 +163,7 @@ export default function SearchField({
       cancelled = true;
       clear();
     };
-  }, [placeholder, reduce, rotatingPlaceholder]);
+  }, [editable, placeholder, reduce, rotatingPlaceholder]);
 
   const label = rotatingPlaceholder
     ? reduce
@@ -136,15 +171,33 @@ export default function SearchField({
       : typed
     : placeholder;
 
+  const onKeyDown = useCallback(
+    (e: ReactKeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        onSubmit?.();
+      }
+    },
+    [onSubmit],
+  );
+
+  const onFormSubmit = useCallback(
+    (e: FormEvent) => {
+      e.preventDefault();
+      onSubmit?.();
+    },
+    [onSubmit],
+  );
+
   return (
     <div
-      className={`ul-search ${crisp ? "ul-search--crisp" : ""} ${onActivate ? "ul-search--tappable" : ""} ${className}`.trim()}
+      className={`ul-search ${crisp ? "ul-search--crisp" : ""} ${useCustomCaret && inputFocused ? "ul-search--focused" : ""} ${onActivate && !editable ? "ul-search--tappable" : ""} ${trailing ? "ul-search--trailing" : ""} ${className}`.trim()}
       role="search"
       style={style}
       onAnimationEnd={onAnimEnd}
-      onClick={onActivate}
+      onClick={!editable ? onActivate : undefined}
       onKeyDown={
-        onActivate
+        onActivate && !editable
           ? (e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
@@ -153,7 +206,7 @@ export default function SearchField({
             }
           : undefined
       }
-      tabIndex={onActivate ? 0 : undefined}
+      tabIndex={onActivate && !editable ? 0 : undefined}
     >
       <svg
         className="ul-search__shape"
@@ -169,17 +222,65 @@ export default function SearchField({
           strokeWidth="1"
         />
       </svg>
-      <div className="ul-search__row">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          className="ul-search__icon"
-          src={UL_ASSETS.searchIcon}
-          alt=""
-          width={33}
-          height={30}
-        />
-        <span className="ul-search__placeholder">{label}</span>
-      </div>
+      <form
+        className={`ul-search__row${useCustomCaret ? " ul-search__row--focused" : ""}`}
+        onSubmit={onFormSubmit}
+      >
+        {/* Focused college-style chrome: no leading search icon */}
+        {!(useCustomCaret && inputFocused) ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            className="ul-search__icon"
+            src={UL_ASSETS.searchIcon}
+            alt=""
+            width={33}
+            height={30}
+          />
+        ) : null}
+        {useCustomCaret ? (
+          <div
+            className="ul-search__value"
+            onClick={() => inputRef.current?.focus()}
+          >
+            {(value ?? "") ? (
+              <span className="ul-search__query">{value}</span>
+            ) : !inputFocused ? (
+              <span className="ul-search__placeholder">{placeholder}</span>
+            ) : null}
+            {inputFocused ? (
+              <span className="ul-search__caret" aria-hidden />
+            ) : null}
+            <input
+              ref={inputRef}
+              className="ul-search__input ul-search__input--ghost"
+              type="search"
+              value={value ?? ""}
+              aria-label={placeholder}
+              enterKeyHint="search"
+              onChange={(e) => onChange?.(e.target.value)}
+              onKeyDown={onKeyDown}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
+            />
+          </div>
+        ) : editable ? (
+          <input
+            className="ul-search__input"
+            type="search"
+            value={value ?? ""}
+            placeholder={placeholder}
+            aria-label={placeholder}
+            enterKeyHint="search"
+            onChange={(e) => onChange?.(e.target.value)}
+            onKeyDown={onKeyDown}
+          />
+        ) : (
+          <span className="ul-search__placeholder">{label}</span>
+        )}
+        {trailing ? (
+          <div className="ul-search__trailing">{trailing}</div>
+        ) : null}
+      </form>
     </div>
   );
 }

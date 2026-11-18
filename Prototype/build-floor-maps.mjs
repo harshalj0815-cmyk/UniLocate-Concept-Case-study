@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { fixStairArrows } from "./tools/fix-stair-arrows.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const proto = __dirname;
@@ -557,10 +558,14 @@ ${mapHtml.replace(
 
       viewport.addEventListener("pointerup", endPointer);
       viewport.addEventListener("pointercancel", endPointer);
+      window.ulView = { state, defaults, render, setZoom };
       render();
     })();
   </script>
-  <script src="map-nav.js?v=20251114s"></script>
+  <link rel="stylesheet" href="nav/campus-map.css?v=20261117v" />
+  <script src="nav/campus-data.js?v=20261117v"></script>
+  <script src="nav/campus-router.js?v=20261117v"></script>
+  <script src="nav/campus-map.js?v=20261117v"></script>
 </body>
 </html>
 `;
@@ -586,7 +591,7 @@ const floors = [
 for (const floor of floors.filter((f) => f.active === "2nd")) {
   const raw = fs.readFileSync(floor.source, "utf8");
   const jsx = extractJsx(raw);
-  const mapHtml = jsxToHtml(jsx);
+  const mapHtml = fixStairArrows(jsxToHtml(jsx)).html;
   const html = shell({
     title: floor.title,
     floorKey: floor.active,

@@ -6,12 +6,13 @@ import CtaDash from "@/components/ui/CtaDash";
 import { paperSquircleClip } from "@/lib/continuousCorner";
 import { UL } from "@/lib/uniLocateTokens";
 
-const CLIP = paperSquircleClip(UL.control.w, UL.control.h, UL.control.radius);
-
 type PrimaryCtaProps = {
   label?: string;
   className?: string;
   style?: CSSProperties;
+  /** Override default 360 control width (e.g. stair confirm 112) */
+  width?: number;
+  height?: number;
   /** Entrance blur→sharp — skip when returning to home */
   animate?: boolean;
   onClick?: () => void;
@@ -22,15 +23,19 @@ export default function PrimaryCta({
   label = "Get Started",
   className = "",
   style,
+  width = UL.control.w,
+  height = UL.control.h,
   animate = true,
   onClick,
 }: PrimaryCtaProps) {
   const [crisp, setCrisp] = useState(!animate);
+  const clip = paperSquircleClip(width, height, UL.control.radius);
+  const narrow = width !== UL.control.w;
 
   const markCrisp = useCallback(() => setCrisp(true), []);
 
   const onAnimEnd = useCallback(
-    (e: AnimationEvent<HTMLDivElement>) => {
+    (e: AnimationEvent<HTMLButtonElement>) => {
       if (
         e.animationName === "scf-cta-enter" ||
         e.animationName === "scf-fade-in"
@@ -41,22 +46,28 @@ export default function PrimaryCta({
     [markCrisp],
   );
 
-  /* Fallback — delay 1340 + duration 260 */
+  /* Fallback — delay 1620 + duration 260 */
   useEffect(() => {
     if (!animate) return;
-    const t = window.setTimeout(markCrisp, 1700);
+    const t = window.setTimeout(markCrisp, 1980);
     return () => window.clearTimeout(t);
   }, [animate, markCrisp]);
 
   return (
     <button
       type="button"
-      className={`ul-cta ${crisp ? "ul-cta--crisp" : ""} ${className}`.trim()}
-      style={{ clipPath: CLIP, ...style }}
+      className={`ul-cta ${crisp ? "ul-cta--crisp" : ""} ${narrow ? "ul-cta--narrow" : ""} ${className}`.trim()}
+      style={{
+        clipPath: clip,
+        width,
+        height,
+        ...(narrow ? { left: "auto", marginLeft: 0 } : null),
+        ...style,
+      }}
       onAnimationEnd={onAnimEnd}
       onClick={onClick}
     >
-      <CtaDash />
+      <CtaDash width={width} height={height} />
       <span className="ul-cta__label">{label}</span>
     </button>
   );

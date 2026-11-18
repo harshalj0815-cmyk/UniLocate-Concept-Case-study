@@ -1,0 +1,31 @@
+<svg width="24" height="29" viewBox="0 0 24 29" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g filter="url(#filter0_d_257_1145)">
+<use xlink:href="#stroke0_257_1145" fill="#C7EA5E"/>
+<mask id="stroke1_257_1145" maskUnits="userSpaceOnUse" x="2" y="1" width="20" height="25" fill="black">
+<rect fill="white" x="2" y="1" width="20" height="25"/>
+<use xlink:href="#stroke0_257_1145"/>
+</mask>
+<path d="M11.2627 21.0665C9.65977 18.9836 6 13.9165 6 11.0714C6 7.42857 9 5 12 5C15 5 18 7.13705 18 11.0714C18 14.1346 14.3632 19.0523 12.7524 21.0802C12.3661 21.5665 11.6415 21.5587 11.2627 21.0665Z" stroke-width="8" stroke="white" mask="url(#stroke1_257_1145)"/>
+<use xlink:href="#stroke2_257_1145" fill="#5D88FF"/>
+<mask id="stroke3_257_1145" maskUnits="userSpaceOnUse" x="5" y="4" width="14" height="19" fill="black">
+<rect fill="white" x="5" y="4" width="14" height="19"/>
+<use xlink:href="#stroke2_257_1145"/>
+</mask>
+<path d="M11.2627 21.0665C9.65977 18.9836 6 13.9165 6 11.0714C6 7.42857 9 5 12 5C15 5 18 7.13705 18 11.0714C18 14.1346 14.3632 19.0523 12.7524 21.0802C12.3661 21.5665 11.6415 21.5587 11.2627 21.0665Z" stroke-width="2" stroke="#002488" mask="url(#stroke3_257_1145)"/>
+<circle cx="12" cy="11" r="2.5" fill="white" stroke="#002488"/>
+</g>
+<defs>
+<filter id="filter0_d_257_1145" x="0" y="0" width="24" height="28.4404" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="1"/>
+<feGaussianBlur stdDeviation="1"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_257_1145"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_257_1145" result="shape"/>
+</filter>
+<path id="stroke0_257_1145" d="M6 11.0714C6 13.9165 9.65977 18.9836 11.2627 21.0665C11.6415 21.5587 12.3661 21.5665 12.7524 21.0802C14.3632 19.0523 18 14.1346 18 11.0714C18 7.13705 15 5 12 5C9 5 6 7.42857 6 11.0714Z"/>
+<path id="stroke2_257_1145" d="M6 11.0714C6 13.9165 9.65977 18.9836 11.2627 21.0665C11.6415 21.5587 12.3661 21.5665 12.7524 21.0802C14.3632 19.0523 18 14.1346 18 11.0714C18 7.13705 15 5 12 5C9 5 6 7.42857 6 11.0714Z"/>
+</defs>
+</svg>

@@ -16,6 +16,7 @@ import RecommendationList from "@/components/ui/RecommendationList";
 import ScenePolaroid from "@/components/ui/ScenePolaroid";
 import SearchField from "@/components/ui/SearchField";
 import { SCENE_POLAROIDS } from "@/lib/scenePolaroids";
+import type { CollegeResult } from "@/lib/collegeResults";
 import { UL_ASSETS } from "@/lib/uniLocateTokens";
 
 type Phase = "home" | "search" | "closing" | "results";
@@ -45,6 +46,8 @@ const EASE_DRAWER = [0.32, 0.72, 0, 1] as const;
 
 type SearchCollegeFlowProps = {
   onGetStarted?: () => void;
+  /** Open campus map after tapping a college result */
+  onSelectCollege?: (college: CollegeResult) => void;
   /** False while SignUp/LogIn sits on top — used to remount polaroid drag */
   active?: boolean;
 };
@@ -52,6 +55,7 @@ type SearchCollegeFlowProps = {
 /** Prototype flow: FirstTime ↔ OnClick ↔ CollegeResults */
 export default function SearchCollegeFlow({
   onGetStarted,
+  onSelectCollege,
   active = true,
 }: SearchCollegeFlowProps) {
   const reduce = useReducedMotion();
@@ -113,7 +117,7 @@ export default function SearchCollegeFlow({
   /* After first enter finishes, lock settled so SignUp round-trip can't replay */
   useEffect(() => {
     if (!homeEnter || useShared) return;
-    const ms = reduce ? 0 : 1700;
+    const ms = reduce ? 0 : 2000;
     const t = window.setTimeout(() => setHomeEnter(false), ms);
     return () => window.clearTimeout(t);
   }, [homeEnter, reduce, useShared]);
@@ -259,6 +263,33 @@ export default function SearchCollegeFlow({
     }
     setShowRecs(true);
   }, [clearResultsTimer, query, showingResults, startTyping]);
+
+  /* Physical keyboard — type starts the demo query; Enter opens results */
+  useEffect(() => {
+    if (!active || !focused || phase !== "search" || showingResults) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as Element | null;
+      if (target?.closest?.("input, textarea, [contenteditable=true]")) return;
+
+      if (e.key === "Enter") {
+        e.preventDefault();
+        openResults();
+        return;
+      }
+
+      const isPrintable = e.key.length === 1 && e.key !== " ";
+      if (!isPrintable && e.key !== "Backspace" && e.key !== " ") return;
+      if (typingRef.current) return;
+
+      e.preventDefault();
+      startTyping();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [active, focused, openResults, phase, showingResults, startTyping]);
 
   const dismissOutside = useCallback(
     (e: ReactMouseEvent<HTMLDivElement>) => {
@@ -498,6 +529,7 @@ export default function SearchCollegeFlow({
         <CollegeResultsList
           loading={resultsLoading}
           onHeaderVisible={setResultsHeader}
+          onSelectCollege={onSelectCollege}
         />
       </motion.div>
 

@@ -16,6 +16,7 @@ const MEDIA_CLIP = paperSquircleClip(MEDIA_W, MEDIA_H, MEDIA_R);
 type Props = {
   result: CollegeResult;
   className?: string;
+  onSelect?: () => void;
 };
 
 function ResultChip({
@@ -50,13 +51,27 @@ function ResultChip({
 export default function CollegeResultCard({
   result,
   className = "",
+  onSelect,
 }: Props) {
   const { ref, path, height } = useSquirclePath<HTMLElement>(CARD_W, CARD_R);
 
   return (
     <article
       ref={ref}
-      className={`cr-card ${className}`.trim()}
+      className={`cr-card ${onSelect ? "cr-card--tappable" : ""} ${className}`.trim()}
+      role={onSelect ? "button" : undefined}
+      tabIndex={onSelect ? 0 : undefined}
+      onClick={onSelect}
+      onKeyDown={
+        onSelect
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelect();
+              }
+            }
+          : undefined
+      }
     >
       <svg
         className="cr-card__shape"
