@@ -61,12 +61,14 @@ export default function PrimaryCta({
         clipPath: clip,
         width,
         height,
+        backgroundImage: UL.ctaGradient,
         ...(narrow ? { left: "auto", marginLeft: 0 } : null),
         ...style,
       }}
       onAnimationEnd={onAnimEnd}
       onClick={onClick}
     >
+      <span className="ul-cta__fill" aria-hidden style={{ backgroundImage: UL.ctaGradient }} />
       <CtaDash width={width} height={height} />
       <span className="ul-cta__label">{label}</span>
     </button>

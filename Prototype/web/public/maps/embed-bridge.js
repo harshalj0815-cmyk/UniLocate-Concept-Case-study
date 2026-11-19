@@ -66,8 +66,30 @@
       cursor: grab !important;
       transition: none !important;
     }
+    /* Create Profile — pan/zoom ok; places not tappable */
+    html.ul-embed.ul-lock-hits .ul-hit {
+      pointer-events: none !important;
+      cursor: inherit !important;
+    }
   `;
   document.head.appendChild(css);
+
+  function setHitsLocked(on) {
+    document.documentElement.classList.toggle("ul-lock-hits", !!on);
+  }
+
+  /* Block place selection even if a hit somehow receives the event */
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (!document.documentElement.classList.contains("ul-lock-hits")) return;
+      if (e.target?.closest?.(".ul-hit")) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    },
+    true,
+  );
 
   function withEmbed(href) {
     const url = new URL(href, location.href);
@@ -246,6 +268,13 @@
       return;
     }
 
+    /* Demo board — jump straight to a known place (e.g. O104) */
+    if (d.type === "select" && d.id && window.ulNav?.selectTarget) {
+      window.ulNav.selectTarget(String(d.id), { fit: d.fit !== false });
+      window.setTimeout(() => window.ulNav?.publishNav?.(0), 60);
+      return;
+    }
+
     if (d.type === "nav-sync") {
       window.ulNav?.publishNav?.(0);
       return;
@@ -269,6 +298,33 @@
         window.setTimeout(run, 200);
         window.setTimeout(run, 450);
       }
+      return;
+    }
+
+    /* Shell MapFilterPanel → campus section / layer / POI filters */
+    if (d.type === "filter") {
+      if (Array.isArray(d.ids)) {
+        window.ulNav?.setSectionIds?.(d.ids.map(String));
+      } else {
+        const id = d.id == null || d.id === "" ? null : String(d.id);
+        window.ulNav?.setSection?.(id);
+      }
+      return;
+    }
+
+    if (d.type === "layer" && d.id) {
+      window.ulNav?.setLayer?.(String(d.id), d.on !== false);
+      return;
+    }
+
+    if (d.type === "poi-focus" && d.kind) {
+      window.ulNav?.focusPoi?.(String(d.kind), d.on !== false);
+      return;
+    }
+
+    if (d.type === "lock-hits") {
+      setHitsLocked(!!d.on);
+      return;
     }
   });
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+import { useDemoReduceMotion } from "@/lib/demoMotion";
 import HangingLogo from "@/components/ui/HangingLogo";
 import SecondaryCta from "@/components/ui/SecondaryCta";
 import { UL_ASSETS } from "@/lib/uniLocateTokens";
@@ -21,7 +22,7 @@ export default function SignUp({
   onBack,
   onSwitchAuth,
 }: SignUpProps) {
-  const reduce = useReducedMotion();
+  const reduce = useDemoReduceMotion();
   const fadeTx = {
     duration: reduce ? 0 : 0.22,
     ease: EASE_OUT,

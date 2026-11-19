@@ -65,6 +65,574 @@
   box-sizing: border-box;
 }
 
+/* Phone + left stepper + right stage card */
+.prototype-board {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  width: 100%;
+  max-width: 1320px;
+  box-sizing: border-box;
+  padding: 0 12px;
+}
+
+.prototype-board__phone {
+  flex-shrink: 0;
+}
+
+/*
+ * Progress stepper — Metaview via Refero:
+ * check = done, ellipsis current, hollow upcoming, light connector.
+ * Accent uses UniLocate CTA blue (#008aec).
+ */
+/*
+ * Shell sized by full step list (incl. Sign up) so board centering never
+ * jumps. White .proto-controls sits at the top and can shrink from bottom.
+ */
+.proto-controls-shell {
+  position: relative;
+  flex: 0 1 280px;
+  max-width: 300px;
+  min-width: 220px;
+  max-height: min(820px, calc(100dvh - 48px));
+}
+
+.proto-controls-shell__sizer {
+  visibility: hidden;
+  pointer-events: none;
+  box-sizing: border-box;
+  padding: 16px 18px;
+  border: 1px solid transparent;
+}
+
+.proto-controls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  padding: 16px 18px;
+  border-radius: 20px;
+  border: 1px solid #e8e8ea;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  max-height: inherit;
+  overflow: auto;
+}
+
+.proto-stepper {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.proto-stepper__item {
+  margin: 0;
+  padding: 0;
+}
+
+.proto-stepper__btn {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 0 0 4px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 160ms var(--ease-out);
+}
+
+.proto-stepper__btn:active {
+  opacity: 0.85;
+}
+
+.proto-stepper__rail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100%;
+}
+
+.proto-stepper__dot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  color: #ffffff;
+  background: #d8d8dc;
+  border: 2px solid #d8d8dc;
+  transition:
+    background-color 180ms var(--ease-out),
+    border-color 180ms var(--ease-out),
+    color 180ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+/* Metaview current marker — three white dots */
+.proto-stepper__ellipsis {
+  display: block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow:
+    -5px 0 0 currentColor,
+    5px 0 0 currentColor;
+}
+
+.proto-stepper__line {
+  flex: 1;
+  width: 2px;
+  min-height: 18px;
+  margin: 4px 0 2px;
+  border-radius: 1px;
+  background: #e4e4e8;
+}
+
+.proto-stepper__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 0 14px;
+  min-width: 0;
+}
+
+.proto-stepper__label {
+  color: #9c9c9c;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.proto-stepper__hint {
+  color: #b4b4b8;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+/* Done */
+.proto-stepper__item[data-state="done"] .proto-stepper__dot {
+  background: #008aec;
+  border-color: #008aec;
+  color: #ffffff;
+}
+
+.proto-stepper__item[data-state="done"] .proto-stepper__line {
+  background: #008aec;
+}
+
+.proto-stepper__item[data-state="done"] .proto-stepper__label {
+  color: #2c2c2c;
+}
+
+/* Current */
+.proto-stepper__item[data-state="current"] .proto-stepper__dot {
+  background: #008aec;
+  border-color: #008aec;
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(0, 138, 236, 0.16);
+}
+
+.proto-stepper__item[data-state="current"] .proto-stepper__label {
+  color: #2c2c2c;
+  font-weight: 700;
+}
+
+.proto-stepper__item[data-state="current"] .proto-stepper__hint {
+  color: #6b6b70;
+}
+
+/* Upcoming */
+.proto-stepper__item[data-state="todo"] .proto-stepper__dot {
+  background: #ffffff;
+  border-color: #d8d8dc;
+}
+
+/*
+ * Right-rail stack — top synced to .proto-controls via UniLocateFlow
+ * (margin-top); stepper stays board-centered.
+ */
+.proto-stage-stack {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+/*
+ * Right-rail stage bar — compact horizontal pill.
+ * Layout matches reference; accents stay UniLocate blue.
+ */
+.proto-stage {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  border: 1px solid #e8e8ea;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* Search college — Recommendation | Empty */
+.proto-segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid #e8e8ea;
+  background: #f0f2f5;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.proto-segment__btn {
+  margin: 0;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #6b6b70;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 160ms var(--ease-out),
+    color 160ms var(--ease-out),
+    box-shadow 160ms var(--ease-out);
+}
+
+.proto-segment__btn[aria-selected="true"] {
+  background: #ffffff;
+  color: #2c2c2c;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.proto-segment__btn:active:not(:disabled) {
+  opacity: 0.9;
+}
+
+.proto-segment--disabled {
+  position: relative;
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.proto-segment__btn:disabled {
+  color: #9c9c9c;
+  cursor: not-allowed;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* One tooltip for the whole disabled segment control */
+.proto-segment[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) translateY(4px);
+  z-index: 20;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #2c2c2c;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 140ms var(--ease-out),
+    transform 140ms var(--ease-out);
+}
+
+.proto-segment[data-tooltip]::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 2px);
+  transform: translateX(-50%) translateY(4px);
+  z-index: 20;
+  border: 5px solid transparent;
+  border-top-color: #2c2c2c;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 140ms var(--ease-out),
+    transform 140ms var(--ease-out);
+}
+
+.proto-segment[data-tooltip]:hover::after,
+.proto-segment[data-tooltip]:focus-within::after,
+.proto-segment[data-tooltip]:hover::before,
+.proto-segment[data-tooltip]:focus-within::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.proto-stage__refresh {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #2c2c2c;
+  color: #ffffff;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 160ms var(--ease-out),
+    transform 120ms var(--ease-out);
+}
+
+.proto-stage__refresh svg {
+  width: 14px;
+  height: 14px;
+}
+
+.proto-stage__refresh:hover {
+  background: #1f1f1f;
+}
+
+.proto-stage__refresh:active {
+  transform: scale(0.96);
+}
+
+.proto-stage__chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
+  padding: 4px 6px 4px 10px;
+  border-radius: 999px;
+  background: #f0f2f5;
+}
+
+.proto-stage__chip-lead {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #2c2c2c;
+}
+
+.proto-stage__chip-lead svg {
+  width: 13px;
+  height: 13px;
+}
+
+.proto-stage__label {
+  color: #2c2c2c;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.proto-toggle {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: #d0d0d4;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 180ms var(--ease-out);
+}
+
+.proto-toggle[aria-checked="true"] {
+  background: #008aec;
+}
+
+.proto-toggle__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  transition: transform 180ms var(--ease-out);
+}
+
+.proto-toggle[aria-checked="true"] .proto-toggle__thumb {
+  transform: translateX(14px);
+}
+
+/* Stage Motion off — kill CSS enter/loop motion inside the phone */
+.prototype-board__phone[data-ul-motion="off"] .iphone-frame__screen *,
+.prototype-board__phone[data-ul-motion="off"] .iphone-frame__screen *::before,
+.prototype-board__phone[data-ul-motion="off"] .iphone-frame__screen *::after {
+  animation: none !important;
+  transition-duration: 0s !important;
+}
+
+/*
+ * Enter beats use opacity:0 + animation-fill both.
+ * With animation killed, force the settled visible end-state.
+ */
+.prototype-board__phone[data-ul-motion="off"] .cr-results--ready .cr-card,
+.prototype-board__phone[data-ul-motion="off"] .cr-skel,
+.prototype-board__phone[data-ul-motion="off"] .scf--enter .scf__icon,
+.prototype-board__phone[data-ul-motion="off"] .scf--enter .scf__title,
+.prototype-board__phone[data-ul-motion="off"] .scf--enter .scf__search,
+.prototype-board__phone[data-ul-motion="off"] .scf--enter .scf__divider,
+.prototype-board__phone[data-ul-motion="off"] .scf--enter .scf__cta,
+.prototype-board__phone[data-ul-motion="off"] .sco--enter .sco__title,
+.prototype-board__phone[data-ul-motion="off"] .sco--enter .sco__search,
+.prototype-board__phone[data-ul-motion="off"] .sco--enter .sco__recs,
+.prototype-board__phone[data-ul-motion="off"] .sco--enter .sco-recs__row,
+.prototype-board__phone[data-ul-motion="off"] .sco--enter .sco__keyboard,
+.prototype-board__phone[data-ul-motion="off"] .su--enter .su__door-wrap,
+.prototype-board__phone[data-ul-motion="off"] .su--enter .su__hanging,
+.prototype-board__phone[data-ul-motion="off"] .su--enter .su__title,
+.prototype-board__phone[data-ul-motion="off"] .su--enter .su__badge,
+.prototype-board__phone[data-ul-motion="off"] .su--enter .su__cta--google,
+.prototype-board__phone[data-ul-motion="off"] .su--enter .su__cta--apple,
+.prototype-board__phone[data-ul-motion="off"] .su--enter .su__cta--email,
+.prototype-board__phone[data-ul-motion="off"] .su--enter .su__footer {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.prototype-board__phone[data-ul-motion="off"] .cr-results--ready .cr-card,
+.prototype-board__phone[data-ul-motion="off"] .cr-skel {
+  transform: none !important;
+}
+
+.prototype-board__phone[data-ul-motion="off"] .scf--enter .scf__title,
+.prototype-board__phone[data-ul-motion="off"] .scf--enter .scf__search,
+.prototype-board__phone[data-ul-motion="off"] .scf--enter .scf__divider,
+.prototype-board__phone[data-ul-motion="off"] .sco--enter .sco__title,
+.prototype-board__phone[data-ul-motion="off"] .su--enter .su__title,
+.prototype-board__phone[data-ul-motion="off"] .su--enter .su__footer {
+  transform: translateX(-50%) !important;
+}
+
+.prototype-board__phone[data-ul-motion="off"] .scf--enter .scf__cta {
+  transform: translate(-50%, 0) scale(1) !important;
+}
+
+.prototype-board__phone[data-ul-motion="off"] .su--enter .su__door-wrap {
+  transform: translate3d(-50%, 0, 0) !important;
+}
+
+.prototype-board__phone[data-ul-motion="off"] .su--enter .su__badge {
+  transform: translateX(-50%) rotate(-2.98deg) !important;
+}
+
+/* Success — mount already at settled end (close + wash + CTA visible) */
+.prototype-board__phone[data-ul-motion="off"] .mf__success-inner,
+.prototype-board__phone[data-ul-motion="off"] .mf__success-close,
+.prototype-board__phone[data-ul-motion="off"] .mf__success-wash,
+.prototype-board__phone[data-ul-motion="off"] .mf__success-hint,
+.prototype-board__phone[data-ul-motion="off"] .mf__success-cta-wrap {
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+.prototype-board__phone[data-ul-motion="off"] .mf__success::before {
+  opacity: 0.5 !important;
+}
+
+
+@media (max-width: 900px) {
+  .prototype-board {
+    flex-direction: column;
+    gap: 20px;
+    max-height: 100dvh;
+    overflow: auto;
+    padding-bottom: 24px;
+  }
+
+  .proto-controls-shell {
+    flex: none;
+    width: min(360px, 100%);
+    max-width: none;
+    order: 2;
+  }
+
+  .proto-controls-shell--compact {
+    /* Column: no need to reserve Sign up height */
+    height: auto;
+  }
+
+  .proto-controls-shell--compact .proto-controls-shell__sizer {
+    display: none;
+  }
+
+  .proto-controls-shell--compact .proto-controls {
+    position: relative;
+  }
+
+  .prototype-board__phone {
+    order: 1;
+  }
+
+  .proto-stage-stack {
+    flex: none;
+    order: 3;
+    width: min(360px, 100%);
+    align-items: stretch;
+  }
+
+  .proto-stage {
+    flex: none;
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proto-stepper__btn,
+  .proto-stepper__dot,
+  .proto-stage__refresh,
+  .proto-toggle,
+  .proto-toggle__thumb {
+    transition: none;
+  }
+}
+
 .iphone-scale {
   /* Paper artboards are 402×874 = screen content; bezel sits outside */
   --screen-w: 402px;
@@ -464,12 +1032,17 @@
 }
 
 .ul-search__trailing {
+  position: relative;
+  z-index: 2;
   flex-shrink: 0;
   display: grid;
   place-items: center;
+  pointer-events: auto;
 }
 
 .ul-search__filter {
+  position: relative;
+  z-index: 2;
   width: 36px;
   height: 36px;
   padding: 0;
@@ -499,6 +1072,147 @@
   top: 415px;
   transform: translate(-50%, 10px) scale(0.97);
   opacity: 0;
+}
+
+/*
+ * Signed-in home — college-home Destination bar in the Create-profile CTA slot
+ * (same y as .mf__search / profile CTA on the campus map).
+ */
+.scf--signed-in .scf__search {
+  top: 798px;
+}
+
+/* Signed-in search fade host — owns the Create-profile CTA slot */
+.scf__signed-search {
+  position: absolute;
+  left: 50%;
+  top: 798px;
+  z-index: 2;
+  width: var(--ul-control-w);
+  margin-left: calc(var(--ul-control-w) / -2);
+  will-change: transform, opacity, filter;
+}
+
+.scf__signed-search .scf__search,
+.scf__signed-search .ul-search,
+.scf__signed-search .ul-search.ul-search--crisp {
+  position: relative;
+  left: 0;
+  top: auto;
+  margin-left: 0;
+  transform: none;
+}
+
+/* Center hero — same cluster pattern as .sco-empty (map + caption) */
+.scf__signed-hero {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.scf__signed-hero-cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: 360px;
+}
+
+.scf__signed-hero-frame {
+  display: block;
+  /* Room for blueprint-sized card + rise travel + drop-shadow */
+  width: 300px;
+  height: 220px;
+  border: 0;
+  background: transparent;
+  overflow: hidden;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+/* Same place + type as focus Search college (.sco__title / .ul-shared-title) */
+.scf__signed-title {
+  position: absolute;
+  left: 50%;
+  top: 65px;
+  z-index: 3;
+  margin: 0;
+  transform: translateX(-50%);
+  color: #2c2c2c;
+  font-family: var(--font-ui);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 32px;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Top-right kebab — mirrors .ul-back / .mf__kebab (home + focus signed-in) */
+.scf__kebab,
+.ul-kebab {
+  position: absolute;
+  right: 16px;
+  top: 68px;
+  z-index: 7;
+  width: 40px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 160ms var(--ease-out);
+}
+
+.scf__kebab:active,
+.ul-kebab:active {
+  transform: scale(0.97);
+}
+
+.scf__kebab img,
+.ul-kebab img {
+  display: block;
+  width: 20px;
+  height: 27px;
+  max-width: none;
+  pointer-events: none;
+}
+
+/* Signed-in flat-map bed — shared across home + focus */
+.ul-signed-hero {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.ul-signed-hero-frame {
+  display: block;
+  width: 300px;
+  height: 220px;
+  border: 0;
+  background: transparent;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.scf--settled.scf--signed-in .scf__search {
+  opacity: 1;
+  transform: none;
+  left: 50%;
+  margin-left: calc(var(--ul-control-w) / -2);
+  filter: none;
 }
 
 .scf__divider {
@@ -548,6 +1262,7 @@
   height: var(--ul-control-h);
   padding: 0;
   border: none;
+  background-color: #008aec;
   background-image: var(--ul-cta-gradient);
   filter: var(--ul-control-shadow);
   display: grid;
@@ -568,12 +1283,21 @@
   transform: scale(0.97);
 }
 
+/* Paint radial on a layer — survives clip-path + filter quirks */
+.ul-cta__fill {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--ul-cta-gradient);
+  pointer-events: none;
+}
+
 /* Press glow — soft light on/off via opacity crossfade */
 .ul-cta::before {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 1;
   background: var(--ul-cta-press-fill);
   opacity: 0;
   pointer-events: none;
@@ -616,7 +1340,7 @@
 .ul-cta__dash {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
   width: 100%;
   height: 100%;
   pointer-events: none;
@@ -625,7 +1349,7 @@
 
 .ul-cta__label {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 /* Secondary auth CTA — white squircle + Figma shadow */
@@ -1255,6 +1979,310 @@
   z-index: 5;
   transform-origin: 50% 0%;
   will-change: transform, opacity;
+}
+
+/* College-not-mapped — after Enter (keyboard dismissed) */
+.ul-empty-settled {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.sco-empty {
+  position: absolute;
+  /* Band between search and Request Map — cluster centered as one unit */
+  left: 0;
+  right: 0;
+  top: 168px;
+  bottom: 92px;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Map + caption stay adjacent — never stretched apart */
+.sco-empty__cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: 360px;
+}
+
+.sco-empty__map {
+  display: block;
+  width: 280px;
+  height: 168px;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.sco-empty__label {
+  position: relative;
+  z-index: 1;
+  /* Clears 3D projection + drop-shadow under the full-size blueprint */
+  margin: 76px 0 0;
+  color: #2c2c2c;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Same slot as Create Profile / map idle search — 874 − 28 − 48 */
+.ul-empty-cta {
+  position: absolute;
+  left: 50%;
+  top: 798px;
+  z-index: 6;
+  width: var(--ul-control-w);
+  margin-left: calc(var(--ul-control-w) / -2);
+  display: flex;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.ul-empty-cta__shell {
+  display: flex;
+  justify-content: center;
+  filter: var(--ul-control-shadow);
+}
+
+.ul-empty-cta__btn.ul-cta,
+.ul-empty-cta__btn.ul-cta.ul-cta--crisp {
+  position: relative;
+  left: auto;
+  margin-left: 0;
+  transform: none;
+  opacity: 1;
+  filter: none !important;
+}
+
+/* Blueprint map unfold — in-tree (not iframe) so Enter remount plays */
+.ul-blueprint {
+  --w: 42px;
+  --h: calc(var(--w) * 2.6667);
+  --a: 34deg;
+  --light: #0090ff;
+  --dark: #0077d9;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+.ul-blueprint__cast {
+  position: absolute;
+  inset: 0;
+  filter: drop-shadow(
+    calc(var(--w) * 0.35) calc(var(--w) * 0.55) calc(var(--w) * 0.12)
+      rgba(0, 0, 0, 0.22)
+  );
+}
+
+.ul-blueprint__float,
+.ul-blueprint__rise,
+.ul-blueprint__persp {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 0;
+  height: 0;
+}
+
+.ul-blueprint__persp {
+  perspective: 900px;
+  perspective-origin: 50% 40%;
+}
+
+.ul-blueprint__scene {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  transform: rotateZ(7deg) rotateX(30deg) rotateY(-12deg);
+}
+
+.ul-blueprint__map {
+  position: absolute;
+  left: 0;
+  top: calc(var(--h) / -2);
+  width: var(--w);
+  height: var(--h);
+  transform-style: preserve-3d;
+  transform: translateX(calc(var(--w) * -2.5 * cos(var(--a))));
+}
+
+.ul-blueprint__p {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform-origin: 0 50%;
+  transform: rotateY(calc(var(--a) * var(--k)));
+}
+
+.ul-blueprint__p .ul-blueprint__p {
+  left: 100%;
+}
+
+.ul-blueprint__face {
+  position: absolute;
+  inset: 0;
+  background-color: var(--c);
+  background-image:
+    linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.38) 1.2px,
+      transparent 1.2px
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.38) 1.2px,
+      transparent 1.2px
+    );
+  background-size: calc(var(--w) / 3) calc(var(--w) / 3);
+}
+
+.ul-blueprint__p--e > .ul-blueprint__face {
+  --c: var(--light);
+  --edge: #fff;
+}
+
+.ul-blueprint__p--o > .ul-blueprint__face {
+  --c: var(--dark);
+  --edge: #dcdcdc;
+}
+
+.ul-blueprint__shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(40, 90, 170, 0.5),
+    rgba(40, 90, 170, 0.14)
+  );
+}
+
+.ul-blueprint__face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  pointer-events: none;
+  --b: calc(var(--w) * 0.15);
+  border-top: var(--b) solid var(--edge);
+  border-bottom: var(--b) solid var(--edge);
+}
+
+.ul-blueprint__p--f > .ul-blueprint__face::after {
+  border-left: var(--b) solid #fff;
+}
+
+.ul-blueprint__p--l > .ul-blueprint__face::after {
+  border-right: var(--b) solid #fff;
+}
+
+.ul-blueprint--play .ul-blueprint__rise {
+  animation: ul-blueprint-rise 0.55s both;
+}
+
+.ul-blueprint--play .ul-blueprint__scene {
+  animation: ul-blueprint-tilt 1.2s 0.35s both;
+}
+
+.ul-blueprint--play .ul-blueprint__float {
+  animation: ul-blueprint-float 4s var(--ease-in-out) 1.6s infinite alternate;
+}
+
+@keyframes ul-blueprint-rise {
+  0% {
+    transform: translateY(100px);
+    animation-timing-function: var(--ease-out);
+  }
+  55% {
+    transform: translateY(-14px);
+    animation-timing-function: var(--ease-in-out);
+  }
+  75% {
+    transform: translateY(5px);
+    animation-timing-function: var(--ease-in-out);
+  }
+  90% {
+    transform: translateY(-2px);
+    animation-timing-function: var(--ease-in-out);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes ul-blueprint-tilt {
+  0% {
+    transform: rotateZ(8deg) rotateX(34deg) rotateY(-14deg);
+    animation-timing-function: var(--ease-out);
+  }
+  35% {
+    transform: rotateZ(4deg) rotateX(26deg) rotateY(-8deg);
+    animation-timing-function: var(--ease-in-out);
+  }
+  65% {
+    transform: rotateZ(8.5deg) rotateX(31deg) rotateY(-13deg);
+    animation-timing-function: var(--ease-in-out);
+  }
+  100% {
+    transform: rotateZ(7deg) rotateX(30deg) rotateY(-12deg);
+  }
+}
+
+@keyframes ul-blueprint-float {
+  to {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes ul-blueprint-fadein {
+  from {
+    opacity: 0;
+  }
+}
+
+.ul-blueprint--reduce.ul-blueprint--play .ul-blueprint__rise,
+.ul-blueprint--reduce.ul-blueprint--play .ul-blueprint__scene,
+.ul-blueprint--reduce.ul-blueprint--play .ul-blueprint__float {
+  animation: none !important;
+}
+
+.ul-blueprint--reduce.ul-blueprint--play .ul-blueprint__cast {
+  animation: ul-blueprint-fadein 0.35s var(--ease-out) both;
+}
+
+.prototype-board__phone[data-ul-motion="off"] .ul-blueprint--play .ul-blueprint__rise,
+.prototype-board__phone[data-ul-motion="off"] .ul-blueprint--play .ul-blueprint__scene,
+.prototype-board__phone[data-ul-motion="off"] .ul-blueprint--play .ul-blueprint__float {
+  animation: none !important;
+}
+
+.prototype-board__phone[data-ul-motion="off"] .ul-blueprint--play .ul-blueprint__cast {
+  animation: ul-blueprint-fadein 0.35s var(--ease-out) both;
 }
 
 .ul-shared-recs .sco-recs {
@@ -1889,6 +2917,25 @@
   animation: scf-search-enter 260ms var(--ease-out) 1500ms both;
 }
 
+/* Signed-in — Destination bar enters in the bottom CTA slot */
+.scf--enter.scf--signed-in .scf__search {
+  top: 798px;
+  animation: scf-search-enter-signed 260ms var(--ease-out) 1500ms both;
+}
+
+@keyframes scf-search-enter-signed {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0.97);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
 .scf--enter .scf__divider {
   animation: scf-ui-blur 220ms var(--ease-out) 1560ms both;
 }
@@ -2365,8 +3412,13 @@ button.su-hang {
   .scf--enter .scf__title,
   .scf--enter .scf__search,
   .scf--enter .scf__divider,
-  .scf--enter .scf__cta {
+  .scf--enter .scf__cta,
+  .scf--enter.scf--signed-in .scf__search {
     transform: translateX(-50%);
+  }
+
+  .scf--enter.scf--signed-in .scf__search {
+    animation-name: scf-fade-in;
   }
 
   .sco--enter .sco__title,
@@ -2610,24 +3662,41 @@ button.su-hang {
 /* Map-Success-FirstTime — Paper map 318px tall above 360×386 card */
 .mf--success .mf__stage {
   bottom: 430px;
+  pointer-events: none;
 }
 
 .mf--success .mf__floors {
   opacity: 0.4;
   z-index: 2;
+  pointer-events: none;
 }
 
 /* Paper: dim sits above chrome (back / title / kebab), card above dim */
 .mf--success .mf__header {
   z-index: 2;
+  pointer-events: none;
+}
+
+/* Create Profile idle — no floor stepper; pan/zoom stay, places locked in iframe */
+.mf--profile .mf__floors {
+  display: none;
+}
+
+.mf--profile .mf__kebab {
+  pointer-events: none;
+  opacity: 0.35;
 }
 
 .mf__success-dim {
   position: absolute;
   inset: 0;
   z-index: 4;
+  border: none;
+  padding: 0;
+  margin: 0;
   background: rgba(0, 0, 0, 0.4);
-  pointer-events: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .mf__success {
@@ -2642,43 +3711,144 @@ button.su-hang {
   border-radius: 16px;
   border: 1px solid #eaeaea;
   overflow: hidden;
+  pointer-events: auto;
+  /* Paper 5ND-0 — tighter blue radial */
+  background-color: #e6f6ff;
   background-image: radial-gradient(
-    ellipse 69.14% 39.565% at 50% 42.75%,
+    ellipse 53.455% 42.75% at 50% 42.75% in oklab,
     #e6f6ff 29.37%,
     #c5eaff 52.88%,
     #a4deff 100%
   );
+  isolation: isolate;
   will-change: transform, opacity;
+}
+
+.mf__success-inner {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/*
+  Paper 5NX-0 overlay — wider white-center radial.
+  Slow opacity fade switches the background between 5ND ↔ 5NX.
+*/
+.mf__success::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background-image: radial-gradient(
+    ellipse 86.1% 56.185% at 50% 42.75% in oklab,
+    #ffffff 0%,
+    #e6f6ff 29.37%,
+    #c5eaff 52.88%,
+    #a4deff 100%
+  );
+  animation: mf-success-beat 4.5s var(--ease-in-out) infinite;
+  will-change: opacity;
+}
+
+@keyframes mf-success-beat {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf__success::before {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
+.mf__success-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mf__success-close img {
+  display: block;
+  width: 22px;
+  height: 22px;
+  opacity: 0.72;
+}
+
+.mf__success-close:active img {
+  opacity: 1;
 }
 
 /* Full card so falling stickers keep going under the soft wash / CTA */
 .mf__success-burst {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 1;
   width: 100%;
   height: 100%;
   border: 0;
   background: transparent;
+  color-scheme: light;
   pointer-events: none;
 }
 
-/* Soft fade only — no hard opaque band cutting the burst */
+/*
+  Paper Frame 126 wash — same on 5ND + 5NX.
+  Solid white + mask (not oklab rgba gradient): filter/blur on the wash
+  was banding the fade into a milky shelf above the CTA.
+*/
 .mf__success-wash {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
-  z-index: 1;
-  height: 168px;
+  bottom: -1px;
+  z-index: 2;
+  width: 100%;
+  height: 140px;
   pointer-events: none;
-  background-image: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.22) 28%,
-    rgba(255, 255, 255, 0.55) 58%,
-    rgba(255, 255, 255, 0.82) 100%
+  will-change: opacity;
+  background-color: #ffffff;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.12) 10%,
+    rgba(0, 0, 0, 0.39) 22%,
+    rgba(0, 0, 0, 0.72) 52%,
+    #000 78.5%,
+    #000 100%
   );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.12) 10%,
+    rgba(0, 0, 0, 0.39) 22%,
+    rgba(0, 0, 0, 0.72) 52%,
+    #000 78.5%,
+    #000 100%
+  );
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
 
 .mf__success-hint {
@@ -2687,7 +3857,7 @@ button.su-hang {
   right: 0;
   /* Above the 48px CTA + 12px pad (Paper bottom≈72) */
   bottom: 68px;
-  z-index: 2;
+  z-index: 3;
   margin: 0;
   padding: 0 33px;
   box-sizing: border-box;
@@ -2698,6 +3868,7 @@ button.su-hang {
   letter-spacing: -0.02em;
   line-height: 18px;
   text-align: center;
+  will-change: opacity, transform, filter;
 }
 
 /* Wrapper beats PrimaryCta’s inline left/margin centering */
@@ -2707,7 +3878,7 @@ button.su-hang {
   right: 0;
   /* 386 − 48 − 12 pad = 326 — keep CTA inside the card */
   top: 326px;
-  z-index: 2;
+  z-index: 3;
   display: flex;
   justify-content: center;
 }
@@ -2737,7 +3908,15 @@ button.su-hang {
   height: 100%;
   border-radius: 22px;
   overflow: hidden;
-  background: #ffffff;
+  /* Match loader paper so the dissolve never flashes white */
+  background: #f0f0f0;
+}
+
+.mf__map-stack {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  will-change: transform, opacity;
 }
 
 .mf__map-layer {
@@ -2777,14 +3956,20 @@ button.su-hang {
 .mf__loading {
   position: absolute;
   inset: 0;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  background: rgba(255, 255, 255, 0.72);
-  color: #6a6a6a;
-  font-size: 13px;
-  font-weight: 600;
+  z-index: 3;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #f0f0f0;
   pointer-events: none;
+  will-change: opacity;
+}
+
+.mf__loading-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #f0f0f0;
 }
 
 /*
@@ -2902,6 +4087,292 @@ button.su-hang {
   width: 100%;
 }
 
+/* After first arrival — Create Profile fills the search slot */
+.mf__search--profile {
+  display: flex;
+  justify-content: center;
+}
+
+/* Shadow on shell — clip-path + filter on same node flattens the CTA radial */
+.mf__profile-cta-shell {
+  display: flex;
+  justify-content: center;
+  filter: var(--ul-control-shadow);
+}
+
+.mf__profile-cta.ul-cta,
+.mf__profile-cta.ul-cta.ul-cta--crisp {
+  position: relative;
+  left: auto;
+  margin-left: 0;
+  background-color: #008aec;
+  background-image: var(--ul-cta-gradient);
+  filter: none !important;
+}
+
+.mf__profile-cta .ul-cta__label {
+  font-size: 15px;
+  letter-spacing: -0.02em;
+  padding: 0 12px;
+}
+
+/* Map-Filter-FirstTime — Paper 62C-0 */
+.mf__filter-layer {
+  position: absolute;
+  inset: 0;
+  /* Above keyboard (5), below search (7) so the bar punches through the dim */
+  z-index: 6;
+  pointer-events: none;
+}
+
+.mf__filter-dim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mf__filter {
+  position: absolute;
+  left: 50%;
+  top: auto;
+  /* Gap above Destination search (search top → 76px from bottom) */
+  bottom: 100px;
+  z-index: 1;
+  box-sizing: border-box;
+  width: 360px;
+  height: auto; /* grow with chips + Clear All — never overlap */
+  min-height: 423px; /* Paper 62C-0 floor */
+  padding: 0;
+  border: none;
+  border-radius: 16px; /* fallback before SVG squircle */
+  background: transparent;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
+  pointer-events: auto;
+  will-change: transform, opacity;
+}
+
+.mf__filter__shape {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.mf__filter__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 15px 17px 16px; /* Paper Clear All bottom ≈ 11–16 */
+}
+
+/* Gap above nav card while navigating (Paper ≈ top 255) */
+.mf--navigating .mf__filter {
+  bottom: 190px;
+}
+
+/*
+ * Only the search bar sits above the black dim.
+ * Snap top — don't ease 486→798 through the filter card when leaving keyboard.
+ */
+.mf--filtering .mf__search {
+  z-index: 7;
+  top: 798px;
+  transition: none;
+}
+
+/* Keyboard exits under the dim; don't intercept taps while filtering */
+.mf--filtering .mf__kb {
+  pointer-events: none;
+  z-index: 4;
+}
+
+.mf--filtering.mf--navigating .mf__nav {
+  z-index: 7;
+}
+
+.mf__filter-section {
+  margin: 0 0 8px;
+  color: #9c9c9c;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 20px;
+}
+
+.mf__filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0; /* spacing to rules owned by .mf__filter-rule */
+}
+
+.mf__filter-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 8px;
+  border: none;
+  border-radius: 8px; /* fallback before SVG squircle */
+  background: transparent;
+  color: #2c2c2c;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 20px;
+  cursor: pointer;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
+  transition: transform 140ms var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mf__filter-chip__shape {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.mf__filter-chip__label {
+  position: relative;
+  z-index: 1;
+}
+
+.mf__filter-chip:active {
+  transform: scale(0.97);
+}
+
+.mf__filter-chip--on {
+  color: #ffffff;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+.mf__filter-rule {
+  width: 100%;
+  height: 0;
+  /* Equal air above/below — was collapsing tight on top, loose below */
+  margin: 14px 0 14px;
+  border: none;
+  border-top: 2px solid #eaeaea;
+  border-radius: 1px;
+}
+
+/* In flow — Paper ~19px before Clear All */
+.mf__filter-rule--foot {
+  position: static;
+  margin: 14px 0 19px;
+}
+
+.mf__filter-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 140ms var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mf__filter-close img {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.mf__filter-close:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf__filter-close {
+    transition: none;
+  }
+
+  .mf__filter-close:active {
+    transform: none;
+  }
+}
+
+.mf__filter-clear {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  z-index: 2;
+  align-self: center;
+  box-sizing: border-box;
+  width: 336px;
+  height: 48px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 16px; /* fallback before SVG squircle */
+  background: transparent;
+  color: #e36464;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 20px;
+  cursor: pointer;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
+  transition: transform 140ms var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.mf__filter-clear__shape {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.mf__filter-clear__label {
+  position: relative;
+  z-index: 1;
+}
+
+.mf__filter-clear:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf__filter-chip,
+  .mf__filter-clear {
+    transition: none;
+  }
+
+  .mf__filter-chip:active,
+  .mf__filter-clear:active {
+    transform: none;
+  }
+}
+
 .mf__kb {
   position: absolute;
   left: 0;
@@ -2939,6 +4410,15 @@ button.su-hang {
   box-shadow: 0 8px 24px rgba(45, 110, 170, 0.12);
   overflow: hidden;
   will-change: transform, opacity;
+}
+
+.mf__nav-inner {
+  position: absolute;
+  inset: 0;
+}
+
+.mf__search-inner {
+  width: 100%;
 }
 
 .mf__nav-dest {
@@ -3030,27 +4510,44 @@ button.su-hang {
   background: #eaeaea;
 }
 
-.mf__nav-step {
+/* Stair confirm ↔ walk step share one slot for blurred crossfade */
+.mf__nav-body {
   position: absolute;
   left: 17px;
   right: 17px;
+  top: 60px;
   bottom: 15px;
+  display: grid;
+  min-height: 0;
+}
+
+.mf__nav-step {
+  grid-area: 1 / 1;
+  align-self: end;
+  width: 100%;
+  min-width: 0;
+  /* Stack maneuver faces for opacity crossfade */
+  display: grid;
+}
+
+.mf__nav-step-face {
+  grid-area: 1 / 1;
   display: flex;
   align-items: center;
   gap: 18px;
+  min-width: 0;
 }
 
 /* Map-StairNavigation-FirstTime — Paper NavigationCard body */
 .mf__nav-stair {
-  position: absolute;
-  left: 17px;
-  right: 17px;
-  bottom: 15px;
-  top: 60px;
+  grid-area: 1 / 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
 }
 
 .mf__nav-stair-copy {

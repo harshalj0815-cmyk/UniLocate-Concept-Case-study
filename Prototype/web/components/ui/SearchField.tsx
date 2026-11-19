@@ -1,5 +1,7 @@
 "use client";
 
+import { useDemoReduceMotion } from "@/lib/demoMotion";
+
 import type {
   AnimationEvent,
   CSSProperties,
@@ -8,7 +10,6 @@ import type {
   ReactNode,
 } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useReducedMotion } from "motion/react";
 import { paperSquirclePath } from "@/lib/continuousCorner";
 import { UL, UL_ASSETS } from "@/lib/uniLocateTokens";
 
@@ -64,7 +65,7 @@ export default function SearchField({
   customCaret = false,
   autoFocus = false,
 }: SearchFieldProps) {
-  const reduce = useReducedMotion();
+  const reduce = useDemoReduceMotion();
   const editable = onChange != null;
   const inputRef = useRef<HTMLInputElement>(null);
   const [crisp, setCrisp] = useState(!animate);
@@ -78,10 +79,15 @@ export default function SearchField({
 
   const markCrisp = useCallback(() => setCrisp(true), []);
 
+  /* Parent owns “search open” — keep DOM focus (and caret) in sync with it */
   useEffect(() => {
-    if (!autoFocus || !useCustomCaret) return;
-    inputRef.current?.focus();
+    if (!useCustomCaret) return;
+    if (autoFocus) inputRef.current?.focus();
+    else inputRef.current?.blur();
   }, [autoFocus, useCustomCaret]);
+
+  /** Caret chrome follows search mode, not only native focus (kb taps blur the ghost input) */
+  const showFocused = useCustomCaret && (inputFocused || autoFocus);
 
   const onAnimEnd = useCallback(
     (e: AnimationEvent<HTMLDivElement>) => {
@@ -191,7 +197,7 @@ export default function SearchField({
 
   return (
     <div
-      className={`ul-search ${crisp ? "ul-search--crisp" : ""} ${useCustomCaret && inputFocused ? "ul-search--focused" : ""} ${onActivate && !editable ? "ul-search--tappable" : ""} ${trailing ? "ul-search--trailing" : ""} ${className}`.trim()}
+      className={`ul-search ${crisp ? "ul-search--crisp" : ""} ${showFocused ? "ul-search--focused" : ""} ${onActivate && !editable ? "ul-search--tappable" : ""} ${trailing ? "ul-search--trailing" : ""} ${className}`.trim()}
       role="search"
       style={style}
       onAnimationEnd={onAnimEnd}
@@ -227,7 +233,7 @@ export default function SearchField({
         onSubmit={onFormSubmit}
       >
         {/* Focused college-style chrome: no leading search icon */}
-        {!(useCustomCaret && inputFocused) ? (
+        {!showFocused ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             className="ul-search__icon"
@@ -244,10 +250,10 @@ export default function SearchField({
           >
             {(value ?? "") ? (
               <span className="ul-search__query">{value}</span>
-            ) : !inputFocused ? (
+            ) : !showFocused ? (
               <span className="ul-search__placeholder">{placeholder}</span>
             ) : null}
-            {inputFocused ? (
+            {showFocused ? (
               <span className="ul-search__caret" aria-hidden />
             ) : null}
             <input
@@ -257,6 +263,9 @@ export default function SearchField({
               value={value ?? ""}
               aria-label={placeholder}
               enterKeyHint="search"
+              /* Fake on-screen kb — don't summon the OS keyboard on devices */
+              inputMode="none"
+              autoComplete="off"
               onChange={(e) => onChange?.(e.target.value)}
               onKeyDown={onKeyDown}
               onFocus={() => setInputFocused(true)}
@@ -278,7 +287,13 @@ export default function SearchField({
           <span className="ul-search__placeholder">{label}</span>
         )}
         {trailing ? (
-          <div className="ul-search__trailing">{trailing}</div>
+          <div
+            className="ul-search__trailing"
+            /* Clicks here must not blur the ghost input — padding snap shifts caret + filter */
+            onPointerDown={(e) => e.preventDefault()}
+          >
+            {trailing}
+          </div>
         ) : null}
       </form>
     </div>

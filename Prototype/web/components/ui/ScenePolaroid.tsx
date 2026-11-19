@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+import { useDemoReduceMotion } from "@/lib/demoMotion";
 import type { ScenePolaroid as ScenePolaroidData } from "@/lib/scenePolaroids";
 import { paperSquircleClip } from "@/lib/continuousCorner";
 
@@ -23,7 +24,7 @@ export default function ScenePolaroid({
   focused,
   moveDuration = 0.28,
 }: Props) {
-  const reduce = useReducedMotion();
+  const reduce = useDemoReduceMotion();
   const pose = focused ? card.focus : card.home;
   const duration = reduce ? 0 : moveDuration;
 

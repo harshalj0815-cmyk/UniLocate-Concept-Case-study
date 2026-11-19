@@ -11,12 +11,30 @@ import {
   type MouseEvent as ReactMouseEvent,
   type Ref,
 } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
+import { useDemoReduceMotion } from "@/lib/demoMotion";
 import IosKeyboard from "@/components/ui/IosKeyboard";
 import NavManeuverSign from "@/components/ui/NavManeuverSign";
+import MapFilterPanel from "@/components/ui/MapFilterPanel";
 import PrimaryCta from "@/components/ui/PrimaryCta";
 import SearchField from "@/components/ui/SearchField";
+import { OTHER_FILTERS, type OtherFilter } from "@/lib/mapFilters";
 import { UL_ASSETS } from "@/lib/uniLocateTokens";
+
+type MapNavApi = {
+  confirmFloor?: () => boolean;
+  play?: (leg: number) => void;
+  setSection?: (id: string | null) => void;
+  setSectionIds?: (ids: string[]) => void;
+  toggleSectionId?: (id: string) => void;
+  setLayer?: (id: string, on: boolean) => void;
+  focusPoi?: (kind: string, on?: boolean) => void;
+  getFilter?: () => {
+    mode?: string;
+    id?: string | null;
+    ids?: string[];
+  };
+};
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 const EASE_IN_OUT = [0.77, 0, 0.175, 1] as const;
@@ -33,6 +51,9 @@ const FLOORS = [
   { id: "first", short: "1" },
   { id: "second", short: "2" },
 ] as const;
+
+/** Demo board Navigating jump — campus-data place id */
+const DEMO_NAV_DEST = { id: "1-o104", name: "O104" } as const;
 
 type FloorId = (typeof FLOORS)[number]["id"];
 
@@ -58,8 +79,18 @@ type NavTrip = {
   pref?: string;
 };
 
+type MapScene = "idle" | "navigating" | "success" | "profile";
+
 type Props = {
   collegeName: string;
+  /** Owned by UniLocateFlow so it survives leave / re-enter map */
+  needsProfile?: boolean;
+  /** Demo board — jump into a map beat (applied on remount) */
+  scene?: MapScene;
+  /** Stage card — mute arrival burst SFX when false */
+  soundEnabled?: boolean;
+  onSceneChange?: (scene: MapScene) => void;
+  onNeedsProfile?: () => void;
   onBack?: () => void;
   /** Map-Success → Create Profile */
   onCreateProfile?: () => void;
@@ -76,8 +107,13 @@ function truncateTitle(name: string, max = 28) {
   return `${name.slice(0, max).trimEnd()}…`;
 }
 
-function buildMapSrc(floor: FloorId, view: ViewState) {
-  const params = new URLSearchParams({ embed: "1", v: "26" });
+function buildMapSrc(
+  floor: FloorId,
+  view: ViewState,
+  reduceMotion = false,
+) {
+  const params = new URLSearchParams({ embed: "1", v: "40" });
+  if (reduceMotion) params.set("reduce", "1");
   if (view.zoom != null && Number.isFinite(view.zoom)) {
     params.set("vx", String(view.x));
     params.set("vy", String(view.y));
@@ -91,8 +127,10 @@ function buildHandoffSrc(
   trip: NavTrip,
   leg: number,
   view: ViewState,
+  reduceMotion = false,
 ) {
-  const params = new URLSearchParams({ embed: "1", v: "26" });
+  const params = new URLSearchParams({ embed: "1", v: "40" });
+  if (reduceMotion) params.set("reduce", "1");
   params.set(
     "trip",
     JSON.stringify({
@@ -131,38 +169,40 @@ const MapLayers = memo(function MapLayers({
 }: MapLayersProps) {
   return (
     <>
-      {layers.map((layer, i) => {
-        const isActive = i === layers.length - 1;
-        const isFirstPaint = layers.length === 1 && i === 0;
-        return (
-          <motion.div
-            key={layer.key}
-            className="mf__map-layer"
-            custom={stepDir}
-            variants={mapSwapVariants}
-            initial={isFirstPaint ? false : "enter"}
-            animate={
-              isActive
-                ? mapReady || isFirstPaint
-                  ? "center"
-                  : "enter"
-                : mapReady
-                  ? "exit"
-                  : "center"
-            }
-            transition={mapSwapTx}
-          >
-            <iframe
-              ref={isActive ? iframeRef : undefined}
-              className="mf__iframe"
-              title={isActive ? "Campus floor map" : ""}
-              src={layer.src}
-              allow={isActive ? "fullscreen" : undefined}
-              tabIndex={isActive ? undefined : -1}
-            />
-          </motion.div>
-        );
-      })}
+      <div className="mf__map-stack">
+        {layers.map((layer, i) => {
+          const isActive = i === layers.length - 1;
+          const isFirstPaint = layers.length === 1 && i === 0;
+          return (
+            <motion.div
+              key={layer.key}
+              className="mf__map-layer"
+              custom={stepDir}
+              variants={mapSwapVariants}
+              initial={isFirstPaint ? false : "enter"}
+              animate={
+                isActive
+                  ? mapReady || isFirstPaint
+                    ? "center"
+                    : "enter"
+                  : mapReady
+                    ? "exit"
+                    : "center"
+              }
+              transition={mapSwapTx}
+            >
+              <iframe
+                ref={isActive ? iframeRef : undefined}
+                className="mf__iframe"
+                title={isActive ? "Campus floor map" : ""}
+                src={layer.src}
+                allow={isActive ? "fullscreen" : undefined}
+                tabIndex={isActive ? undefined : -1}
+              />
+            </motion.div>
+          );
+        })}
+      </div>
       <div className="mf__frame-shade" aria-hidden />
     </>
   );
@@ -171,10 +211,15 @@ const MapLayers = memo(function MapLayers({
 /** Map-FirstTime — campus map chrome around the existing floor HTML + nav logic */
 export default function MapFirstTime({
   collegeName,
+  needsProfile = false,
+  scene = "idle",
+  soundEnabled = true,
+  onSceneChange,
+  onNeedsProfile,
   onBack,
   onCreateProfile,
 }: Props) {
-  const reduce = useReducedMotion();
+  const reduce = useDemoReduceMotion();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const layerSeq = useRef(0);
   /** Carry pan/zoom across floor swaps so the same spot stays in view */
@@ -186,27 +231,81 @@ export default function MapFirstTime({
     {
       key: `L${layerSeq.current++}`,
       floor: "ground",
-      src: buildMapSrc("ground", { x: 0, y: 0, zoom: null }),
+      src: buildMapSrc("ground", { x: 0, y: 0, zoom: null }, reduce),
     },
   ]);
   const [query, setQuery] = useState("");
   const [mapReady, setMapReady] = useState(false);
   /** Map-Search-FirstTime — shrink map, lift search, show keyboard */
   const [searching, setSearching] = useState(false);
+  /** Map-Filter-FirstTime — Wings / Building / Other sheet */
+  const [filtering, setFiltering] = useState(false);
+  /** Filter opened from search+keyboard — sheet rises into freed space */
+  const [filterFromKeyboard, setFilterFromKeyboard] = useState(false);
+  /** Active campus section ids (wing-* / bldg-*) — multi-select */
+  const [filterSectionIds, setFilterSectionIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  /** Other chip labels — survive panel close/reopen (map keeps POI overlays) */
+  const [filterOther, setFilterOther] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const filterOtherRef = useRef(filterOther);
+  filterOtherRef.current = filterOther;
+  const filterSectionIdsRef = useRef(filterSectionIds);
+  filterSectionIdsRef.current = filterSectionIds;
   /** Map-Navigation-FirstTime — nav card after a destination search */
-  const [navigating, setNavigating] = useState(false);
+  const [navigating, setNavigating] = useState(
+    () => scene === "navigating",
+  );
   /** Map-Success-FirstTime — after the pin reaches the room */
-  const [arrived, setArrived] = useState(false);
-  /** Hint + CTA after sticker burst settles */
-  const [burstSettled, setBurstSettled] = useState(false);
-  const [destination, setDestination] = useState("");
-  const [navStep, setNavStep] = useState<NavStep | null>(null);
+  const [arrived, setArrived] = useState(() => scene === "success");
+  /**
+   * Hint + Create Profile — blur-fade in after sticker burst settles.
+   * Motion off / profile jump: already settled (show end state).
+   * Success with motion on: wait for unilocate-burst settled.
+   */
+  const [burstSettled, setBurstSettled] = useState(
+    () => scene === "profile" || reduce,
+  );
+  const onNeedsProfileRef = useRef(onNeedsProfile);
+  onNeedsProfileRef.current = onNeedsProfile;
+  const onSceneChangeRef = useRef(onSceneChange);
+  onSceneChangeRef.current = onSceneChange;
+  const [destination, setDestination] = useState(() =>
+    scene === "navigating" || scene === "success" || scene === "profile"
+      ? DEMO_NAV_DEST.name
+      : "",
+  );
+  const [navStep, setNavStep] = useState<NavStep | null>(() =>
+    scene === "navigating"
+      ? {
+          icon: "walk",
+          text: `Head to ${DEMO_NAV_DEST.name}`,
+          meters: 42,
+          arrive: false,
+        }
+      : null,
+  );
+  /** Seed O104 once when jumping into Navigating via the stepper */
+  const demoNavSeededRef = useRef(false);
   const playTimerRef = useRef<number | null>(null);
   const floorIndexRef = useRef(0);
   const arrivedRef = useRef(false);
   /** Leg to resume after stair confirm — from map nav payload */
   const resumeLegRef = useRef<number | null>(null);
+  /**
+   * After nav/success, remounted search must blur-in (hide layout stretch).
+   * First map paint stays sharp — no trip morph yet.
+   */
+  const searchReturnBlurRef = useRef(false);
   arrivedRef.current = arrived;
+  if (navigating || arrived) searchReturnBlurRef.current = true;
+
+  /** Idle after first arrival — Create Profile CTA; pan ok, places locked */
+  const profileGate = needsProfile && !navigating && !arrived;
+  const profileGateRef = useRef(profileGate);
+  profileGateRef.current = profileGate;
 
   const swapping = layers.length > 1;
   const floorIndex = FLOORS.findIndex((f) => f.id === floor);
@@ -232,10 +331,76 @@ export default function MapFirstTime({
     duration: reduce ? 0 : SEARCH_MOVE_S,
     ease: EASE_IN_OUT,
   };
+  /** Search → nav → success shared morph (on-screen reshape) */
+  const tripCardTx = {
+    layout: {
+      duration: reduce ? 0 : SEARCH_MOVE_S,
+      ease: EASE_IN_OUT,
+    },
+    opacity: {
+      duration: reduce ? 0 : 0.2,
+      ease: EASE_OUT,
+    },
+  };
+  /**
+   * Inner content fades + blurs while the shell morphs (hides stretch).
+   * Hold until layout finishes (SEARCH_MOVE_S) — unblurring early shows the stretch.
+   */
+  const tripContentInTx = {
+    duration: reduce ? 0 : 0.2,
+    ease: EASE_OUT,
+    delay: reduce ? 0 : SEARCH_MOVE_S,
+  };
+  const tripContentOutTx = {
+    duration: reduce ? 0 : 0.14,
+    ease: EASE_OUT,
+  };
+  const tripShellVariants = {
+    show: { opacity: 1, transform: "translate3d(0, 0, 0)" },
+    exit: { opacity: 1 },
+  };
+  const tripContentHidden = reduce
+    ? { opacity: 0 }
+    : { opacity: 0, filter: "blur(10px)" };
+  const tripContentShown = reduce
+    ? { opacity: 1 }
+    : { opacity: 1, filter: "blur(0px)" };
+  const tripContentVariants = {
+    show: { ...tripContentShown, transition: tripContentInTx },
+    exit: { ...tripContentHidden, transition: tripContentOutTx },
+  };
   const drawerTx = {
     duration: reduce ? 0 : SEARCH_MOVE_S,
     ease: EASE_DRAWER,
   };
+  /** Maneuver sign + copy — near-imperceptible crossfade (tens/trip) */
+  const stepFadeTx = {
+    duration: reduce ? 0 : 0.14,
+    ease: EASE_OUT,
+  };
+  /** Stair confirm ↔ walk step — blur hides the body layout swap */
+  const navBodyTx = {
+    duration: reduce ? 0 : 0.18,
+    ease: EASE_OUT,
+  };
+  const navBodyHidden = reduce
+    ? { opacity: 0 }
+    : { opacity: 0, filter: "blur(10px)" };
+  const navBodyShown = reduce
+    ? { opacity: 1 }
+    : { opacity: 1, filter: "blur(0px)" };
+
+  const mapWin = useCallback(() => {
+    const iframe =
+      iframeRef.current ||
+      (typeof document !== "undefined"
+        ? document.querySelector<HTMLIFrameElement>("iframe.mf__iframe")
+        : null);
+    return iframe?.contentWindow as
+      | (Window & { ulNav?: MapNavApi })
+      | null
+      | undefined;
+  }, []);
 
   const post = useCallback((payload: Record<string, unknown>) => {
     const iframe =
@@ -286,6 +451,40 @@ export default function MapFirstTime({
           const id = d.floor as FloorId;
           if (FLOORS.some((f) => f.id === id)) setFloor(id);
         }
+        try {
+          /* Prefer shell selection — map storage may lag after Clear All */
+          const shellIds = [...filterSectionIdsRef.current];
+          if (shellIds.length) {
+            mapWin()?.ulNav?.setSectionIds?.(shellIds);
+            post({ type: "filter", ids: shellIds });
+          } else {
+            const cur = mapWin()?.ulNav?.getFilter?.();
+            if (cur) {
+              const ids = Array.isArray(cur.ids)
+                ? cur.ids
+                : cur.id
+                  ? [cur.id]
+                  : [];
+              setFilterSectionIds(new Set(ids));
+            }
+          }
+          /* Re-apply stacked Other overlays after floor reload */
+          for (const f of OTHER_FILTERS) {
+            if (!filterOtherRef.current.has(f.label)) continue;
+            mapWin()?.ulNav?.focusPoi?.(f.poi, true);
+            post({ type: "poi-focus", kind: f.poi, on: true });
+          }
+          /* Re-apply Create Profile place-lock after floor reload */
+          post({ type: "lock-hits", on: profileGateRef.current });
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+      if (d.type === "filter" && d.filter && typeof d.filter === "object") {
+        const f = d.filter as { id?: string | null; ids?: string[] };
+        const ids = Array.isArray(f.ids) ? f.ids : f.id ? [f.id] : [];
+        setFilterSectionIds(new Set(ids));
         return;
       }
       if (d.type === "floor-handoff") {
@@ -306,6 +505,7 @@ export default function MapFirstTime({
           trip,
           Number.isFinite(leg) ? leg : 0,
           viewRef.current,
+          reduce,
         );
         setStepDir(dir);
         setMapReady(false);
@@ -322,7 +522,9 @@ export default function MapFirstTime({
           setDestination(d.destination);
         }
         setBurstSettled(false);
+        onNeedsProfileRef.current?.();
         setArrived(true);
+        onSceneChangeRef.current?.("success");
         return;
       }
       if (d.type === "nav") {
@@ -382,7 +584,22 @@ export default function MapFirstTime({
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [captureView]);
+  }, [captureView, mapWin, post, reduce]);
+
+  /** Demo Navigating jump — select O104 as soon as the map is ready */
+  useEffect(() => {
+    if (!mapReady || !navigating || arrived) return;
+    if (scene !== "navigating" || demoNavSeededRef.current) return;
+    demoNavSeededRef.current = true;
+    post({ type: "select", id: DEMO_NAV_DEST.id, fit: true });
+    setDestination(DEMO_NAV_DEST.name);
+  }, [arrived, mapReady, navigating, post, scene]);
+
+  /* Create Profile — keep pan/zoom; block place taps */
+  useEffect(() => {
+    if (!mapReady) return;
+    post({ type: "lock-hits", on: profileGate });
+  }, [mapReady, post, profileGate]);
 
   /** Ask the map for the upcoming turn, then auto-start walk ~3s later */
   useEffect(() => {
@@ -409,15 +626,24 @@ export default function MapFirstTime({
     };
   }, [arrived, navigating, post, reduce]);
 
-  /** Fallback if the burst page never posts settled */
+  /** Motion off — skip burst; otherwise fallback if settled never posts */
   useEffect(() => {
     if (!arrived || burstSettled) return;
-    const t = window.setTimeout(
-      () => setBurstSettled(true),
-      reduce ? 0 : 4200,
-    );
+    if (reduce) {
+      setBurstSettled(true);
+      return;
+    }
+    const t = window.setTimeout(() => setBurstSettled(true), 9000);
     return () => window.clearTimeout(t);
   }, [arrived, burstSettled, reduce]);
+
+  const footerInTx = useMemo(
+    () =>
+      reduce
+        ? { duration: 0 }
+        : { duration: 0.48, ease: EASE_OUT },
+    [reduce],
+  );
 
   /** After the incoming floor settles, drop the held previous iframe */
   useEffect(() => {
@@ -438,7 +664,7 @@ export default function MapFirstTime({
       const next = FLOORS[floorIndex + dir];
       if (!next || swapping) return;
       captureView();
-      const src = buildMapSrc(next.id, viewRef.current);
+      const src = buildMapSrc(next.id, viewRef.current, reduce);
       setStepDir(dir);
       setMapReady(false);
       setFloor(next.id);
@@ -447,7 +673,7 @@ export default function MapFirstTime({
         { key: `L${layerSeq.current++}`, floor: next.id, src },
       ]);
     },
-    [captureView, floorIndex, swapping],
+    [captureView, floorIndex, reduce, swapping],
   );
 
   const floorLabelVariants = {
@@ -503,25 +729,12 @@ export default function MapFirstTime({
     setArrived(false);
     setBurstSettled(false);
     setNavStep(null);
-  }, [post]);
+    onSceneChange?.(needsProfile ? "profile" : "idle");
+  }, [needsProfile, onSceneChange, post]);
 
   const confirmStairFloor = useCallback(() => {
     if (!navStep?.awaitConfirm) return;
     const leg = resumeLegRef.current;
-    const mapWin = () => {
-      const iframe =
-        iframeRef.current ||
-        document.querySelector<HTMLIFrameElement>("iframe.mf__iframe");
-      return iframe?.contentWindow as
-        | (Window & {
-            ulNav?: {
-              confirmFloor?: () => boolean;
-              play?: (leg: number) => void;
-            };
-          })
-        | null
-        | undefined;
-    };
     /* Same-origin: call the map directly — postMessage alone failed after embed query strip */
     const bump = () => {
       try {
@@ -544,7 +757,69 @@ export default function MapFirstTime({
         post({ type: "play", leg });
       }, 280);
     }
-  }, [navStep?.awaitConfirm, post]);
+  }, [mapWin, navStep?.awaitConfirm, post]);
+
+  const toggleFilterSection = useCallback(
+    (id: string) => {
+      setFilterSectionIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        const ids = [...next];
+        try {
+          mapWin()?.ulNav?.setSectionIds?.(ids);
+        } catch {
+          /* ignore */
+        }
+        post({ type: "filter", ids });
+        return next;
+      });
+    },
+    [mapWin, post],
+  );
+
+  const applyOtherFilter = useCallback(
+    (filter: OtherFilter, on: boolean) => {
+      setFilterOther((prev) => {
+        const next = new Set(prev);
+        if (on) next.add(filter.label);
+        else next.delete(filter.label);
+        return next;
+      });
+      if (on && filter.layer) {
+        try {
+          mapWin()?.ulNav?.setLayer?.(filter.layer, true);
+        } catch {
+          /* ignore */
+        }
+        post({ type: "layer", id: filter.layer, on: true });
+      }
+      try {
+        mapWin()?.ulNav?.focusPoi?.(filter.poi, on);
+      } catch {
+        /* ignore */
+      }
+      post({ type: "poi-focus", kind: filter.poi, on });
+    },
+    [mapWin, post],
+  );
+
+  const clearMapFilters = useCallback(() => {
+    setFilterSectionIds(new Set());
+    setFilterOther(new Set());
+    try {
+      mapWin()?.ulNav?.setSectionIds?.([]);
+      mapWin()?.ulNav?.focusPoi?.("washroom", false);
+      mapWin()?.ulNav?.focusPoi?.("exit", false);
+      mapWin()?.ulNav?.focusPoi?.("staff", false);
+    } catch {
+      /* ignore */
+    }
+    post({ type: "filter", ids: [] });
+    for (const f of OTHER_FILTERS) {
+      post({ type: "poi-focus", kind: f.poi, on: false });
+    }
+  }, [mapWin, post]);
 
   const submitSearch = useCallback(() => {
     const q = queryRef.current.trim();
@@ -553,13 +828,42 @@ export default function MapFirstTime({
     setDestination(q);
     setSearching(false);
     setNavigating(true);
-  }, [post]);
+    onSceneChange?.("navigating");
+  }, [onSceneChange, post]);
 
   const openSearch = useCallback(() => {
-    if (navigating) return;
+    if (navigating || needsProfile || filtering) return;
     setSearching(true);
-  }, [navigating]);
+  }, [filtering, navigating, needsProfile]);
   const closeSearch = useCallback(() => setSearching(false), []);
+  const openFilter = useCallback(() => {
+    if (arrived) return;
+    setFilterFromKeyboard(searching);
+    setSearching(false);
+    /* Drop field focus so the soft keyboard isn't fighting the sheet enter */
+    if (typeof document !== "undefined") {
+      const ae = document.activeElement as HTMLElement | null;
+      ae?.blur?.();
+    }
+    try {
+      const cur = mapWin()?.ulNav?.getFilter?.();
+      if (cur) {
+        const ids = Array.isArray(cur.ids)
+          ? cur.ids
+          : cur.id
+            ? [cur.id]
+            : [];
+        setFilterSectionIds(new Set(ids));
+      }
+    } catch {
+      /* ignore */
+    }
+    setFiltering(true);
+  }, [arrived, mapWin, searching]);
+  const closeFilter = useCallback(() => {
+    setFiltering(false);
+    setFilterFromKeyboard(false);
+  }, []);
 
   /* Enter works even if the ghost input blurred (tap on keyboard / map) */
   useEffect(() => {
@@ -574,6 +878,10 @@ export default function MapFirstTime({
   }, [navigating, searching, submitSearch]);
 
   const handleBack = useCallback(() => {
+    if (filtering) {
+      closeFilter();
+      return;
+    }
     if (searching) {
       closeSearch();
       return;
@@ -583,7 +891,16 @@ export default function MapFirstTime({
       return;
     }
     onBack?.();
-  }, [arrived, closeSearch, endNavigation, navigating, onBack, searching]);
+  }, [
+    arrived,
+    closeFilter,
+    closeSearch,
+    endNavigation,
+    filtering,
+    navigating,
+    onBack,
+    searching,
+  ]);
 
   /** Tap outside map / search / keyboard → leave Map-Search */
   const dismissSearchOutside = useCallback(
@@ -603,13 +920,16 @@ export default function MapFirstTime({
     ? `${destination}, right on time`
     : "Right on time";
 
-  const mfMode = arrived
-    ? " mf--success"
-    : navigating
-      ? " mf--navigating"
-      : searching
-        ? " mf--searching"
-        : "";
+  const mfMode = [
+    arrived ? "mf--success" : "",
+    filtering ? "mf--filtering" : "",
+    navigating && !arrived ? "mf--navigating" : "",
+    searching && !filtering && !arrived ? "mf--searching" : "",
+    profileGate ? "mf--profile" : "",
+  ]
+    .filter(Boolean)
+    .map((c) => ` ${c}`)
+    .join("");
 
   return (
     <motion.div
@@ -678,94 +998,73 @@ export default function MapFirstTime({
           </div>
         </div>
 
-        <div className="mf__floors" role="group" aria-label="Floor stepper">
-          <div className="mf__floors-face">
-            <button
-              type="button"
-              className="mf__floors-btn"
-              aria-label="Floor up"
-              disabled={!canGoUp || swapping}
-              onClick={() => stepFloor(1)}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={UL_ASSETS.plusIcon} alt="" width={29} height={29} />
-            </button>
-            <div className="mf__floors-label" aria-live="polite">
-              <AnimatePresence initial={false} custom={stepDir}>
-                <motion.span
-                  key={floorShort}
-                  className="mf__floors-label-text"
-                  aria-current="true"
-                  custom={stepDir}
-                  variants={floorLabelVariants}
-                  initial={reduce ? false : "enter"}
-                  animate="center"
-                  exit={reduce ? undefined : "exit"}
-                  transition={floorSlideTx}
-                >
-                  {floorShort}
-                </motion.span>
-              </AnimatePresence>
+        {!profileGate ? (
+          <div className="mf__floors" role="group" aria-label="Floor stepper">
+            <div className="mf__floors-face">
+              <button
+                type="button"
+                className="mf__floors-btn"
+                aria-label="Floor up"
+                disabled={!canGoUp || swapping}
+                onClick={() => stepFloor(1)}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={UL_ASSETS.plusIcon} alt="" width={29} height={29} />
+              </button>
+              <div className="mf__floors-label" aria-live="polite">
+                <AnimatePresence initial={false} custom={stepDir}>
+                  <motion.span
+                    key={floorShort}
+                    className="mf__floors-label-text"
+                    aria-current="true"
+                    custom={stepDir}
+                    variants={floorLabelVariants}
+                    initial={reduce ? false : "enter"}
+                    animate="center"
+                    exit={reduce ? undefined : "exit"}
+                    transition={floorSlideTx}
+                  >
+                    {floorShort}
+                  </motion.span>
+                </AnimatePresence>
+              </div>
+              <button
+                type="button"
+                className="mf__floors-btn"
+                aria-label="Floor down"
+                disabled={!canGoDown || swapping}
+                onClick={() => stepFloor(-1)}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={UL_ASSETS.minusIcon} alt="" width={29} height={20} />
+              </button>
             </div>
-            <button
-              type="button"
-              className="mf__floors-btn"
-              aria-label="Floor down"
-              disabled={!canGoDown || swapping}
-              onClick={() => stepFloor(-1)}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={UL_ASSETS.minusIcon} alt="" width={29} height={20} />
-            </button>
           </div>
-        </div>
+        ) : null}
       </motion.div>
 
-      <motion.div
-        className="mf__search"
-        initial={
-          reduce
-            ? false
-            : { opacity: 0, transform: "translate3d(0, 10px, 0)" }
-        }
-        animate={{
-          opacity: navigating || arrived ? 0 : 1,
-          transform:
-            navigating || arrived
-              ? "translate3d(0, 12px, 0)"
-              : "translate3d(0, 0, 0)",
-        }}
-        transition={
-          navigating || arrived || searching ? chromeTx : enterTx(0.1)
-        }
-        style={{
-          pointerEvents: navigating || arrived ? "none" : "auto",
-        }}
-        aria-hidden={navigating || arrived}
-        onFocusCapture={openSearch}
-        onClick={openSearch}
-      >
-        <SearchField
-          animate={false}
-          rotatingPlaceholder={false}
-          customCaret
-          autoFocus={searching}
-          placeholder="Destination"
-          value={query}
-          onChange={setQuery}
-          onSubmit={submitSearch}
-          trailing={
-            <button
-              type="button"
-              className="ul-search__filter"
-              aria-label="Filter"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={UL_ASSETS.filterIcon} alt="" width={30} height={28} />
-            </button>
+      {/* After first arrival — Create Profile sits in the search slot (no trip morph) */}
+      {profileGate ? (
+        <motion.div
+          className="mf__search mf__search--profile"
+          initial={
+            reduce
+              ? false
+              : { opacity: 0, transform: "translate3d(0, 10px, 0)" }
           }
-        />
-      </motion.div>
+          animate={{ opacity: 1, transform: "translate3d(0, 0, 0)" }}
+          transition={enterTx(0.1)}
+        >
+          <div className="mf__profile-cta-shell">
+            <PrimaryCta
+              className="mf__profile-cta"
+              label="Create profile to keep navigating"
+              animate={false}
+              onClick={onCreateProfile}
+            />
+          </div>
+        </motion.div>
+      ) : null}
 
       <motion.div
         className="mf__kb"
@@ -785,161 +1084,395 @@ export default function MapFirstTime({
       </motion.div>
 
       <AnimatePresence>
+        {filtering ? (
+          <MapFilterPanel
+            key="map-filter"
+            onClose={closeFilter}
+            sectionIds={filterSectionIds}
+            other={filterOther}
+            onSectionToggle={toggleFilterSection}
+            onOtherChange={applyOtherFilter}
+            onClearAll={clearMapFilters}
+            fromKeyboard={filterFromKeyboard}
+          />
+        ) : null}
+      </AnimatePresence>
+
+      <AnimatePresence mode="sync">
         {arrived ? (
           <>
-            <motion.div
+            <motion.button
               key="success-dim"
+              type="button"
               className="mf__success-dim"
-              aria-hidden
-              initial={{ opacity: 0 }}
+              aria-label="Dismiss arrival"
+              initial={reduce ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={chromeTx}
+              transition={{ duration: reduce ? 0 : 0.24, ease: EASE_OUT }}
+              onClick={endNavigation}
             />
             <motion.div
               key="success-card"
+              /* No layoutId — tall success → thin search morph stretches the field */
               className="mf__success"
               role="region"
               aria-label="Arrived"
-              initial={
-                reduce
-                  ? { opacity: 0 }
-                  : { opacity: 0, transform: "translate3d(0, 20px, 0)" }
-              }
-              animate={{ opacity: 1, transform: "translate3d(0, 0, 0)" }}
+              style={{ borderRadius: 16 }}
+              initial={reduce ? false : "show"}
+              animate="show"
               exit={
                 reduce
                   ? { opacity: 0 }
                   : { opacity: 0, transform: "translate3d(0, 16px, 0)" }
               }
-              transition={chromeTx}
+              variants={tripShellVariants}
+              transition={tripCardTx}
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
             >
+              {/* Motion off — mount already at settled end (no fade/blur enter) */}
+              <motion.div
+                className="mf__success-inner"
+                variants={reduce ? undefined : tripContentVariants}
+                initial={reduce ? false : tripContentHidden}
+                animate={reduce ? undefined : "show"}
+                exit={reduce ? undefined : "exit"}
+                style={
+                  reduce
+                    ? { opacity: 1, filter: "none" }
+                    : undefined
+                }
+              >
+              <motion.button
+                type="button"
+                className="mf__success-close"
+                aria-label="Close"
+                initial={false}
+                animate={{
+                  opacity: burstSettled ? 1 : 0,
+                  filter: burstSettled
+                    ? "blur(0px)"
+                    : reduce
+                      ? "blur(0px)"
+                      : "blur(10px)",
+                  transform: burstSettled
+                    ? "translate3d(0, 0, 0)"
+                    : "translate3d(0, 8px, 0)",
+                }}
+                transition={footerInTx}
+                style={{
+                  pointerEvents: burstSettled ? "auto" : "none",
+                }}
+                onClick={endNavigation}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={UL_ASSETS.clearIcon}
+                  alt=""
+                  width={24}
+                  height={24}
+                />
+              </motion.button>
               <iframe
                 className="mf__success-burst"
                 title="Arrival celebration"
-                src={`/animations/campus-sticker-burst.html?embed=1&v=3&sub=${encodeURIComponent(successSubtitle)}`}
+                src={`/animations/campus-sticker-burst.html?embed=1&v=12&mute=${soundEnabled && !reduce ? "0" : "1"}&reduce=${reduce ? "1" : "0"}&sub=${encodeURIComponent(successSubtitle)}`}
+                style={{ background: "transparent" }}
+                allow="autoplay"
                 tabIndex={-1}
+                onLoad={(e) => {
+                  /* Motion off settles inside the page; motion on unlocks audio */
+                  if (reduce || !soundEnabled) return;
+                  try {
+                    e.currentTarget.contentWindow?.postMessage(
+                      { type: "burst-unlock" },
+                      "*",
+                    );
+                  } catch {
+                    /* ignore */
+                  }
+                }}
               />
-              <div className="mf__success-wash" aria-hidden />
+              <motion.div
+                className="mf__success-wash"
+                aria-hidden
+                initial={false}
+                animate={{ opacity: burstSettled ? 1 : 0 }}
+                transition={footerInTx}
+              />
               <motion.p
                 className="mf__success-hint"
                 initial={false}
                 animate={{
                   opacity: burstSettled ? 1 : 0,
+                  filter: burstSettled
+                    ? "blur(0px)"
+                    : reduce
+                      ? "blur(0px)"
+                      : "blur(10px)",
                   transform: burstSettled
                     ? "translate3d(0, 0, 0)"
-                    : "translate3d(0, 8px, 0)",
+                    : "translate3d(0, 10px, 0)",
                 }}
-                transition={chromeTx}
+                transition={footerInTx}
               >
-                Create profile for more navigation
+                {needsProfile
+                  ? "Create profile for more navigation"
+                  : "Nice — ready for the next stop"}
               </motion.p>
               <motion.div
                 className="mf__success-cta-wrap"
                 initial={false}
                 animate={{
                   opacity: burstSettled ? 1 : 0,
+                  filter: burstSettled
+                    ? "blur(0px)"
+                    : reduce
+                      ? "blur(0px)"
+                      : "blur(10px)",
                   transform: burstSettled
                     ? "translate3d(0, 0, 0)"
-                    : "translate3d(0, 10px, 0)",
+                    : "translate3d(0, 12px, 0)",
                 }}
-                transition={chromeTx}
+                transition={footerInTx}
                 style={{
                   pointerEvents: burstSettled ? "auto" : "none",
                 }}
               >
                 <PrimaryCta
                   className="mf__success-cta"
-                  label="Create Profile"
+                  label={needsProfile ? "Create Profile" : "Done"}
                   width={336}
                   height={48}
                   animate={false}
-                  onClick={onCreateProfile}
+                  onClick={
+                    needsProfile ? onCreateProfile : endNavigation
+                  }
                 />
+              </motion.div>
               </motion.div>
             </motion.div>
           </>
         ) : navigating ? (
           <motion.div
             key="nav-card"
+            layoutId="mf-trip-card"
             className="mf__nav"
             role="region"
             aria-label="Navigation"
+            style={{ borderRadius: 16 }}
+            initial="show"
+            animate="show"
+            exit="exit"
+            variants={tripShellVariants}
+            transition={tripCardTx}
+          >
+            <motion.div
+              className="mf__nav-inner"
+              variants={tripContentVariants}
+              initial={tripContentHidden}
+              animate="show"
+              exit="exit"
+            >
+              <div className="mf__nav-dest">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  className="mf__nav-pin"
+                  src={UL_ASSETS.mapPinIcon}
+                  alt=""
+                  width={24}
+                  height={29}
+                />
+                <p className="mf__nav-dest-name">
+                  {destination || "Destination"}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="mf__nav-filter"
+                aria-label="Filter"
+                onClick={openFilter}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={UL_ASSETS.filterIcon}
+                  alt=""
+                  width={30}
+                  height={28}
+                />
+              </button>
+              <button
+                type="button"
+                className="mf__nav-end"
+                onClick={endNavigation}
+              >
+                End
+              </button>
+              <div className="mf__nav-rule" aria-hidden />
+              <div className="mf__nav-body">
+                <AnimatePresence mode="sync" initial={false}>
+                  {navStep?.awaitConfirm ? (
+                    <motion.div
+                      key="stair"
+                      className="mf__nav-stair"
+                      initial={navBodyHidden}
+                      animate={navBodyShown}
+                      exit={navBodyHidden}
+                      transition={navBodyTx}
+                    >
+                      <p className="mf__nav-stair-copy">
+                        {navStep.kind === "lift" ? "Lift to " : "Stairs to "}
+                        <span className="mf__nav-stair-floor">
+                          {navStep.toFloorLabel || "the next floor"}
+                        </span>
+                        {" confirm when there."}
+                      </p>
+                      <PrimaryCta
+                        className="mf__stair-cta"
+                        label={`On ${navStep.toFloorLabel || "floor"}`}
+                        width={112}
+                        height={48}
+                        animate={false}
+                        onClick={confirmStairFloor}
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="step"
+                      className="mf__nav-step"
+                      initial={navBodyHidden}
+                      animate={navBodyShown}
+                      exit={navBodyHidden}
+                      transition={navBodyTx}
+                    >
+                      {/*
+                        Crossfade only when the maneuver changes — not every
+                        meter tick (that remount was the nav-body blink).
+                      */}
+                      <AnimatePresence mode="sync" initial={false}>
+                        <motion.div
+                          key={`${navStep?.icon ?? "walk"}|${navStep?.text ?? ""}`}
+                          className="mf__nav-step-face"
+                          initial={reduce ? false : { opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={stepFadeTx}
+                        >
+                          <div className="mf__nav-sign" aria-hidden>
+                            <NavManeuverSign
+                              icon={navStep?.icon ?? "walk"}
+                            />
+                          </div>
+                          <div className="mf__nav-copy">
+                            <p className="mf__nav-instruction">
+                              {navStep?.text || "Finding route…"}
+                            </p>
+                            <p className="mf__nav-distance">
+                              {navStep
+                                ? formatNavDistance(
+                                    navStep.meters,
+                                    navStep.arrive,
+                                  )
+                                : "—"}
+                            </p>
+                          </div>
+                        </motion.div>
+                      </AnimatePresence>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : !needsProfile ? (
+          <motion.div
+            key="search-card"
+            /* Skip shared morph after nav/success — layout stretch warps the field */
+            layoutId={
+              reduce || searchReturnBlurRef.current
+                ? undefined
+                : "mf-trip-card"
+            }
+            className="mf__search"
+            style={{ borderRadius: 16 }}
             initial={
               reduce
-                ? { opacity: 0 }
-                : { opacity: 0, transform: "translate3d(0, 16px, 0)" }
+                ? "show"
+                : { opacity: 0, transform: "translate3d(0, 10px, 0)" }
             }
-            animate={{ opacity: 1, transform: "translate3d(0, 0, 0)" }}
-            exit={
-              reduce
-                ? { opacity: 0 }
-                : { opacity: 0, transform: "translate3d(0, 12px, 0)" }
-            }
-            transition={chromeTx}
+            animate="show"
+            exit="exit"
+            variants={tripShellVariants}
+            transition={tripCardTx}
+            onFocusCapture={(e) => {
+              const t = e.target as Element | null;
+              if (t?.closest?.(".ul-search__filter, .ul-search__trailing")) {
+                return;
+              }
+              openSearch();
+            }}
+            onClick={(e) => {
+              const t = e.target as Element | null;
+              if (t?.closest?.(".ul-search__filter, .ul-search__trailing")) {
+                return;
+              }
+              openSearch();
+            }}
           >
-            <div className="mf__nav-dest">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className="mf__nav-pin"
-                src={UL_ASSETS.mapPinIcon}
-                alt=""
-                width={24}
-                height={29}
+            <motion.div
+              className="mf__search-inner"
+              variants={tripContentVariants}
+              initial={
+                searchReturnBlurRef.current ? tripContentHidden : false
+              }
+              animate="show"
+              exit="exit"
+              transition={
+                searchReturnBlurRef.current
+                  ? {
+                      duration: reduce ? 0 : 0.28,
+                      ease: EASE_OUT,
+                      delay: 0,
+                    }
+                  : undefined
+              }
+            >
+              <SearchField
+                animate={false}
+                rotatingPlaceholder={false}
+                customCaret
+                autoFocus={searching}
+                placeholder="Destination"
+                value={query}
+                onChange={setQuery}
+                onSubmit={submitSearch}
+                trailing={
+                  <button
+                    type="button"
+                    className="ul-search__filter"
+                    aria-label="Filter"
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      openFilter();
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={UL_ASSETS.filterIcon}
+                      alt=""
+                      width={30}
+                      height={28}
+                    />
+                  </button>
+                }
               />
-              <p className="mf__nav-dest-name">{destination || "Destination"}</p>
-            </div>
-            <button
-              type="button"
-              className="mf__nav-filter"
-              aria-label="Filter"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={UL_ASSETS.filterIcon} alt="" width={30} height={28} />
-            </button>
-            <button
-              type="button"
-              className="mf__nav-end"
-              onClick={endNavigation}
-            >
-              End
-            </button>
-            <div className="mf__nav-rule" aria-hidden />
-            {navStep?.awaitConfirm ? (
-              <div className="mf__nav-stair">
-                <p className="mf__nav-stair-copy">
-                  {navStep.kind === "lift" ? "Lift to " : "Stairs to "}
-                  <span className="mf__nav-stair-floor">
-                    {navStep.toFloorLabel || "the next floor"}
-                  </span>
-                  {" confirm when there."}
-                </p>
-                <PrimaryCta
-                  className="mf__stair-cta"
-                  label={`On ${navStep.toFloorLabel || "floor"}`}
-                  width={112}
-                  height={48}
-                  animate={false}
-                  onClick={confirmStairFloor}
-                />
-              </div>
-            ) : (
-              <div className="mf__nav-step">
-                <div className="mf__nav-sign" aria-hidden>
-                  <NavManeuverSign icon={navStep?.icon ?? "walk"} />
-                </div>
-                <div className="mf__nav-copy">
-                  <p className="mf__nav-instruction">
-                    {navStep?.text || "Finding route…"}
-                  </p>
-                  <p className="mf__nav-distance">
-                    {navStep
-                      ? formatNavDistance(navStep.meters, navStep.arrive)
-                      : "—"}
-                  </p>
-                </div>
-              </div>
-            )}
+            </motion.div>
           </motion.div>
         ) : null}
       </AnimatePresence>

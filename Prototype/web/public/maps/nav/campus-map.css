@@ -82,9 +82,15 @@
 }
 
 /* ── Section highlight (wings / buildings) ────────────── */
+/* Default / buildings — #FC3477; wings stay purple */
 #ul-overlay {
-  --ul-sec: #ff6b6b;
-  --ul-sec-fill: rgba(255, 107, 107, 0.32);
+  --ul-sec: #fc3477;
+  --ul-sec-fill: rgba(252, 52, 119, 0.32);
+}
+
+#ul-overlay[data-section-mode="buildings"] {
+  --ul-sec: #fc3477;
+  --ul-sec-fill: rgba(252, 52, 119, 0.32);
 }
 
 #ul-overlay[data-section-mode="wings"] {
@@ -141,11 +147,7 @@
 
 /* ── Route ────────────────────────────────────────────── */
 .ul-route-casing {
-  fill: none;
-  stroke: #ffffff;
-  stroke-width: 13;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  display: none;
 }
 
 .ul-route-line {
@@ -170,6 +172,46 @@
   stroke-width: 4;
   stroke-dasharray: 2 6;
   stroke-linecap: round;
+}
+
+/* Other filter — paths to all exits (#FF922D); nearest solid, rest dashed */
+.ul-poi-route-casing {
+  display: none;
+}
+
+.ul-poi-route-line {
+  fill: none;
+  stroke: #ff922d;
+  stroke-width: 5.5;
+  stroke-dasharray: 12 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.ul-poi-route-line.is-near {
+  stroke-width: 7;
+  stroke-dasharray: none;
+}
+
+.ul-poi-end {
+  fill: #ff922d;
+  stroke: #ffffff;
+  stroke-width: 2.5;
+  pointer-events: none;
+}
+
+.ul-poi-end.is-near {
+  stroke-width: 3;
+}
+
+/* Restroom / staff filters — orange footprints, no name tags */
+.ul-poi-wash,
+.ul-poi-staff {
+  fill: rgba(255, 146, 45, 0.32);
+  stroke: #ff922d;
+  stroke-width: 3;
+  pointer-events: none;
 }
 
 .ul-scale {
@@ -642,10 +684,14 @@ html.ul-embed .ul-banner {
 }
 
 .ul-sec-chips {
-  --ul-sec: #ff6b6b;
+  --ul-sec: #fc3477;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.ul-sec-chips[data-mode="buildings"] {
+  --ul-sec: #fc3477;
 }
 
 .ul-sec-chips[data-mode="wings"] {

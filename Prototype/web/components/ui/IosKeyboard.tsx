@@ -28,20 +28,17 @@ export default function IosKeyboard({
     return x > 0.7 && y > 0.62;
   };
 
-  const onMouseDown = (e: ReactMouseEvent<HTMLDivElement>) => {
-    if (!onEnter || !hitTest(e)) return;
-    /* Fire before input blur / outside-dismiss can cancel the submit */
+  const onPointerDown = (e: ReactMouseEvent<HTMLDivElement>) => {
+    /* Keep the search ghost input focused — otherwise caret dies while kb stays up */
     e.preventDefault();
     e.stopPropagation();
-    onEnter();
+    if (onEnter && hitTest(e)) onEnter();
   };
 
   const onClick = (e: ReactMouseEvent<HTMLDivElement>) => {
-    if (hitTest(e) && onEnter) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
+    e.preventDefault();
+    e.stopPropagation();
+    if (hitTest(e) && onEnter) return;
     onActivate?.();
   };
 
@@ -49,7 +46,7 @@ export default function IosKeyboard({
     <div
       className={`sco-kb sco-kb--asset ${live ? "sco-kb--tappable" : ""} ${className}`.trim()}
       aria-hidden={!live}
-      onMouseDown={live ? onMouseDown : undefined}
+      onPointerDown={live ? onPointerDown : undefined}
       onClick={live ? onClick : undefined}
       role={live ? "group" : undefined}
       aria-label={live ? "Keyboard" : undefined}

@@ -12,7 +12,7 @@
   const viewport = document.getElementById("viewport");
   const NS = "http://www.w3.org/2000/svg";
   const MPP = DATA.metersPerPx;
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches || new URLSearchParams(location.search).get("reduce") === "1";
 
   const LAYERS = [
     { id: "rooms", label: "Classrooms & rooms", swatch: "#9AABB2" },
@@ -133,7 +133,19 @@
     confirmQueued: false, // CTA clicked before wait was armed
     confirmedLeg: null, // leg already confirmed — skip wait if play restarts
     activeResult: -1,
-    filter: { mode: "wings", id: null, ...(store.get("ul-filter") || {}) },
+    filter: (() => {
+      const saved = store.get("ul-filter") || {};
+      const ids = Array.isArray(saved.ids)
+        ? saved.ids.filter(Boolean)
+        : saved.id
+          ? [saved.id]
+          : [];
+      return {
+        mode: saved.mode || "wings",
+        id: ids[0] || null,
+        ids,
+      };
+    })(),
   };
 
   function persist() {
@@ -365,7 +377,18 @@
 
   const overlay = el("svg", { id: "ul-overlay", viewBox: `0 0 ${DATA.size.w} ${DATA.size.h}` });
   const G = {};
-  for (const id of ["sections", "outer", "paths", "rooms", "washrooms", "exits", "verticals", "route", "marks"]) {
+  for (const id of [
+    "sections",
+    "outer",
+    "paths",
+    "rooms",
+    "washrooms",
+    "exits",
+    "verticals",
+    "poiRoutes",
+    "route",
+    "marks",
+  ]) {
     G[id] = el("g", { class: `ul-ov-${id}` }, overlay);
   }
   map.appendChild(overlay);
@@ -392,7 +415,7 @@
       { x: x - pad, y: y - pad, width: w + pad * 2, height: h + pad * 2, rx: 6, class: "ul-hit", "data-id": t.id },
       group
     );
-    el("title", {}, r).textContent = `${t.name}${t.near ? " · " + t.near : ""}`;
+    /* No SVG <title> — native browser tooltips feel like a hover effect */
   }
 
   function drawTargets() {
@@ -400,7 +423,6 @@
       if (t.layer === "verticals") {
         if (!t.accessPoints[FLOOR]) continue;
         const c = el("circle", { cx: t.icon[0], cy: t.icon[1], r: 17, class: "ul-hit", "data-id": t.id }, G.verticals);
-        el("title", {}, c).textContent = `${t.name} · ${t.near}`;
         continue;
       }
       if (t.floor !== FLOOR || !t.rect) continue;
@@ -441,28 +463,156 @@
     }
   }
 
-  const activeSection = () => (state.filter.id && SECTION_BY_ID.get(state.filter.id)) || null;
+  const activeSectionIds = () =>
+    (Array.isArray(state.filter.ids) ? state.filter.ids : []).filter((id) =>
+      SECTION_BY_ID.has(id),
+    );
 
-  function drawSection() {
-    G.sections.innerHTML = "";
-    const sec = activeSection();
-    overlay.dataset.sectionMode = sec ? sec.mode : "";
-    if (!sec) return;
-    el("polygon", { points: sec.poly.map((p) => p.join(",")).join(" "), class: "ul-sec-shape" }, G.sections);
+  const activeSections = () =>
+    activeSectionIds().map((id) => SECTION_BY_ID.get(id)).filter(Boolean);
+
+  /** First selected — placeholder / legacy single-section helpers */
+  const activeSection = () => activeSections()[0] || null;
+
+  const inAnyActiveSection = (targetId) => {
+    const secs = activeSections();
+    if (!secs.length) return true;
+    return secs.some((sec) => sec.members.has(targetId));
+  };
+
+  const SEC_COLORS = {
+    wings: { stroke: "#6c72e0", fill: "rgba(108, 114, 224, 0.32)" },
+    buildings: { stroke: "#FC3477", fill: "rgba(252, 52, 119, 0.32)" },
+  };
+
+  function sectionTabAnchor(sec) {
     const xs = sec.poly.map((p) => p[0]);
     const ys = sec.poly.map((p) => p[1]);
     const top = Math.min(...ys);
-    // Tab sits on the widest top edge so L-shaped sections still read clearly.
     const topEdge = sec.poly
       .map((p, i) => [p, sec.poly[(i + 1) % sec.poly.length]])
       .filter(([a, b]) => a[1] === top && b[1] === top)
-      .sort((e1, e2) => Math.abs(e2[1][0] - e2[0][0]) - Math.abs(e1[1][0] - e1[0][0]))[0];
-    const cx = topEdge ? (topEdge[0][0] + topEdge[1][0]) / 2 : (Math.min(...xs) + Math.max(...xs)) / 2;
-    const tab = el("g", { class: "ul-scale ul-sec-tab" }, G.sections);
-    tab.style.transform = `translate(${cx}px, ${top}px) scale(var(--ul-k))`;
+      .sort(
+        (e1, e2) =>
+          Math.abs(e2[1][0] - e2[0][0]) - Math.abs(e1[1][0] - e1[0][0]),
+      )[0];
+    const cx = topEdge
+      ? (topEdge[0][0] + topEdge[1][0]) / 2
+      : (Math.min(...xs) + Math.max(...xs)) / 2;
     const w = Math.max(56, sec.name.length * 8.4 + 26);
-    el("rect", { x: -w / 2, y: -24, width: w, height: 26, rx: 9 }, tab);
+    return { sec, cx, top, w };
+  }
+
+  /** Tab labels use scale(var(--ul-k)); layout must use that visual width. */
+  function currentTabK() {
+    const zoom = view ? view.state.zoom : 0.5;
+    return clamp(1 / zoom, 0.7, 3);
+  }
+
+  /** Spread overlapping name tabs horizontally so labels sit side by side. */
+  function resolveTabOverlaps(tabs) {
+    if (tabs.length < 2) return tabs;
+    const k = currentTabK();
+    const TOP_BAND = 36;
+    const GAP = 14 * k;
+    const placed = tabs.map((t) => ({ ...t, vw: t.w * k }));
+    const used = new Set();
+
+    for (let i = 0; i < placed.length; i++) {
+      if (used.has(i)) continue;
+      const cluster = [i];
+      used.add(i);
+      let grew = true;
+      while (grew) {
+        grew = false;
+        for (let j = 0; j < placed.length; j++) {
+          if (used.has(j)) continue;
+          const a = placed[j];
+          const hits = cluster.some((ci) => {
+            const b = placed[ci];
+            if (Math.abs(a.top - b.top) > TOP_BAND) return false;
+            const a0 = a.cx - a.vw / 2;
+            const a1 = a.cx + a.vw / 2;
+            const b0 = b.cx - b.vw / 2;
+            const b1 = b.cx + b.vw / 2;
+            return a0 < b1 + GAP && a1 + GAP > b0;
+          });
+          if (hits) {
+            cluster.push(j);
+            used.add(j);
+            grew = true;
+          }
+        }
+      }
+      if (cluster.length < 2) continue;
+      /* Stable order: left→right by natural cx, then name */
+      cluster.sort((ai, bi) => {
+        const d = placed[ai].cx - placed[bi].cx;
+        if (Math.abs(d) > 1) return d;
+        return String(placed[ai].sec.name).localeCompare(placed[bi].sec.name);
+      });
+      const members = cluster.map((ci) => placed[ci]);
+      const totalW =
+        members.reduce((s, t) => s + t.vw, 0) + GAP * (members.length - 1);
+      const mid =
+        members.reduce((s, t) => s + t.cx, 0) / members.length;
+      let x = mid - totalW / 2;
+      const top = Math.min(...members.map((t) => t.top));
+      for (const ci of cluster) {
+        const t = placed[ci];
+        t.cx = x + t.vw / 2;
+        t.top = top;
+        x += t.vw + GAP;
+      }
+    }
+    return placed;
+  }
+
+  function drawOneSection(sec, tabCx, tabTop, tabW) {
+    const colors = SEC_COLORS[sec.mode] || SEC_COLORS.buildings;
+    const shape = el(
+      "polygon",
+      { points: sec.poly.map((p) => p.join(",")).join(" "), class: "ul-sec-shape" },
+      G.sections,
+    );
+    shape.style.fill = colors.fill;
+    shape.style.stroke = colors.stroke;
+    const tab = el(
+      "g",
+      { class: "ul-scale ul-sec-tab", "data-sec-id": sec.id },
+      G.sections,
+    );
+    tab.style.transform = `translate(${tabCx}px, ${tabTop}px) scale(var(--ul-k))`;
+    const tabRect = el(
+      "rect",
+      { x: -tabW / 2, y: -24, width: tabW, height: 26, rx: 9 },
+      tab,
+    );
+    tabRect.style.fill = colors.stroke;
     el("text", { x: 0, y: -11 }, tab).textContent = sec.name;
+  }
+
+  function placeSectionTabs() {
+    const secs = activeSections();
+    if (secs.length < 2) return;
+    const byId = new Map(
+      resolveTabOverlaps(secs.map(sectionTabAnchor)).map((t) => [t.sec.id, t]),
+    );
+    for (const node of G.sections.querySelectorAll(".ul-sec-tab")) {
+      const t = byId.get(node.getAttribute("data-sec-id"));
+      if (!t) continue;
+      node.style.transform = `translate(${t.cx}px, ${t.top}px) scale(var(--ul-k))`;
+    }
+  }
+
+  function drawSection() {
+    G.sections.innerHTML = "";
+    const secs = activeSections();
+    const modes = new Set(secs.map((s) => s.mode));
+    overlay.dataset.sectionMode =
+      modes.size === 1 ? [...modes][0] : modes.size > 1 ? "mixed" : "";
+    const tabs = resolveTabOverlaps(secs.map(sectionTabAnchor));
+    for (const t of tabs) drawOneSection(t.sec, t.cx, t.top, t.w);
   }
 
   // ── Pin ───────────────────────────────────────────────
@@ -590,7 +740,9 @@
     }
   }
 
-  function fitPoints(points, pad = 70) {
+  let centerAnim = 0;
+
+  function fitPoints(points, pad = 70, opts = {}) {
     if (!view || !points.length) return;
     const xs = points.map((p) => p.x);
     const ys = points.map((p) => p.y);
@@ -598,14 +750,58 @@
     const maxX = Math.max(...xs) + pad;
     const minY = Math.min(...ys) - pad;
     const maxY = Math.max(...ys) + pad;
-    const a = visibleArea();
-    const z = Math.min((a.width - 40) / (maxX - minX), (a.height - 60) / ((maxY - minY) * Math.cos((view.state.tilt * Math.PI) / 180)));
-    view.state.zoom = clamp(z * 0.88, 0.3, 1.2);
-    view.render();
-    panTo((minX + maxX) / 2, (minY + maxY) / 2, { x: a.left + a.width / 2, y: a.top + a.height / 2 });
-  }
+    const screenCenter = () => {
+      const a = visibleArea();
+      return { x: a.left + a.width / 2, y: a.top + a.height / 2 };
+    };
+    const a0 = visibleArea();
+    const zRaw = Math.min(
+      (a0.width - 40) / (maxX - minX),
+      (a0.height - 60) /
+        ((maxY - minY) * Math.cos((view.state.tilt * Math.PI) / 180)),
+    );
+    const bounds = window.ulEmbedZoomBounds?.();
+    const minZ = bounds?.min ?? 0.3;
+    const maxZ = bounds?.max ?? 1.2;
+    const targetZ = clamp(zRaw * 0.88, minZ, Math.min(maxZ, 1.2));
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    const duration = reduceMotion
+      ? 0
+      : Number.isFinite(opts.duration)
+        ? Math.max(0, opts.duration)
+        : 0;
 
-  let centerAnim = 0;
+    const settle = (z) => {
+      view.state.zoom = z;
+      view.render();
+      panTo(cx, cy, screenCenter());
+    };
+
+    if (centerAnim) {
+      cancelAnimationFrame(centerAnim);
+      centerAnim = 0;
+    }
+
+    if (duration <= 0) {
+      settle(targetZ);
+      return;
+    }
+
+    const z0 = Number(view.state.zoom) || minZ;
+    const t0 = performance.now();
+    const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+    const frame = (now) => {
+      const t = Math.min(1, (now - t0) / duration);
+      settle(z0 + (targetZ - z0) * easeOut(t));
+      if (t < 1) centerAnim = requestAnimationFrame(frame);
+      else {
+        centerAnim = 0;
+        settle(targetZ);
+      }
+    };
+    centerAnim = requestAnimationFrame(frame);
+  }
 
   /** Subtle 3D pitch after a destination is set (deg). Keep tiny. */
   const DEST_TILT_DEG = 8;
@@ -701,6 +897,8 @@
     const zoom = view ? view.state.zoom : 0.5;
     const k = clamp(1 / zoom, 0.7, 3);
     map.style.setProperty("--ul-k", k.toFixed(3));
+    /* Tabs are scale(--ul-k); re-spread whenever zoom changes */
+    placeSectionTabs();
   }
   new MutationObserver(syncScale).observe(document.getElementById("stage"), {
     attributes: true,
@@ -913,11 +1111,11 @@
     });
     const nq = norm(tokens.join(" "));
     const C = costs();
-    const sec = activeSection();
+    const secs = activeSections();
     const hits = [];
     for (const t of router.targets.values()) {
       if (floorFilter && t.layer !== "verticals" && t.floor !== floorFilter) continue;
-      if (sec && !sec.members.has(t.id)) continue;
+      if (secs.length && !inAnyActiveSection(t.id)) continue;
       const name = norm(t.name);
       let rank = null;
       if (name === nq) rank = 0;
@@ -944,13 +1142,24 @@
   const TYPE_ORDER = { classroom: 0, lab: 0, office: 0, facility: 0, open: 1, washroom: 2, lift: 3, stairs: 3 };
   const byName = (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true });
 
-  /** Everything inside the selected section: this floor first, then the others. */
-  function sectionHits(sec) {
+  /** Everything inside selected section(s): this floor first, then the others. */
+  function sectionHits(secs) {
+    const list = Array.isArray(secs) ? secs : secs ? [secs] : [];
+    if (!list.length) return [];
     const C = costs();
-    const level = (t) => (t.layer === "verticals" ? -1 : t.floor === FLOOR ? 0 : 1 + FLOORS[t.floor].level);
-    return [...sec.members]
+    const level = (t) =>
+      t.layer === "verticals" ? -1 : t.floor === FLOOR ? 0 : 1 + FLOORS[t.floor].level;
+    const members = new Set();
+    for (const sec of list) for (const id of sec.members) members.add(id);
+    return [...members]
       .map((id) => router.targets.get(id))
-      .sort((a, b) => level(a) - level(b) || (TYPE_ORDER[a.type] ?? 0) - (TYPE_ORDER[b.type] ?? 0) || byName(a, b))
+      .filter(Boolean)
+      .sort(
+        (a, b) =>
+          level(a) - level(b) ||
+          (TYPE_ORDER[a.type] ?? 0) - (TYPE_ORDER[b.type] ?? 0) ||
+          byName(a, b),
+      )
       .map((t) => ({ t, cost: C.get(t.id) ?? Infinity }));
   }
 
@@ -965,13 +1174,20 @@
   let lastHits = [];
   function renderResults() {
     const q = $("ulQuery").value;
-    const sec = activeSection();
+    const secs = activeSections();
     const list = $("ulResults");
     if (!q.trim()) {
-      lastHits = sec && !state.to ? sectionHits(sec) : [];
+      lastHits = secs.length && !state.to ? sectionHits(secs) : [];
       state.activeResult = lastHits.length ? 0 : -1;
+      const head =
+        secs.length === 1
+          ? secs[0].name
+          : secs.length > 1
+            ? `${secs.length} filters`
+            : "";
       list.innerHTML = lastHits.length
-        ? `<li class="ul-list-head">${sec.name} · ${lastHits.length} places</li>` + lastHits.map(resultItem).join("")
+        ? `<li class="ul-list-head">${head} · ${lastHits.length} places</li>` +
+          lastHits.map(resultItem).join("")
         : "";
       return;
     }
@@ -988,28 +1204,261 @@
   // ── Filter (wings / buildings) ────────────────────────
   function renderFilter() {
     document.querySelectorAll(".ul-seg button").forEach((b) => b.classList.toggle("is-on", b.dataset.mode === state.filter.mode));
-    const list = SECTIONS[state.filter.mode] || [];
-    $("ulSecChips").dataset.mode = state.filter.mode;
-    $("ulSecChips").innerHTML =
-      `<button type="button" role="radio" aria-checked="${!state.filter.id}" data-sec="" class="${state.filter.id ? "" : "is-on"}">All</button>` +
-      list
-        .map((s) => {
-          const on = s.id === state.filter.id;
-          return `<button type="button" role="radio" aria-checked="${on}" data-sec="${s.id}" class="${on ? "is-on" : ""}">${s.name}</button>`;
-        })
-        .join("");
-    $("ulQuery").placeholder = activeSection() ? `Search in ${activeSection().name}…` : "Search a room, washroom, exit…";
+    const chips = $("ulSecChips");
+    if (chips) {
+      const list = SECTIONS[state.filter.mode] || [];
+      chips.dataset.mode = state.filter.mode;
+      const selected = new Set(activeSectionIds());
+      chips.innerHTML =
+        `<button type="button" role="checkbox" aria-checked="${!selected.size}" data-sec="" class="${selected.size ? "" : "is-on"}">All</button>` +
+        list
+          .map((s) => {
+            const on = selected.has(s.id);
+            return `<button type="button" role="checkbox" aria-checked="${on}" data-sec="${s.id}" class="${on ? "is-on" : ""}">${s.name}</button>`;
+          })
+          .join("");
+    }
+    const q = $("ulQuery");
+    if (q) {
+      const secs = activeSections();
+      q.placeholder =
+        secs.length === 1
+          ? `Search in ${secs[0].name}…`
+          : secs.length > 1
+            ? `Search in ${secs.length} areas…`
+            : "Search a room, washroom, exit…";
+    }
   }
 
-  function setSection(id, opts = {}) {
-    state.filter.id = id || null;
+  function setSectionIds(ids, opts = {}) {
+    const clean = [
+      ...new Set(
+        (Array.isArray(ids) ? ids : []).filter((id) => SECTION_BY_ID.has(id)),
+      ),
+    ];
+    state.filter.ids = clean;
+    state.filter.id = clean[0] || null;
+    if (clean[0]) state.filter.mode = SECTION_BY_ID.get(clean[0]).mode;
     persist();
     renderFilter();
     drawSection();
     renderResults();
-    const sec = activeSection();
-    if (sec && opts.fit !== false) fitPoints(sec.poly.map(([x, y]) => ({ x, y })), 60);
-    status(sec ? `Showing ${sec.name}. Pick a room below or search inside it.` : "");
+    const secs = activeSections();
+    if (secs.length && opts.fit !== false) {
+      const pts = secs.flatMap((sec) =>
+        sec.poly.map(([x, y]) => ({ x, y })),
+      );
+      fitPoints(pts, 60, {
+        duration: Number.isFinite(opts.duration) ? opts.duration : 720,
+      });
+    }
+    status(
+      secs.length === 1
+        ? `Showing ${secs[0].name}. Pick a room below or search inside it.`
+        : secs.length > 1
+          ? `Showing ${secs.length} areas.`
+          : "",
+    );
+    notifyShell({
+      type: "filter",
+      filter: {
+        mode: state.filter.mode,
+        id: state.filter.id,
+        ids: [...state.filter.ids],
+      },
+    });
+  }
+
+  function setSection(id, opts = {}) {
+    if (id == null || id === "") setSectionIds([], opts);
+    else setSectionIds([id], opts);
+  }
+
+  function toggleSectionId(id, opts = {}) {
+    if (!SECTION_BY_ID.has(id)) return;
+    const cur = new Set(activeSectionIds());
+    if (cur.has(id)) cur.delete(id);
+    else cur.add(id);
+    setSectionIds([...cur], opts);
+  }
+
+  function setLayer(id, on) {
+    if (!LAYERS.some((l) => l.id === id)) return;
+    state.layers[id] = !!on;
+    applyLayers();
+    persist();
+    if ($("ulLayers")) renderLayers();
+    notifyShell({ type: "layers", layers: { ...state.layers } });
+  }
+
+  /** Active Other overlays — can stack (exits + restrooms + staff). */
+  const poiFocus = new Set();
+
+  const STAFF_IDS = new Set(["1-o101", "2-o201", "2-staff"]);
+  const STAFF_NAMES = /^(O101|O201)$/i;
+
+  function poiMatches(t, kind) {
+    if (kind === "washroom") return t.type === "washroom";
+    if (kind === "exit") return t.type === "exit";
+    if (kind === "staff") {
+      return (
+        STAFF_IDS.has(t.id) ||
+        STAFF_NAMES.test(t.name || "") ||
+        /staff/i.test(t.name || "")
+      );
+    }
+    return false;
+  }
+
+  function clearPoiRoutes() {
+    G.poiRoutes.innerHTML = "";
+  }
+
+  /**
+   * Paths to every matching POI in #FF922D.
+   * Nearest = solid (default) line; others = dashed.
+   * Appends into G.poiRoutes (does not clear — redrawPoiOverlays owns that).
+   */
+  function drawMultiPoiRoutes(kind, fitPts) {
+    const ranked = [];
+    for (const t of router.targets.values()) {
+      if (!poiMatches(t, kind)) continue;
+      const r = router.route(state.from, t.id, { pref: state.pref });
+      if (!r || r.error) continue;
+      ranked.push({ t, r, meters: r.meters });
+    }
+    ranked.sort((a, b) => a.meters - b.meters);
+    if (!ranked.length) return null;
+
+    const nearId = ranked[0].t.id;
+    /* Dashed first, nearest solid on top */
+    const ordered = [
+      ...ranked.filter((x) => x.t.id !== nearId),
+      ...ranked.filter((x) => x.t.id === nearId),
+    ];
+
+    for (const { t, r } of ordered) {
+      const near = t.id === nearId;
+      for (const L of r.legs) {
+        if (L.floor !== FLOOR) continue;
+        const d = pathD(L.points);
+        for (const p of L.points) fitPts.push(p);
+        el(
+          "path",
+          { d, class: `ul-poi-route-casing${near ? " is-near" : ""}` },
+          G.poiRoutes,
+        );
+        el(
+          "path",
+          { d, class: `ul-poi-route-line${near ? " is-near" : ""}` },
+          G.poiRoutes,
+        );
+      }
+      if (t.floor === FLOOR) {
+        const p = anchorOf(t);
+        if (p) {
+          el(
+            "circle",
+            {
+              cx: p[0],
+              cy: p[1],
+              r: near ? 10 : 7,
+              class: `ul-poi-end${near ? " is-near" : ""}`,
+            },
+            G.poiRoutes,
+          );
+        }
+      }
+    }
+    return ranked[0].t.id;
+  }
+
+  /** Orange room footprints — washrooms / staff (O101, O201, Staff room). No name tags. */
+  function drawRoomHighlights(kind, fitPts) {
+    let n = 0;
+    for (const t of router.targets.values()) {
+      if (!poiMatches(t, kind) || t.floor !== FLOOR || !t.rect) continue;
+      const [x, y, w, h] = t.rect;
+      const shape = el(
+        "rect",
+        {
+          x,
+          y,
+          width: w,
+          height: h,
+          rx: 6,
+          class: kind === "staff" ? "ul-poi-staff" : "ul-poi-wash",
+        },
+        G.poiRoutes,
+      );
+      shape.style.fill = "rgba(255, 146, 45, 0.32)";
+      shape.style.stroke = "#FF922D";
+      shape.style.strokeWidth = "3";
+      fitPts.push({ x: x + w / 2, y: y + h / 2 });
+      fitPts.push({ x, y }, { x: x + w, y: y + h });
+      n += 1;
+    }
+    return n;
+  }
+
+  /** Redraw every active Other overlay so multiple chips can show together. */
+  function redrawPoiOverlays(opts = {}) {
+    clearPoiRoutes();
+    const fitPts = [];
+    let nearestExit = null;
+
+    if (poiFocus.has("exit")) {
+      nearestExit = drawMultiPoiRoutes("exit", fitPts);
+    }
+    if (poiFocus.has("washroom")) {
+      drawRoomHighlights("washroom", fitPts);
+    }
+    if (poiFocus.has("staff")) {
+      drawRoomHighlights("staff", fitPts);
+    }
+
+    if (opts.fit !== false && fitPts.length) {
+      fitPoints(fitPts, 70, { duration: 720 });
+    }
+
+    if (nearestExit) {
+      const t = router.targets.get(nearestExit);
+      const r = t && router.route(state.from, t.id, { pref: state.pref });
+      if (t && r && !r.error) {
+        status(`Nearest exit: ${t.name} · ${r.meters} m`);
+      }
+    } else if (poiFocus.size === 0) {
+      status("");
+    }
+  }
+
+  function countPoiOnFloor(kind) {
+    let n = 0;
+    for (const t of router.targets.values()) {
+      if (!poiMatches(t, kind) || t.floor !== FLOOR) continue;
+      if (kind === "exit" || t.rect) n += 1;
+    }
+    return n;
+  }
+
+  /** Fit + peek POIs for shell Other chips (exit / washroom / staff). */
+  function focusPoi(kind, on = true) {
+    if (on) poiFocus.add(kind);
+    else poiFocus.delete(kind);
+
+    for (const t of router.targets.values()) {
+      if (!poiMatches(t, kind)) continue;
+      overlay.querySelectorAll(`.ul-hit[data-id="${t.id}"]`).forEach((n) => {
+        n.classList.toggle("is-peek", poiFocus.has(kind));
+      });
+    }
+
+    redrawPoiOverlays({ fit: on || poiFocus.size > 0 });
+
+    if (on && (kind === "staff" || kind === "washroom") && !countPoiOnFloor(kind)) {
+      const label = kind === "staff" ? "staff rooms" : "washrooms";
+      if (poiFocus.size === 1) status(`No ${label} on this floor.`);
+    }
   }
 
   document.querySelector(".ul-seg").addEventListener("click", (e) => {
@@ -1023,7 +1472,8 @@
     const b = e.target.closest("button[data-sec]");
     if (!b) return;
     const id = b.dataset.sec;
-    setSection(id === state.filter.id ? null : id);
+    if (!id) setSectionIds([]);
+    else toggleSectionId(id);
   });
 
   $("ulQuery").addEventListener("input", renderResults);
@@ -1292,6 +1742,8 @@
     });
   }
 
+  let lastStepActive = -2;
+
   function stepProgress(legIndex, walked) {
     const r = state.route;
     const L = r.legs[legIndex];
@@ -1316,13 +1768,17 @@
       if (s.leg < legIndex) return;
       if (s.leg === legIndex && at(s.at) <= walked + 4) active = i;
     });
-    document.querySelectorAll("#ulSteps li[data-step]").forEach((li) => {
-      const i = Number(li.dataset.step);
-      li.classList.toggle("is-active", i === active);
-      li.classList.toggle("is-done", i < active);
-    });
-    const li = document.querySelector(`#ulSteps li[data-step="${active}"]`);
-    if (li) li.scrollIntoView({ block: "nearest" });
+    /* List chrome only when the active step changes — distance ticks every frame */
+    if (active !== lastStepActive) {
+      lastStepActive = active;
+      document.querySelectorAll("#ulSteps li[data-step]").forEach((li) => {
+        const i = Number(li.dataset.step);
+        li.classList.toggle("is-active", i === active);
+        li.classList.toggle("is-done", i < active);
+      });
+      const li = document.querySelector(`#ulSteps li[data-step="${active}"]`);
+      if (li) li.scrollIntoView({ block: "nearest" });
+    }
     publishNav(active >= 0 ? active : 0, walked);
   }
 
@@ -1341,7 +1797,6 @@
     const walked = walkedEls[legIndex];
     return new Promise((resolve) => {
       let t0 = null;
-      let lastStep = -1;
       const frame = (ts) => {
         if (token.cancel) return resolve(false);
         if (t0 == null) t0 = ts;
@@ -1359,11 +1814,11 @@
         setPin(x, y, heading, look);
         if (walked) walked.setAttribute("stroke-dasharray", `${d.toFixed(1)} ${total + 50}`);
         followPin(x, y);
-        const stepBucket = Math.floor(d / 28);
-        if (stepBucket !== lastStep) {
-          lastStep = stepBucket;
-          stepProgress(legIndex, d);
-        }
+        /*
+         * Publish every frame — publishNav dedupes on whole meters so the
+         * shell distance counts down 1 m at a time (was ~6 m / 28px buckets).
+         */
+        stepProgress(legIndex, d);
         if (d >= total) return resolve(true);
         requestAnimationFrame(frame);
       };
@@ -1576,20 +2031,24 @@
       if (
         centerOnUser({
           zoom: state.to ? 1.05 : 0.88,
-          duration: state.to ? 720 : 920,
+          duration: reduceMotion ? 0 : state.to ? 720 : 920,
         })
       ) {
         return;
       }
-      if (!state.to && activeSection()) {
+      if (!state.to && activeSections().length) {
         fitPoints(
-          activeSection().poly.map(([x, y]) => ({ x, y })),
+          activeSections().flatMap((sec) =>
+            sec.poly.map(([x, y]) => ({ x, y })),
+          ),
           60,
+          { duration: 0 },
         );
       }
     };
-    /* Beat so the wide map reads, then zoom into the pin */
-    setTimeout(focus, isEmbed ? (reduceMotion ? 0 : 320) : 0);
+    /* Motion off: settle on user with no wide→zoom beat */
+    if (reduceMotion) focus();
+    else setTimeout(focus, isEmbed ? 320 : 0);
   } else if (!resumingPlay && state.to && !isEmbed) {
     const here = legsHere();
     if (here.length) fitPoints(here.flatMap(({ L }) => L.points));
@@ -1608,5 +2067,16 @@
     centerOnUser,
     screenToMap,
     mapToScreen,
+    setSection,
+    setSectionIds,
+    toggleSectionId,
+    setLayer,
+    focusPoi,
+    getFilter: () => ({
+      mode: state.filter.mode,
+      id: state.filter.id,
+      ids: [...(state.filter.ids || [])],
+    }),
+    getLayers: () => ({ ...state.layers }),
   };
 })();

@@ -13,8 +13,8 @@ import {
   motion,
   useMotionValue,
   useMotionValueEvent,
-  useReducedMotion,
 } from "motion/react";
+import { useDemoReduceMotion } from "@/lib/demoMotion";
 import CollegeResultCard from "@/components/ui/CollegeResultCard";
 import CollegeResultSkeleton from "@/components/ui/CollegeResultSkeleton";
 import {
@@ -47,7 +47,7 @@ export default function CollegeResultsList({
   onHeaderVisible,
   onSelectCollege,
 }: Props) {
-  const reduce = useReducedMotion();
+  const reduce = useDemoReduceMotion();
   const viewportRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const minYRef = useRef(0);

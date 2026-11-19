@@ -1,7 +1,8 @@
 "use client";
 
+import { useDemoReduceMotion } from "@/lib/demoMotion";
+
 import { useCallback, useState } from "react";
-import { useReducedMotion } from "motion/react";
 
 type ScfLogoProps = {
   /** When false, skip entrance and allow tap bounce immediately */
@@ -9,7 +10,7 @@ type ScfLogoProps = {
 };
 
 export default function ScfLogo({ animate = true }: ScfLogoProps) {
-  const reduce = useReducedMotion();
+  const reduce = useDemoReduceMotion();
   const [ready, setReady] = useState(!animate);
   const [tap, setTap] = useState(false);
 

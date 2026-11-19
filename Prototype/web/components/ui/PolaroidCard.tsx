@@ -1,7 +1,8 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+import { useDemoReduceMotion } from "@/lib/demoMotion";
 import { paperSquircleClip } from "@/lib/continuousCorner";
 
 const SHELL_CLIP = paperSquircleClip(126, 140, 12);
@@ -69,7 +70,7 @@ export default function PolaroidCard({
   animate = true,
   muted = false,
 }: PolaroidCardProps) {
-  const reduce = useReducedMotion();
+  const reduce = useDemoReduceMotion();
   const offset = ENTER_OFFSET[from];
   const kick = enterKick(from);
   const delay = 0.78 + enterIndex * 0.055;

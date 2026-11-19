@@ -43,6 +43,7 @@ html.ul-embed #msg p{font-size:14px!important;font-weight:600!important;line-hei
 (async()=>{
 const params=new URLSearchParams(location.search);
 const embed=params.get('embed')==='1';
+const muteParam=params.get('mute')==='1';
 if(embed)document.documentElement.classList.add('ul-embed');
 const sub=params.get('sub');
 if(sub){const p=document.querySelector('#msg p');if(p)p.textContent=sub;}
@@ -66,7 +67,7 @@ function bez(x1,y1,x2,y2){
 const easeOut=bez(.23,1,.32,1),flyEase=bez(.25,.7,.3,1);
 const PAL=['#2f8bff','#7cc4ff','#ffc83d','#f0486e','#3fcf7a','#ff9440'];
 const cv=document.getElementById('c'),ctx=cv.getContext('2d'),msg=document.getElementById('msg');
-const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches||params.get('reduce')==='1';
 const imgs=SPR.map(s=>{const i=new Image();i.src=s.src;return i});
 try{await Promise.all(imgs.map(i=>i.decode()))}catch(e){}
 const BP=56,BLUR=[0,2,5,10,18],BK=[1,2,3,5,8];
@@ -88,12 +89,17 @@ const whiteImgs=BL.map(a=>{
   const x=c.getContext('2d');x.drawImage(b,0,0);x.globalCompositeOperation='source-in';x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);return c;
 });
 const N=SPR.length,HERO=N-1;
-let AC=null,master=null,muted=false,hits=0,chimed=false,rum=null,jingled=false,jbus=null,stuck=false;
+let AC=null,master=null,muted=muteParam,hits=0,chimed=false,rum=null,jingled=false,jbus=null,stuck=false,introPlayed=false;
 const NOTES=[0,2,4,7,9,11,12,14,16];
+const MASTER_PEAK=.85;
+/** Soft bed under the pile — was a hard cut at first hit */
+const FADE_IN_S=.42;
 function ac(){
   if(!AC){try{
     AC=new(window.AudioContext||window.webkitAudioContext)();
-    master=AC.createGain();master.gain.value=muted?0:.85;
+    master=AC.createGain();
+    /* Start silent — fadeMasterIn brings the bed up */
+    master.gain.value=0;
     const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=6500;
     const len=Math.floor(AC.sampleRate*1.2),ir=AC.createBuffer(2,len,AC.sampleRate);
     for(let c=0;c<2;c++){const d=ir.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.5)}
@@ -102,8 +108,32 @@ function ac(){
   }catch(e){AC=null}}
   return AC;
 }
-function unlock(){const a=ac();if(a&&a.state==='suspended')a.resume()}
+function fadeMasterIn(){
+  if(!master||!AC||muted){if(master&&muted)master.gain.value=0;return}
+  const now=AC.currentTime;
+  const cur=Math.max(master.gain.value,.0001);
+  master.gain.cancelScheduledValues(now);
+  master.gain.setValueAtTime(cur,now);
+  master.gain.linearRampToValueAtTime(MASTER_PEAK,now+FADE_IN_S);
+}
+function unlock(){
+  const a=ac();
+  if(!a)return;
+  const go=()=>fadeMasterIn();
+  if(a.state==='suspended')a.resume().then(go).catch(()=>{});
+  else go();
+}
 function live(){const a=ac();return playing&&a&&a.state==='running'?a:null}
+/** Early soft swell so audio isn't silent until the first sticker hit */
+function sfxIntro(){
+  if(introPlayed||muted)return;
+  const a=live();if(!a)return;
+  introPlayed=true;
+  const t0=a.currentTime;
+  noise(a,t0,.55,280,900,.07,'bandpass');
+  tone(a,'sine',160,240,t0,.05,.55,.12);
+  tone(a,'sine',320,400,t0,.025,.45,.1);
+}
 function env(g,t0,peak,att,dec){g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(peak,t0+att);g.gain.exponentialRampToValueAtTime(.0001,t0+att+dec)}
 function tone(a,type,f0,f1,t0,peak,dec,att=.006,dest=master){
   const o=a.createOscillator(),g=a.createGain();o.type=type;
@@ -129,11 +159,13 @@ function sfxHit(i){
   noise(a,t0,.07,900,250,.14,'lowpass');
 }
 function startRumble(){
+  if(rum)return;
   const a=live();if(!a)return;
   const t0=a.currentTime,d=Math.max(.2,tBurst-t);
   const o=a.createOscillator(),g=a.createGain(),lfo=a.createOscillator(),lg=a.createGain();
   o.type='sine';o.frequency.setValueAtTime(95,t0);o.frequency.exponentialRampToValueAtTime(200,t0+d);
-  g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.06,t0+d);
+  /* Rumble itself fades in — avoids a second hard jump mid-pile */
+  g.gain.setValueAtTime(.0001,t0);g.gain.linearRampToValueAtTime(.06,t0+Math.min(.35,d*.5));g.gain.linearRampToValueAtTime(.06,t0+d);
   lfo.frequency.setValueAtTime(6,t0);lfo.frequency.linearRampToValueAtTime(18,t0+d);lg.gain.value=.02;
   lfo.connect(lg).connect(g.gain);o.connect(g).connect(master);
   const buf=a.createBuffer(1,a.sampleRate,a.sampleRate),ch=buf.getChannelData(0);
@@ -175,7 +207,7 @@ function sfxChime(){
   o.start(t0);l.start(t0);o.stop(t0+.8);l.stop(t0+.8);
 }
 let W=0,H=0,DPR=1,S=150,R=70,cx=0,cy=0,floorY=0,gR=0,gF=0,gC=0;
-let items=[],conf=[],t=0,tLast=0,tBurst=0,tEnd=0,burst=false,bump=0,bumpV=0,flash=0,wave2=false,nPile=0,P=0;
+let items=[],conf=[],t=0,tLast=0,tBurst=0,tEnd=0,burst=false,bump=0,bumpV=0,flash=0,wave2=false,nPile=0,P=0,settledPosted=false;
 let playing=false,loopOn=!reduced,raf=0,last=0,calm=false;
 
 function resize(){
@@ -201,7 +233,7 @@ function fitText(){
 }
 
 function build(){
-  t=0;burst=false;bump=0;bumpV=0;flash=0;wave2=false;hits=0;chimed=false;jingled=false;stuck=false;stopRumble();conf=[];nPile=0;P=0;
+  t=0;burst=false;bump=0;bumpV=0;flash=0;wave2=false;hits=0;chimed=false;jingled=false;stuck=false;introPlayed=false;settledPosted=false;stopRumble();conf=[];nPile=0;P=0;
   const order=[HERO,...[...Array(N).keys()].filter(i=>i!==HERO).sort(()=>Math.random()-.5)];
   const rest=new Set();
   let tt=.15;
@@ -288,8 +320,17 @@ function sim(dt){
   if(burst){
     const tb=t-tBurst;
     if(!chimed&&tb>.12){chimed=true;sfxChime()}
-    if(!stuck&&tb>.66){stuck=true;sfxStick();if(embed){try{parent.postMessage({source:'unilocate-burst',type:'settled'},'*')}catch(e){}}}
+    if(!stuck&&tb>.66){stuck=true;sfxStick()}
     if(!wave2&&tb>.16){wave2=true;spawnConf(Math.round(clamp(W*.03,12,24)),.6)}
+    if(embed&&stuck&&!settledPosted){
+      const flyDone=items.every(it=>it.hero||it.rest||it.st===5);
+      const restDone=items.every(it=>!it.rest||it.st===4||it.st===5);
+      if(flyDone&&restDone&&tb>1.1){
+        settledPosted=true;
+        items.forEach(it=>{if(!it.hero)it.st=5});
+        try{parent.postMessage({source:'unilocate-burst',type:'settled'},'*')}catch(e){}
+      }
+    }
     for(const it of items){
       if(it.st===3){
         if(it.rest){
@@ -442,7 +483,7 @@ function frame(ts){
   const dt=Math.min(.033,(ts-last)/1000||.016);last=ts;
   sim(dt);
   if(t>=tEnd){
-    if(loopOn)build();else{playing=false;draw();return}
+    if(loopOn)build();else{playing=false;draw();if(embed&&!settledPosted){settledPosted=true;try{parent.postMessage({source:'unilocate-burst',type:'settled'},'*')}catch(e){}}return}
   }
   draw();raf=requestAnimationFrame(frame);
 }
@@ -450,10 +491,22 @@ function start(user){
   cancelAnimationFrame(raf);build();
   calm=reduced;
   if(calm){
-    const it=items[0];it.fs=stickerW()/it.w;it.fx=cx;it.fy=cy+(msg.offsetHeight||60)/2+22+it.h*it.fs/2;
-    tEnd=2.2;msg.style.opacity=0;
+    const it=items[0];it.fs=stickerW()/it.w;it.fx=cx;it.fy=embed?Math.min(H*0.48,cy+(msg.offsetHeight||60)/2+4+it.h*it.fs/2):cy+(msg.offsetHeight||60)/2+22+it.h*it.fs/2;
+    tEnd=2.2;msg.style.opacity=embed?1:0;
+    /* reduce+embed: jump to settled end */
+    if(embed){
+      stuck=true;playing=false;loopOn=false;t=tEnd;
+      if(it){it.st=6;it.hx=it.fx;it.hy=it.fy;it.hr=0;it.hs=it.fs;}
+      drawCalm();
+      if(!settledPosted){settledPosted=true;try{parent.postMessage({source:'unilocate-burst',type:'settled'},'*')}catch(e){}}
+      return;
+    }
   }
-  loopOn=!reduced&&!embed;playing=true;last=performance.now();raf=requestAnimationFrame(frame);
+  loopOn=!reduced&&!embed;playing=true;last=performance.now();
+  /* Unlock + fade as the pile begins — don't wait for the first hit */
+  unlock();
+  requestAnimationFrame(()=>{unlock();sfxIntro();if(hits===0&&!rum&&!calm)startRumble()});
+  raf=requestAnimationFrame(frame);
 }
 
 for(let q=0;q<4;q++)for(const col of PAL)for(let l=0;l<4;l++)confSprite(q,col,l);
@@ -468,11 +521,20 @@ new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{
 document.getElementById('replay').addEventListener('click',()=>{unlock();start(true)});
 const snd=document.getElementById('sound'),swP=document.getElementById('sw');
 snd.addEventListener('click',()=>{
-  muted=!muted;unlock();ac();if(master)master.gain.value=muted?0:.85;
+  muted=!muted;unlock();ac();
+  if(master){
+    if(muted){master.gain.cancelScheduledValues(AC.currentTime);master.gain.value=0}
+    else fadeMasterIn();
+  }
   snd.setAttribute('aria-label',muted?'Unmute sound':'Mute sound');
   swP.setAttribute('d',muted?'m16 9 5 6m0-6-5 6':'M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13');
 });
 document.addEventListener('pointerdown',unlock);document.addEventListener('keydown',unlock);
+/* Parent shell unlocks after arrival — iframe autoplay is often suspended */
+window.addEventListener('message',(e)=>{
+  const d=e.data;if(!d||d.type!=='burst-unlock')return;
+  unlock();sfxIntro();
+});
 })();
 </script>
 </body>

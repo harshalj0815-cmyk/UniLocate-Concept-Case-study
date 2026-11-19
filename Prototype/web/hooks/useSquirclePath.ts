@@ -12,11 +12,13 @@ import { paperSquirclePath } from "@/lib/continuousCorner";
 export function useSquirclePath<T extends HTMLElement = HTMLElement>(
   width: number,
   cornerRadius: number,
+  /** Seed height so the first paint matches layout (avoids enter jump). */
+  initialHeight = width,
 ): { ref: RefObject<T | null>; path: string; height: number } {
   const ref = useRef<T | null>(null);
-  const [height, setHeight] = useState(width);
+  const [height, setHeight] = useState(initialHeight);
   const [path, setPath] = useState(() =>
-    paperSquirclePath(width, width, cornerRadius),
+    paperSquirclePath(width, initialHeight, cornerRadius),
   );
 
   useLayoutEffect(() => {
