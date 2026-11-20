@@ -69,3 +69,13 @@ export const PROTOTYPE_STEPS: readonly PrototypeStep[] = [
 export function stepIndex(id: PrototypeStepId) {
   return PROTOTYPE_STEPS.findIndex((s) => s.id === id);
 }
+
+/** Campus map → Arrived / Create profile — needs network */
+export function isMapNavStep(id: PrototypeStepId) {
+  return (
+    id === "map-idle" ||
+    id === "map-nav" ||
+    id === "map-success" ||
+    id === "map-profile"
+  );
+}

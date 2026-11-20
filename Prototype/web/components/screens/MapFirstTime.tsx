@@ -46,6 +46,13 @@ const MAP_SWAP_PX = 14;
 const MAP_SWAP_S = 0.22;
 /** Map-Search-FirstTime chrome morph */
 const SEARCH_MOVE_S = 0.28;
+/** Nav card → success card reshape (taller + higher) */
+const ARRIVAL_MORPH_S = 0.36;
+/** Nav shell box — success grows from here */
+const NAV_CARD_TOP = 696;
+const NAV_CARD_H = 146;
+const SUCCESS_CARD_TOP = 456;
+const SUCCESS_CARD_H = 386;
 const FLOORS = [
   { id: "ground", short: "G" },
   { id: "first", short: "1" },
@@ -85,6 +92,13 @@ type Props = {
   collegeName: string;
   /** Owned by UniLocateFlow so it survives leave / re-enter map */
   needsProfile?: boolean;
+  /** Signed-in success — share location instead of Done */
+  signedIn?: boolean;
+  /**
+   * Campus map stepper page only — loading sticker.
+   * False for Arrived / Navigating / Create profile (even if scene is idle).
+   */
+  campusMapHome?: boolean;
   /** Demo board — jump into a map beat (applied on remount) */
   scene?: MapScene;
   /** Stage card — mute arrival burst SFX when false */
@@ -153,23 +167,48 @@ type MapLayersProps = {
   layers: MapLayer[];
   stepDir: 1 | -1;
   mapReady: boolean;
+  /** False while campus loading sticker covers the frame */
+  mapRevealed: boolean;
+  reduce: boolean;
   iframeRef: Ref<HTMLIFrameElement>;
   mapSwapVariants: Record<string, unknown>;
   mapSwapTx: { duration: number; ease: readonly number[] };
 };
+
+/** Loader ↔ real map dissolve — opacity only (blur/scale on iframes reads muddy) */
+const MAP_REVEAL_S = 0.52;
+const MAP_REVEAL_EASE = [0.23, 1, 0.32, 1] as const;
 
 /** Keep the heavy iframe tree out of nav-card re-renders */
 const MapLayers = memo(function MapLayers({
   layers,
   stepDir,
   mapReady,
+  mapRevealed,
+  reduce,
   iframeRef,
   mapSwapVariants,
   mapSwapTx,
 }: MapLayersProps) {
+  const revealTx = {
+    duration: reduce ? 0 : MAP_REVEAL_S,
+    ease: MAP_REVEAL_EASE,
+  };
+
   return (
     <>
-      <div className="mf__map-stack">
+      <motion.div
+        className="mf__map-stack"
+        initial={false}
+        animate={
+          mapRevealed
+            ? { opacity: 1, transform: "translate3d(0, 0, 0)" }
+            : reduce
+              ? { opacity: 0 }
+              : { opacity: 0, transform: "translate3d(0, 10px, 0)" }
+        }
+        transition={revealTx}
+      >
         {layers.map((layer, i) => {
           const isActive = i === layers.length - 1;
           const isFirstPaint = layers.length === 1 && i === 0;
@@ -202,7 +241,29 @@ const MapLayers = memo(function MapLayers({
             </motion.div>
           );
         })}
-      </div>
+      </motion.div>
+      <AnimatePresence>
+        {!mapRevealed ? (
+          <motion.div
+            key="map-loader"
+            className="mf__loading"
+            initial={false}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={revealTx}
+            aria-busy
+            aria-label="Loading campus map"
+          >
+            <iframe
+              className="mf__loading-frame"
+              title="Loading campus map"
+              src={`/animations/campus-map-loading.html?embed=1&v=5&dur=4.2&reduce=${reduce ? "1" : "0"}`}
+              tabIndex={-1}
+              aria-hidden
+            />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
       <div className="mf__frame-shade" aria-hidden />
     </>
   );
@@ -212,6 +273,8 @@ const MapLayers = memo(function MapLayers({
 export default function MapFirstTime({
   collegeName,
   needsProfile = false,
+  signedIn = false,
+  campusMapHome = false,
   scene = "idle",
   soundEnabled = true,
   onSceneChange,
@@ -236,6 +299,12 @@ export default function MapFirstTime({
   ]);
   const [query, setQuery] = useState("");
   const [mapReady, setMapReady] = useState(false);
+  /** Campus map stepper page only — never after arrival / nav / profile */
+  const showMapLoadIntro =
+    !reduce && campusMapHome && scene === "idle" && !needsProfile;
+  const [mapRevealed, setMapRevealed] = useState(!showMapLoadIntro);
+  const mapLoadGenRef = useRef(0);
+  const MAP_LOAD_MS = 4500;
   /** Map-Search-FirstTime — shrink map, lift search, show keyboard */
   const [searching, setSearching] = useState(false);
   /** Map-Filter-FirstTime — Wings / Building / Other sheet */
@@ -267,6 +336,14 @@ export default function MapFirstTime({
    */
   const [burstSettled, setBurstSettled] = useState(
     () => scene === "profile" || reduce,
+  );
+  /** Scrim only after the success card has finished growing — never during morph */
+  const [arrivalScrim, setArrivalScrim] = useState(
+    () => scene === "success" || scene === "profile",
+  );
+  /** Demo jump onto success — settle immediately; live nav→arrive still grows */
+  const skipArrivalGrowRef = useRef(
+    scene === "success" || scene === "profile" || reduce,
   );
   const onNeedsProfileRef = useRef(onNeedsProfile);
   onNeedsProfileRef.current = onNeedsProfile;
@@ -331,7 +408,7 @@ export default function MapFirstTime({
     duration: reduce ? 0 : SEARCH_MOVE_S,
     ease: EASE_IN_OUT,
   };
-  /** Search → nav → success shared morph (on-screen reshape) */
+  /** Search → nav shared morph (on-screen reshape) */
   const tripCardTx = {
     layout: {
       duration: reduce ? 0 : SEARCH_MOVE_S,
@@ -342,14 +419,24 @@ export default function MapFirstTime({
       ease: EASE_OUT,
     },
   };
+  /** Nav → success — timed grow from nav box (no layoutId = no scrim flash) */
+  const arrivalCardTx = {
+    duration: reduce ? 0 : ARRIVAL_MORPH_S,
+    ease: EASE_OUT,
+  };
   /**
    * Inner content fades + blurs while the shell morphs (hides stretch).
-   * Hold until layout finishes (SEARCH_MOVE_S) — unblurring early shows the stretch.
+   * Hold until layout finishes — unblurring early shows the stretch.
    */
   const tripContentInTx = {
     duration: reduce ? 0 : 0.2,
     ease: EASE_OUT,
     delay: reduce ? 0 : SEARCH_MOVE_S,
+  };
+  const arrivalContentInTx = {
+    duration: reduce ? 0 : 0.26,
+    ease: EASE_OUT,
+    delay: reduce ? 0 : ARRIVAL_MORPH_S * 0.65,
   };
   const tripContentOutTx = {
     duration: reduce ? 0 : 0.14,
@@ -368,6 +455,14 @@ export default function MapFirstTime({
   const tripContentVariants = {
     show: { ...tripContentShown, transition: tripContentInTx },
     exit: { ...tripContentHidden, transition: tripContentOutTx },
+  };
+  const arrivalContentVariants = {
+    show: { ...tripContentShown, transition: arrivalContentInTx },
+    exit: { ...tripContentHidden, transition: tripContentOutTx },
+  };
+  const arrivalDimTx = {
+    duration: reduce ? 0 : 0.32,
+    ease: EASE_OUT,
   };
   const drawerTx = {
     duration: reduce ? 0 : SEARCH_MOVE_S,
@@ -518,6 +613,9 @@ export default function MapFirstTime({
         return;
       }
       if (d.type === "arrived") {
+        /* Ignore duplicate arrived posts — replay would restart the burst */
+        if (arrivedRef.current) return;
+        arrivedRef.current = true;
         if (typeof d.destination === "string" && d.destination) {
           setDestination(d.destination);
         }
@@ -601,6 +699,23 @@ export default function MapFirstTime({
     post({ type: "lock-hits", on: profileGate });
   }, [mapReady, post, profileGate]);
 
+  /* Campus map home only — loading sticker once, then reveal */
+  useEffect(() => {
+    if (!showMapLoadIntro) {
+      setMapRevealed(true);
+      return;
+    }
+    const gen = ++mapLoadGenRef.current;
+    setMapRevealed(false);
+    const t = window.setTimeout(() => {
+      if (mapLoadGenRef.current !== gen) return;
+      setMapRevealed(true);
+    }, MAP_LOAD_MS);
+    return () => window.clearTimeout(t);
+    // Mount / first open of campus map only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /** Ask the map for the upcoming turn, then auto-start walk ~3s later */
   useEffect(() => {
     if (playTimerRef.current != null) {
@@ -636,6 +751,24 @@ export default function MapFirstTime({
     const t = window.setTimeout(() => setBurstSettled(true), 9000);
     return () => window.clearTimeout(t);
   }, [arrived, burstSettled, reduce]);
+
+  /** Scrim after card grow — never mounts during the nav→success reshape */
+  useEffect(() => {
+    if (!arrived) {
+      setArrivalScrim(false);
+      return;
+    }
+    if (reduce || skipArrivalGrowRef.current) {
+      setArrivalScrim(true);
+      return;
+    }
+    setArrivalScrim(false);
+    const t = window.setTimeout(
+      () => setArrivalScrim(true),
+      Math.round(ARRIVAL_MORPH_S * 1000),
+    );
+    return () => window.clearTimeout(t);
+  }, [arrived, reduce]);
 
   const footerInTx = useMemo(
     () =>
@@ -727,10 +860,12 @@ export default function MapFirstTime({
     post({ type: "stop" });
     setNavigating(false);
     setArrived(false);
+    setArrivalScrim(false);
     setBurstSettled(false);
     setNavStep(null);
-    onSceneChange?.(needsProfile ? "profile" : "idle");
-  }, [needsProfile, onSceneChange, post]);
+    /* Stay on post-arrival (Create profile / After arrival) — not Campus map */
+    onSceneChange?.(needsProfile || signedIn ? "profile" : "idle");
+  }, [needsProfile, onSceneChange, post, signedIn]);
 
   const confirmStairFloor = useCallback(() => {
     if (!navStep?.awaitConfirm) return;
@@ -926,6 +1061,7 @@ export default function MapFirstTime({
     navigating && !arrived ? "mf--navigating" : "",
     searching && !filtering && !arrived ? "mf--searching" : "",
     profileGate ? "mf--profile" : "",
+    !mapRevealed ? "mf--loading" : "",
   ]
     .filter(Boolean)
     .map((c) => ` ${c}`)
@@ -991,6 +1127,8 @@ export default function MapFirstTime({
               layers={layers}
               stepDir={stepDir}
               mapReady={mapReady}
+              mapRevealed={mapRevealed}
+              reduce={reduce}
               iframeRef={iframeRef}
               mapSwapVariants={mapSwapVariants}
               mapSwapTx={mapSwapTx}
@@ -998,7 +1136,7 @@ export default function MapFirstTime({
           </div>
         </div>
 
-        {!profileGate ? (
+        {!profileGate && mapRevealed ? (
           <div className="mf__floors" role="group" aria-label="Floor stepper">
             <div className="mf__floors-face">
               <button
@@ -1098,43 +1236,62 @@ export default function MapFirstTime({
         ) : null}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {arrived && arrivalScrim ? (
+          <motion.button
+            key="success-dim"
+            type="button"
+            className="mf__success-dim"
+            aria-label="Dismiss arrival"
+            initial={reduce ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={arrivalDimTx}
+            onClick={endNavigation}
+          />
+        ) : null}
+      </AnimatePresence>
+
       <AnimatePresence mode="sync">
         {arrived ? (
           <>
-            <motion.button
-              key="success-dim"
-              type="button"
-              className="mf__success-dim"
-              aria-label="Dismiss arrival"
-              initial={reduce ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: reduce ? 0 : 0.24, ease: EASE_OUT }}
-              onClick={endNavigation}
-            />
             <motion.div
               key="success-card"
-              /* No layoutId — tall success → thin search morph stretches the field */
+              /*
+                Grow from the nav card box — explicit top/height, no layoutId,
+                so the scrim never stacks over a projected shared shell.
+              */
               className="mf__success"
               role="region"
               aria-label="Arrived"
-              style={{ borderRadius: 16 }}
-              initial={reduce ? false : "show"}
-              animate="show"
+              style={{ borderRadius: 16, zIndex: 6 }}
+              initial={
+                skipArrivalGrowRef.current
+                  ? false
+                  : {
+                      top: NAV_CARD_TOP,
+                      height: NAV_CARD_H,
+                      opacity: 1,
+                    }
+              }
+              animate={{
+                top: SUCCESS_CARD_TOP,
+                height: SUCCESS_CARD_H,
+                opacity: 1,
+              }}
               exit={
                 reduce
                   ? { opacity: 0 }
                   : { opacity: 0, transform: "translate3d(0, 16px, 0)" }
               }
-              variants={tripShellVariants}
-              transition={tripCardTx}
+              transition={arrivalCardTx}
               onClick={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
             >
               {/* Motion off — mount already at settled end (no fade/blur enter) */}
               <motion.div
                 className="mf__success-inner"
-                variants={reduce ? undefined : tripContentVariants}
+                variants={reduce ? undefined : arrivalContentVariants}
                 initial={reduce ? false : tripContentHidden}
                 animate={reduce ? undefined : "show"}
                 exit={reduce ? undefined : "exit"}
@@ -1174,26 +1331,32 @@ export default function MapFirstTime({
                   height={24}
                 />
               </motion.button>
-              <iframe
-                className="mf__success-burst"
-                title="Arrival celebration"
-                src={`/animations/campus-sticker-burst.html?embed=1&v=12&mute=${soundEnabled && !reduce ? "0" : "1"}&reduce=${reduce ? "1" : "0"}&sub=${encodeURIComponent(successSubtitle)}`}
-                style={{ background: "transparent" }}
-                allow="autoplay"
-                tabIndex={-1}
-                onLoad={(e) => {
-                  /* Motion off settles inside the page; motion on unlocks audio */
-                  if (reduce || !soundEnabled) return;
-                  try {
-                    e.currentTarget.contentWindow?.postMessage(
-                      { type: "burst-unlock" },
-                      "*",
-                    );
-                  } catch {
-                    /* ignore */
-                  }
-                }}
-              />
+              {/*
+                Mount only after the card has grown — resizing the iframe
+                mid-morph used to ResizeObserver→restart the burst (played twice).
+              */}
+              {arrivalScrim || skipArrivalGrowRef.current ? (
+                <iframe
+                  className="mf__success-burst"
+                  title="Arrival celebration"
+                  src={`/animations/campus-sticker-burst.html?embed=1&v=13&mute=${soundEnabled && !reduce ? "0" : "1"}&reduce=${reduce ? "1" : "0"}&sub=${encodeURIComponent(successSubtitle)}`}
+                  style={{ background: "transparent" }}
+                  allow="autoplay"
+                  tabIndex={-1}
+                  onLoad={(e) => {
+                    /* Motion off settles inside the page; motion on unlocks audio */
+                    if (reduce || !soundEnabled) return;
+                    try {
+                      e.currentTarget.contentWindow?.postMessage(
+                        { type: "burst-unlock" },
+                        "*",
+                      );
+                    } catch {
+                      /* ignore */
+                    }
+                  }}
+                />
+              ) : null}
               <motion.div
                 className="mf__success-wash"
                 aria-hidden
@@ -1219,7 +1382,9 @@ export default function MapFirstTime({
               >
                 {needsProfile
                   ? "Create profile for more navigation"
-                  : "Nice — ready for the next stop"}
+                  : signedIn
+                    ? "Share your location with a friend"
+                    : "Nice — ready for the next stop"}
               </motion.p>
               <motion.div
                 className="mf__success-cta-wrap"
@@ -1242,7 +1407,13 @@ export default function MapFirstTime({
               >
                 <PrimaryCta
                   className="mf__success-cta"
-                  label={needsProfile ? "Create Profile" : "Done"}
+                  label={
+                    needsProfile
+                      ? "Create Profile"
+                      : signedIn
+                        ? "Share"
+                        : "Done"
+                  }
                   width={336}
                   height={48}
                   animate={false}
@@ -1264,7 +1435,12 @@ export default function MapFirstTime({
             style={{ borderRadius: 16 }}
             initial="show"
             animate="show"
-            exit="exit"
+            /* Instant handoff into success grow — no ghost under the morph */
+            exit={
+              reduce
+                ? { opacity: 0 }
+                : { opacity: 0, transition: { duration: 0 } }
+            }
             variants={tripShellVariants}
             transition={tripCardTx}
           >
@@ -1385,7 +1561,7 @@ export default function MapFirstTime({
               </div>
             </motion.div>
           </motion.div>
-        ) : !needsProfile ? (
+        ) : !needsProfile && mapRevealed ? (
           <motion.div
             key="search-card"
             /* Skip shared morph after nav/success — layout stretch warps the field */

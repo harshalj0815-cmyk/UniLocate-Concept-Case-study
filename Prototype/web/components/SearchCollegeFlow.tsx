@@ -14,6 +14,7 @@ import CollegeResultsList from "@/components/ui/CollegeResultsList";
 import FocusedSearchField from "@/components/ui/FocusedSearchField";
 import IosKeyboard from "@/components/ui/IosKeyboard";
 import CollegeNotMappedEmpty from "@/components/ui/CollegeNotMappedEmpty";
+import OfflineScreen from "@/components/ui/OfflineScreen";
 import PrimaryCta from "@/components/ui/PrimaryCta";
 import RecommendationList from "@/components/ui/RecommendationList";
 import ScenePolaroid from "@/components/ui/ScenePolaroid";
@@ -67,6 +68,8 @@ type SearchCollegeFlowProps = {
   recVariant?: SearchRecVariant;
   /** Signed in — hide Get Started (post-signup) */
   signedIn?: boolean;
+  /** Stage Online | Offline — offline replaces college UI with wifi empty */
+  offline?: boolean;
 };
 
 /** Prototype flow: FirstTime ↔ OnClick ↔ CollegeResults */
@@ -78,6 +81,7 @@ export default function SearchCollegeFlow({
   onSceneChange,
   recVariant = "recommendation",
   signedIn = false,
+  offline = false,
 }: SearchCollegeFlowProps) {
   const reduce = useDemoReduceMotion();
   const [phase, setPhase] = useState<Phase>(() =>
@@ -464,6 +468,19 @@ export default function SearchCollegeFlow({
     },
     [closeSearch, focused, phase, query, showingResults],
   );
+
+  /* Offline — per-step skeleton, then wifi empty (replay on scene change) */
+  if (offline) {
+    const offlineVariant =
+      scene === "results" ? "results" : scene === "search" ? "search" : "home";
+    return (
+      <OfflineScreen
+        key={offlineVariant}
+        variant={offlineVariant}
+        signedIn={signedIn}
+      />
+    );
+  }
 
   if (!useShared) {
     return (

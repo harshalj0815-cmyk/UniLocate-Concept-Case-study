@@ -516,7 +516,10 @@ let rt=0;
 new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{
   const b=document.body;
   if(Math.abs(b.clientWidth-W)<2&&Math.abs(b.clientHeight-H)<80)return;
-  resize();start(false);
+  resize();
+  /* Embed: card grow resizes the iframe — redraw only, never replay */
+  if(embed){if(calm)drawCalm();else draw();return}
+  start(false);
 },150)}).observe(document.body);
 document.getElementById('replay').addEventListener('click',()=>{unlock();start(true)});
 const snd=document.getElementById('sound'),swP=document.getElementById('sw');

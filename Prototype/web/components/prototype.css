@@ -106,17 +106,42 @@
   border: 1px solid transparent;
 }
 
+/* Demo board sticker shells — match CollegeResultCard squircle + shadow */
+.proto-squircle {
+  position: relative;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  overflow: visible;
+}
+
+.proto-squircle__shape {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+  overflow: visible;
+  filter: var(--ul-control-shadow);
+}
+
+.proto-squircle__body {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+}
+
 .proto-controls {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  box-sizing: border-box;
+  max-height: inherit;
+}
+
+.proto-controls .proto-squircle__body {
   padding: 16px 18px;
-  border-radius: 20px;
-  border: 1px solid #e8e8ea;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
   max-height: inherit;
   overflow: auto;
 }
@@ -273,43 +298,50 @@
   flex-direction: column;
   align-items: stretch;
   gap: 10px;
+  /* Room for disabled-segment tooltip below Mapped / Not mapped */
+  overflow: visible;
 }
 
 /*
- * Right-rail stage bar — compact horizontal pill.
- * Layout matches reference; accents stay UniLocate blue.
+ * Right-rail stage bar — squircle sticker; UniLocate blue accents.
  */
 .proto-stage {
   flex: 0 0 auto;
-  box-sizing: border-box;
+  width: 100%;
+}
+
+.proto-stage .proto-squircle__body {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 6px;
-  padding: 6px;
-  border-radius: 999px;
-  border: 1px solid #e8e8ea;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  padding: 8px 10px;
 }
 
-/* Search college — Recommendation | Empty */
+/* Search college — Mapped | Empty (and audience / network) */
 .proto-segment {
+  width: 100%;
+}
+
+.proto-segment .proto-squircle__body {
+  padding: 4px;
+}
+
+.proto-segment__track {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2px;
-  padding: 3px;
-  border-radius: 999px;
-  border: 1px solid #e8e8ea;
-  background: #f0f2f5;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  padding: 0;
+  border-radius: 12px;
+  background: rgba(0, 138, 236, 0.08);
 }
 
 .proto-segment__btn {
   margin: 0;
   padding: 8px 12px;
   border: none;
-  border-radius: 999px;
+  border-radius: 12px;
   background: transparent;
   color: #6b6b70;
   font-family: inherit;
@@ -328,8 +360,8 @@
 
 .proto-segment__btn[aria-selected="true"] {
   background: #ffffff;
-  color: #2c2c2c;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  color: #008aec;
+  box-shadow: var(--ul-control-box-shadow);
 }
 
 .proto-segment__btn:active:not(:disabled) {
@@ -338,8 +370,17 @@
 
 .proto-segment--disabled {
   position: relative;
+  z-index: 1;
   opacity: 0.72;
   cursor: not-allowed;
+}
+
+.proto-segment--disabled:hover {
+  z-index: 5;
+}
+
+.proto-segment--disabled .proto-segment__track {
+  position: relative;
 }
 
 .proto-segment__btn:disabled {
@@ -349,13 +390,17 @@
   box-shadow: none;
 }
 
-/* One tooltip for the whole disabled segment control */
-.proto-segment[data-tooltip]::after {
+/*
+ * Disabled Mapped/Empty tip — below the sticker so it never covers
+ * First open / Signed in. Hover only (focus-within stuck open in preview).
+ */
+.proto-segment--disabled .proto-segment__track[data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
   left: 50%;
-  bottom: calc(100% + 8px);
-  transform: translateX(-50%) translateY(4px);
+  top: calc(100% + 8px);
+  bottom: auto;
+  transform: translateX(-50%) translateY(-4px);
   z-index: 20;
   box-sizing: border-box;
   padding: 6px 10px;
@@ -369,33 +414,39 @@
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
+  visibility: hidden;
   transition:
     opacity 140ms var(--ease-out),
-    transform 140ms var(--ease-out);
+    transform 140ms var(--ease-out),
+    visibility 140ms var(--ease-out);
 }
 
-.proto-segment[data-tooltip]::before {
+.proto-segment--disabled .proto-segment__track[data-tooltip]::before {
   content: "";
   position: absolute;
   left: 50%;
-  bottom: calc(100% + 2px);
-  transform: translateX(-50%) translateY(4px);
+  top: calc(100% + 2px);
+  bottom: auto;
+  transform: translateX(-50%) translateY(-4px);
   z-index: 20;
   border: 5px solid transparent;
-  border-top-color: #2c2c2c;
+  border-bottom-color: #2c2c2c;
   pointer-events: none;
   opacity: 0;
+  visibility: hidden;
   transition:
     opacity 140ms var(--ease-out),
-    transform 140ms var(--ease-out);
+    transform 140ms var(--ease-out),
+    visibility 140ms var(--ease-out);
 }
 
-.proto-segment[data-tooltip]:hover::after,
-.proto-segment[data-tooltip]:focus-within::after,
-.proto-segment[data-tooltip]:hover::before,
-.proto-segment[data-tooltip]:focus-within::before {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
+@media (hover: hover) {
+  .proto-segment--disabled .proto-segment__track[data-tooltip]:hover::after,
+  .proto-segment--disabled .proto-segment__track[data-tooltip]:hover::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .proto-stage__refresh {
@@ -406,14 +457,15 @@
   margin: 0;
   padding: 0;
   border: none;
-  border-radius: 50%;
-  background: #2c2c2c;
+  border-radius: 12px;
+  background: #008aec;
+  background-image: var(--ul-cta-gradient);
   color: #ffffff;
   cursor: pointer;
   flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
   transition:
-    background-color 160ms var(--ease-out),
+    filter 160ms var(--ease-out),
     transform 120ms var(--ease-out);
 }
 
@@ -423,7 +475,7 @@
 }
 
 .proto-stage__refresh:hover {
-  background: #1f1f1f;
+  filter: brightness(1.05);
 }
 
 .proto-stage__refresh:active {
@@ -437,8 +489,8 @@
   gap: 8px;
   min-height: 32px;
   padding: 4px 6px 4px 10px;
-  border-radius: 999px;
-  background: #f0f2f5;
+  border-radius: 12px;
+  background: rgba(0, 138, 236, 0.08);
 }
 
 .proto-stage__chip-lead {
@@ -843,6 +895,101 @@
   object-position: center;
   /* PNG already has alpha baked in — no extra opacity / blend */
   opacity: 1;
+}
+
+/* Offline — skeleton per screen, then wifi elastic empty */
+.scf--offline .scf__map {
+  opacity: 0.55;
+}
+
+.scf__offline-phase {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+.scf__offline {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 36px;
+  box-sizing: border-box;
+  /* Don’t clip wifi elastic enter / overshoot */
+  overflow: visible;
+  pointer-events: none;
+  font-family: var(--font-ui);
+}
+
+.scf__offline-icon {
+  width: 100%;
+  flex-shrink: 0;
+  will-change: transform, opacity, filter;
+}
+
+.scf__offline-frame {
+  display: block;
+  width: 100%;
+  /* Room above + below for spring enter / bounce (iframe still clips internally) */
+  height: 248px;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  pointer-events: none;
+  margin: -28px 0 -20px;
+}
+
+.scf__offline-title {
+  margin: 0;
+  color: #2c2c2c;
+  font-family: var(--font-ui);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.scf__offline-copy {
+  margin: 0;
+  max-width: 260px;
+  color: #2c2c2c;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  text-align: center;
+  opacity: 0.72;
+}
+
+/* Offline preload — map uses campus-map-loading; results keep results chrome */
+.scf--offline-map .scf__map-wrap {
+  display: none;
+}
+
+.scf__offline-map.mf {
+  z-index: 2;
+  pointer-events: none;
+}
+
+.scf__offline-results {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.scf__offline-results .ul-shared-results {
+  pointer-events: none;
+}
+
+/* Signed-in offline — PrimaryCta in empty-results bottom slot */
+.scf__offline-cta {
+  z-index: 4;
+  pointer-events: auto;
 }
 
 .scf__icon,
@@ -3642,7 +3789,13 @@ button.su-hang {
   top: 112px;
   bottom: 92px;
   z-index: 2;
-  transition: bottom 280ms var(--ease-in-out);
+  /* Match nav → success card morph */
+  transition: bottom 360ms var(--ease-out);
+}
+
+/* Campus map loading — no Destination field; frame fills the search slot */
+.mf--loading .mf__stage {
+  bottom: 16px;
 }
 
 /* Map-Search-FirstTime — frame shortens above search + keyboard */
@@ -3687,23 +3840,25 @@ button.su-hang {
   opacity: 0.35;
 }
 
+/* Behind the trip card — never paints over the morphing success shell */
 .mf__success-dim {
   position: absolute;
   inset: 0;
-  z-index: 4;
+  z-index: 3;
   border: none;
   padding: 0;
   margin: 0;
   background: rgba(0, 0, 0, 0.4);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  will-change: opacity;
 }
 
 .mf__success {
   position: absolute;
   left: 50%;
   top: 456px;
-  z-index: 5;
+  z-index: 6;
   width: 360px;
   height: 386px;
   margin-left: -180px;
@@ -4399,7 +4554,8 @@ button.su-hang {
   position: absolute;
   left: 50%;
   top: 696px;
-  z-index: 4;
+  /* Above success dim so layoutId morph never sits under the scrim */
+  z-index: 6;
   width: 360px;
   height: 146px;
   margin-left: -180px;

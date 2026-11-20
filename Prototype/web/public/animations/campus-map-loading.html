@@ -34,7 +34,7 @@ svg#map{position:absolute;inset:0;width:100%;height:100%}
 .sizer{grid-area:1/1;display:grid;visibility:hidden}
 .sizer span{grid-area:1/1;padding:8px 16px;border:2px solid transparent;white-space:nowrap;font-size:15px;font-weight:600;line-height:1.25}
 .flipper{position:absolute;inset:0;transform-style:preserve-3d;transition:transform 500ms var(--ease-in-out)}
-.face{position:absolute;inset:0;display:grid;place-items:center;padding:8px 16px;border:2px solid var(--sticker);border-radius:5px;backface-visibility:hidden;-webkit-backface-visibility:hidden;text-align:center;white-space:nowrap;font-weight:600;font-size:15px;line-height:1.25}
+.face{position:absolute;inset:0;display:grid;place-items:center;padding:8px 16px;border:2px solid var(--sticker);border-radius:5px;backface-visibility:hidden;-webkit-backface-visibility:hidden;text-align:center;white-space:nowrap;font-weight:600;font-size:15px;line-height:1.25;color:#fff}
 .face.back{transform:rotateX(180deg)}
 
 @media (prefers-reduced-motion:reduce){
@@ -267,7 +267,8 @@ svg#map{position:absolute;inset:0;width:100%;height:100%}
 
   /* ---------- vertical flipping sticker (a few flips while the map draws) ---------- */
   var words=shuffle(["Charting your route…","Finding your bearings…","Plotting the shortest path…","Calculating corridors…","Measuring hallways…","Triangulating your position…"]);
-  var colors=shuffle([["#f4504f","#fff"],["#2f5bff","#fff"],["#ffd23f","#1a1a1a"],["#2ec4a0","#0d2a22"],["#ff6fb5","#2a0d1c"],["#8b5cf6","#fff"]]);
+  /* Card fill + white label only (no dark ink on yellow/teal/pink) */
+  var colors=shuffle([["#f4504f","#fff"],["#2f5bff","#fff"],["#d97706","#fff"],["#0d9488","#fff"],["#db2777","#fff"],["#8b5cf6","#fff"]]);
   var faces=[document.getElementById("f0"),document.getElementById("f1")];
   var flipper=document.getElementById("flipper");
   var sizer=document.getElementById("sizer");

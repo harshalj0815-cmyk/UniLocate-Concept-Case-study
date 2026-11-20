@@ -1,5 +1,7 @@
 "use client";
 
+import ProtoSquircle from "@/components/ui/ProtoSquircle";
+
 type SearchRecVariant = "recommendation" | "empty";
 /** First open = just after download; Signed in = after signup */
 export type AudienceMode = "first-open" | "signed-in";
@@ -36,7 +38,7 @@ type Props = {
   };
 };
 
-/** Right-rail stage tools — pill bar: refresh + sound/motion toggles */
+/** Right-rail stage tools — sticker squircles matching in-app cards */
 export default function PrototypeStageCard({
   motion,
   sound,
@@ -52,7 +54,13 @@ export default function PrototypeStageCard({
 
   return (
     <div className="proto-stage-stack">
-      <aside className="proto-stage" aria-label="Stage controls">
+      <ProtoSquircle
+        className="proto-stage"
+        radius={16}
+        seedWidth={286}
+        seedHeight={44}
+        aria-label="Stage controls"
+      >
         <button
           type="button"
           className="proto-stage__refresh"
@@ -139,96 +147,119 @@ export default function PrototypeStageCard({
             <span className="proto-toggle__thumb" />
           </button>
         </div>
-      </aside>
+      </ProtoSquircle>
 
-      <div
+      <ProtoSquircle
         className="proto-segment"
-        role="tablist"
-        aria-label="Account state"
+        radius={16}
+        seedWidth={286}
+        seedHeight={36}
       >
-        <button
-          type="button"
-          role="tab"
-          className="proto-segment__btn"
-          aria-selected={audience.value === "first-open"}
-          onClick={() => audience.onChange("first-open")}
+        <div
+          className="proto-segment__track"
+          role="tablist"
+          aria-label="Account state"
         >
-          First open
-        </button>
-        <button
-          type="button"
-          role="tab"
-          className="proto-segment__btn"
-          aria-selected={audience.value === "signed-in"}
-          onClick={() => audience.onChange("signed-in")}
-        >
-          Signed in
-        </button>
-      </div>
+          <button
+            type="button"
+            role="tab"
+            className="proto-segment__btn"
+            aria-selected={audience.value === "first-open"}
+            onClick={() => audience.onChange("first-open")}
+          >
+            First open
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className="proto-segment__btn"
+            aria-selected={audience.value === "signed-in"}
+            onClick={() => audience.onChange("signed-in")}
+          >
+            Signed in
+          </button>
+        </div>
+      </ProtoSquircle>
 
-      <div
+      <ProtoSquircle
         className={`proto-segment${searchActive ? "" : " proto-segment--disabled"}`}
-        role="tablist"
-        aria-label={resultsMode ? "College results" : "Search outcomes"}
-        aria-disabled={!searchActive}
-        data-tooltip={
-          searchActive
-            ? undefined
-            : `Available on ${searchSegment.availableOn}`
-        }
+        radius={16}
+        seedWidth={286}
+        seedHeight={36}
       >
-        <button
-          type="button"
-          role="tab"
-          className="proto-segment__btn"
-          aria-selected={searchActive && searchSegment.value === "recommendation"}
-          disabled={!searchActive}
-          onClick={() => {
-            if (!searchActive) return;
-            searchSegment.onChange("recommendation");
-          }}
+        <div
+          className="proto-segment__track"
+          role="tablist"
+          aria-label={resultsMode ? "College results" : "Search outcomes"}
+          aria-disabled={!searchActive}
+          data-tooltip={
+            searchActive
+              ? undefined
+              : `Available on ${searchSegment.availableOn}`
+          }
         >
-          {resultsMode ? "On the map" : "Suggestions"}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          className="proto-segment__btn"
-          aria-selected={searchActive && searchSegment.value === "empty"}
-          disabled={!searchActive}
-          onClick={() => {
-            if (!searchActive) return;
-            searchSegment.onChange("empty");
-          }}
-        >
-          Not mapped
-        </button>
-      </div>
+          <button
+            type="button"
+            role="tab"
+            className="proto-segment__btn"
+            aria-selected={
+              searchActive && searchSegment.value === "recommendation"
+            }
+            disabled={!searchActive}
+            onClick={() => {
+              if (!searchActive) return;
+              searchSegment.onChange("recommendation");
+            }}
+          >
+            {resultsMode ? "On the map" : "Mapped"}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className="proto-segment__btn"
+            aria-selected={searchActive && searchSegment.value === "empty"}
+            disabled={!searchActive}
+            onClick={() => {
+              if (!searchActive) return;
+              searchSegment.onChange("empty");
+            }}
+          >
+            Not mapped
+          </button>
+        </div>
+      </ProtoSquircle>
 
-      <div
+      <ProtoSquircle
         className="proto-segment"
-        role="tablist"
-        aria-label="Network"
+        radius={16}
+        seedWidth={286}
+        seedHeight={36}
       >
-        <button
-          type="button"
-          role="tab"
-          className="proto-segment__btn"
-          aria-selected={connectivity.value === "online"}
-          onClick={() => connectivity.onChange("online")}
+        <div
+          className="proto-segment__track"
+          role="tablist"
+          aria-label="Network"
         >
-          Online
-        </button>
-        <button
-          type="button"
-          role="tab"
-          className="proto-segment__btn"
-          aria-selected={connectivity.value === "offline"}
-          onClick={() => connectivity.onChange("offline")}
-        >
-          Offline
-        </button>
-      </div>
+          <button
+            type="button"
+            role="tab"
+            className="proto-segment__btn"
+            aria-selected={connectivity.value === "online"}
+            onClick={() => connectivity.onChange("online")}
+          >
+            Online
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className="proto-segment__btn"
+            aria-selected={connectivity.value === "offline"}
+            onClick={() => connectivity.onChange("offline")}
+          >
+            Offline
+          </button>
+        </div>
+      </ProtoSquircle>
     </div>
   );
 }

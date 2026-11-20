@@ -13,6 +13,7 @@ import SearchCollegeFlow, {
 } from "@/components/SearchCollegeFlow";
 import MapFirstTime from "@/components/screens/MapFirstTime";
 import SignUp from "@/components/screens/SignUp";
+import OfflineScreen from "@/components/ui/OfflineScreen";
 import { COLLEGE_RESULTS, type CollegeResult } from "@/lib/collegeResults";
 import { DemoMotionProvider } from "@/lib/demoMotion";
 import type { PrototypeStepId } from "@/lib/prototypeSteps";
@@ -65,6 +66,7 @@ export default function UniLocateFlow() {
   const [connectivity, setConnectivity] =
     useState<ConnectivityMode>("online");
   const signedIn = audience === "signed-in";
+  const offline = connectivity === "offline";
 
   const refreshScreen = useCallback(() => {
     setJumpKey((k) => k + 1);
@@ -80,6 +82,12 @@ export default function UniLocateFlow() {
     setDemoStep("college-home");
     setCollegeScene("home");
     setScreen("college");
+  }, []);
+
+  const setConnectivityMode = useCallback((mode: ConnectivityMode) => {
+    setConnectivity(mode);
+    /* Remount so offline skeleton / wifi sequence restarts on current step */
+    setJumpKey((k) => k + 1);
   }, []);
 
   const setAudienceMode = useCallback(
@@ -162,7 +170,6 @@ export default function UniLocateFlow() {
       setJumpKey((k) => k + 1);
       return;
     }
-
     setDemoStep(id);
     const nextScreen = stepToScreen(id);
     setScreen(nextScreen);
@@ -249,35 +256,52 @@ export default function UniLocateFlow() {
                   scene={collegeScene}
                   recVariant={searchRecVariant}
                   signedIn={signedIn}
+                  offline={offline}
                   onSceneChange={onCollegeScene}
                   onGetStarted={openSignup}
                   onSelectCollege={openMap}
                 />
               </div>
               {!signedIn && (screen === "signup" || screen === "login") ? (
-                <SignUp
-                  key={`${screen}-${jumpKey}`}
-                  mode={authMode}
-                  onBack={backToCollege}
-                  onSwitchAuth={screen === "signup" ? openLogin : openSignup}
-                />
+                offline ? (
+                  <OfflineScreen key={`signup-offline-${jumpKey}`} variant="signup" />
+                ) : (
+                  <SignUp
+                    key={`${screen}-${jumpKey}`}
+                    mode={authMode}
+                    onBack={backToCollege}
+                    onSwitchAuth={
+                      screen === "signup" ? openLogin : openSignup
+                    }
+                  />
+                )
               ) : null}
               {screen === "map" && mapCollege ? (
-                <MapFirstTime
-                  key={`map-${jumpKey}`}
-                  collegeName={mapCollege.name}
-                  needsProfile={mapNeedsProfile && !signedIn}
-                  scene={
-                    signedIn && mapScene === "profile" ? "idle" : mapScene
-                  }
-                  soundEnabled={soundOn}
-                  onSceneChange={onMapScene}
-                  onNeedsProfile={
-                    signedIn ? undefined : markMapNeedsProfile
-                  }
-                  onBack={backToCollege}
-                  onCreateProfile={openSignup}
-                />
+                offline ? (
+                  <OfflineScreen
+                    key={`map-offline-${jumpKey}`}
+                    variant="map"
+                    signedIn={signedIn}
+                  />
+                ) : (
+                  <MapFirstTime
+                    key={`map-${jumpKey}`}
+                    collegeName={mapCollege.name}
+                    needsProfile={mapNeedsProfile && !signedIn}
+                    signedIn={signedIn}
+                    campusMapHome={demoStep === "map-idle"}
+                    scene={
+                      signedIn && mapScene === "profile" ? "idle" : mapScene
+                    }
+                    soundEnabled={soundOn}
+                    onSceneChange={onMapScene}
+                    onNeedsProfile={
+                      signedIn ? undefined : markMapNeedsProfile
+                    }
+                    onBack={backToCollege}
+                    onCreateProfile={openSignup}
+                  />
+                )
               ) : null}
             </IPhoneFrame>
           </MotionConfig>
@@ -295,7 +319,7 @@ export default function UniLocateFlow() {
           }}
           connectivity={{
             value: connectivity,
-            onChange: setConnectivity,
+            onChange: setConnectivityMode,
           }}
           searchSegment={{
             value: searchRecVariant,

@@ -1,16 +1,20 @@
 "use client";
 
 import {
+  isMapNavStep,
   PROTOTYPE_STEPS,
   type PrototypeStep,
   type PrototypeStepId,
 } from "@/lib/prototypeSteps";
+import ProtoSquircle from "@/components/ui/ProtoSquircle";
 
 type Props = {
   active: PrototypeStepId;
   onJump: (id: PrototypeStepId) => void;
   /** Signed-in audience — Sign up is first-open only */
   hideSignup?: boolean;
+  /** Offline — hide campus map / nav / arrived steps */
+  hideMapNav?: boolean;
 };
 
 function stepState(
@@ -100,10 +104,13 @@ function StepperList({
   );
 }
 
-function resolveSteps(signedIn: boolean): PrototypeStep[] {
-  const base = signedIn
-    ? PROTOTYPE_STEPS.filter((s) => s.id !== "signup")
-    : [...PROTOTYPE_STEPS];
+function resolveSteps(
+  signedIn: boolean,
+  hideMapNav: boolean,
+): PrototypeStep[] {
+  let base = [...PROTOTYPE_STEPS];
+  if (signedIn) base = base.filter((s) => s.id !== "signup");
+  if (hideMapNav) base = base.filter((s) => !isMapNavStep(s.id));
   if (!signedIn) return base;
   return base.map((s) => ({
     ...s,
@@ -123,26 +130,33 @@ export default function PrototypeControls({
   active,
   onJump,
   hideSignup = false,
+  hideMapNav = false,
 }: Props) {
-  const visibleSteps = resolveSteps(hideSignup);
+  const visibleSteps = resolveSteps(hideSignup, hideMapNav);
   /* Sizer always uses first-open full list so shell height stays put */
   const sizerSteps = [...PROTOTYPE_STEPS];
+  const compact = hideSignup || hideMapNav;
 
   return (
     <aside
-      className={`proto-controls-shell${hideSignup ? " proto-controls-shell--compact" : ""}`}
+      className={`proto-controls-shell${compact ? " proto-controls-shell--compact" : ""}`}
       aria-label="Prototype screens"
     >
       <div className="proto-controls-shell__sizer" aria-hidden>
         <StepperList steps={sizerSteps} active={active} inert />
       </div>
-      <div className="proto-controls">
+      <ProtoSquircle
+        className="proto-controls"
+        radius={20}
+        seedWidth={280}
+        seedHeight={474}
+      >
         <StepperList
           steps={visibleSteps}
           active={active}
           onJump={onJump}
         />
-      </div>
+      </ProtoSquircle>
     </aside>
   );
 }
