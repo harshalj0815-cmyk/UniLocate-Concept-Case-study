@@ -4,8 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 /**
- * Quotes auto-cycle over the crowd. Clicking any character hides the bubble
- * and illustration and reveals the affinity-map titles (↑ stayed / ↓ dropped).
+ * Quotes auto-cycle over the crowd. Click the bubble or a character for the next quote.
  */
 const SPEAKERS = [
   {
@@ -94,8 +93,39 @@ const INTERVAL = 3000;
 
 type Turn = { speakerIndex: number; quoteIndex: number };
 
+export function AffinityClusters() {
+  return (
+    <figure className="interview-bubbles interview-bubbles--affinity section-visual">
+      <ol className="interview-bubbles__affinity">
+        {AFFINITY.map((item) => (
+          <li
+            key={item.title}
+            className="interview-bubbles__affinity-item sticker"
+          >
+            <span
+              className={`interview-bubbles__mark${item.stayed ? " is-kept" : " is-dropped"}`}
+              aria-hidden="true"
+            >
+              {item.stayed ? "↑" : "↓"}
+            </span>
+            <span className="sr-only">
+              {item.stayed ? "Stayed. " : "Did not stay. "}
+            </span>
+            <span className="interview-bubbles__affinity-title">
+              {item.title}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <figcaption className="sr-only">
+        Affinity-map titles marked with an up arrow if they stayed in
+        synthesis, or a down arrow if they did not.
+      </figcaption>
+    </figure>
+  );
+}
+
 export function InterviewBubbles() {
-  const figureRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const bubbleRef = useRef<HTMLButtonElement>(null);
   const measureRef = useRef<HTMLParagraphElement>(null);
@@ -103,18 +133,12 @@ export function InterviewBubbles() {
   const turnRef = useRef<Turn>({ speakerIndex: 0, quoteIndex: 0 });
   const busyRef = useRef(false);
   const timerRef = useRef<number | null>(null);
-  const panelHeightRef = useRef(0);
 
-  const [mapOpen, setMapOpen] = useState(false);
-  const mapOpenRef = useRef(false);
-  const [swapPhase, setSwapPhase] = useState<"idle" | "out" | "in">("idle");
   const [turn, setTurn] = useState<Turn>({ speakerIndex: 0, quoteIndex: 0 });
   const [out, setOut] = useState(false);
   const [slotHeight, setSlotHeight] = useState<number | undefined>();
-  const [panelMinHeight, setPanelMinHeight] = useState<number | undefined>();
   const [tail, setTail] = useState("50%");
   const [borderColor, setBorderColor] = useState<string>(SPEAKERS[0].color);
-  const swapBusyRef = useRef(false);
 
   const speaker = SPEAKERS[turn.speakerIndex];
   const text = speaker.quotes[turn.quoteIndex];
@@ -161,17 +185,6 @@ export function InterviewBubbles() {
     setSlotHeight(Math.ceil(maxQuote + padY + borderY));
   };
 
-  /** Lock figure height to the interview illustration so map swap doesn’t shrink the page. */
-  const measurePanel = () => {
-    const figure = figureRef.current;
-    if (!figure || mapOpen) return;
-    const h = Math.ceil(figure.getBoundingClientRect().height);
-    if (h > 0 && h !== panelHeightRef.current) {
-      panelHeightRef.current = h;
-      setPanelMinHeight(h);
-    }
-  };
-
   const randomTurn = (from: Turn): Turn => {
     let speakerIndex = from.speakerIndex;
     if (SPEAKERS.length > 1) {
@@ -185,7 +198,7 @@ export function InterviewBubbles() {
   };
 
   const goNext = () => {
-    if (busyRef.current || mapOpenRef.current) return;
+    if (busyRef.current) return;
     busyRef.current = true;
     const next = randomTurn(turnRef.current);
     setOut(true);
@@ -200,7 +213,6 @@ export function InterviewBubbles() {
 
   const startTimer = () => {
     clearTimer();
-    if (mapOpenRef.current) return;
     const reduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
@@ -208,64 +220,18 @@ export function InterviewBubbles() {
     timerRef.current = window.setInterval(goNext, INTERVAL);
   };
 
-  const swapTo = (nextMap: boolean) => {
-    if (swapBusyRef.current || nextMap === mapOpenRef.current) return;
-    swapBusyRef.current = true;
-    clearTimer();
-
-    const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (reduced) {
-      mapOpenRef.current = nextMap;
-      setMapOpen(nextMap);
-      swapBusyRef.current = false;
-      if (!nextMap) {
-        requestAnimationFrame(() => {
-          applyTail(turnRef.current.speakerIndex);
-          startTimer();
-        });
-      }
-      return;
-    }
-
-    setSwapPhase("out");
-    window.setTimeout(() => {
-      mapOpenRef.current = nextMap;
-      setMapOpen(nextMap);
-      setSwapPhase("in");
-      requestAnimationFrame(() => {
-        if (!nextMap) applyTail(turnRef.current.speakerIndex);
-      });
-      window.setTimeout(() => {
-        setSwapPhase("idle");
-        swapBusyRef.current = false;
-        if (!nextMap) startTimer();
-      }, 280);
-    }, 200);
-  };
-
-  const openMap = () => {
-    measurePanel();
-    swapTo(true);
-  };
-  const closeMap = () => swapTo(false);
-
   useEffect(() => {
     measureSlot();
     applyTail(0);
     startTimer();
-    requestAnimationFrame(measurePanel);
     const onResize = () => {
       measureSlot();
       applyTail(turnRef.current.speakerIndex);
-      requestAnimationFrame(measurePanel);
     };
     window.addEventListener("resize", onResize);
     void document.fonts?.ready?.then(() => {
       measureSlot();
       applyTail(turnRef.current.speakerIndex);
-      requestAnimationFrame(measurePanel);
     });
     return () => {
       clearTimer();
@@ -281,127 +247,64 @@ export function InterviewBubbles() {
 
   const quoteKey = `${turn.speakerIndex}-${turn.quoteIndex}`;
 
-  const swapClass =
-    swapPhase === "out"
-      ? " is-swap-out"
-      : swapPhase === "in"
-        ? " is-swap-in"
-        : "";
-
   return (
-    <figure
-      ref={figureRef}
-      className={`interview-bubbles section-visual${swapClass}`}
-      style={panelMinHeight ? { minHeight: panelMinHeight } : undefined}
-    >
-      {mapOpen ? (
+    <figure className="interview-bubbles section-visual">
+      <div className="interview-bubbles__stage" ref={stageRef}>
         <div
-          className="interview-bubbles__map"
-          onClick={closeMap}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              closeMap();
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          aria-label="Show interview illustration"
+          className="interview-bubbles__slot"
+          style={slotHeight ? { height: slotHeight } : undefined}
         >
-          <ol className="interview-bubbles__affinity">
-            {AFFINITY.map((item) => (
-              <li
-                key={item.title}
-                className="interview-bubbles__affinity-item sticker"
-              >
-                <span
-                  className={`interview-bubbles__mark${item.stayed ? " is-kept" : " is-dropped"}`}
-                  aria-hidden="true"
-                >
-                  {item.stayed ? "↑" : "↓"}
-                </span>
-                <span className="sr-only">
-                  {item.stayed ? "Stayed. " : "Did not stay. "}
-                </span>
-                <span className="interview-bubbles__affinity-title">
-                  {item.title}
-                </span>
-              </li>
-            ))}
-          </ol>
-          <span className="interview-bubbles__toggle" aria-hidden="true">
-            Show interviews
-          </span>
-        </div>
-      ) : (
-        <>
-          <div className="interview-bubbles__stage" ref={stageRef}>
-            <div
-              className="interview-bubbles__slot"
-              style={slotHeight ? { height: slotHeight } : undefined}
-            >
-              <button
-                type="button"
-                className={`interview-bubbles__bubble${out ? " is-out" : ""}`}
-                ref={bubbleRef}
-                aria-live="polite"
-                style={bubbleStyle}
-                onClick={goNext}
-                aria-label="Show next interview quote"
-              >
-                <p className="interview-bubbles__quote" key={quoteKey}>
-                  “{text}”
-                </p>
-              </button>
-            </div>
-            <p
-              className="interview-bubbles__quote interview-bubbles__measure"
-              ref={measureRef}
-              aria-hidden="true"
-            />
-            <div className="interview-bubbles__group">
-              <Image
-                ref={imgRef}
-                className="interview-bubbles__crowd"
-                src="/interview-crowd.png"
-                alt="Illustrated students from interview sessions"
-                width={1000}
-                height={480}
-                draggable={false}
-                sizes="(max-width: 920px) 100vw, 720px"
-                onLoad={() => {
-                  measureSlot();
-                  applyTail(turnRef.current.speakerIndex);
-                  requestAnimationFrame(measurePanel);
-                }}
-              />
-              <div className="interview-bubbles__hits">
-                {SPEAKERS.map((s) => (
-                  <button
-                    key={s.color}
-                    type="button"
-                    className="interview-bubbles__hit"
-                    style={{ ["--head" as string]: `${s.head * 100}%` }}
-                    onClick={openMap}
-                    aria-label="Show affinity map titles"
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
           <button
             type="button"
-            className="interview-bubbles__toggle"
-            onClick={openMap}
+            className={`interview-bubbles__bubble${out ? " is-out" : ""}`}
+            ref={bubbleRef}
+            aria-live="polite"
+            style={bubbleStyle}
+            onClick={goNext}
+            aria-label="Show next interview quote"
           >
-            Show affinity map
+            <p className="interview-bubbles__quote" key={quoteKey}>
+              “{text}”
+            </p>
           </button>
-        </>
-      )}
+        </div>
+        <p
+          className="interview-bubbles__quote interview-bubbles__measure"
+          ref={measureRef}
+          aria-hidden="true"
+        />
+        <div className="interview-bubbles__group">
+          <Image
+            ref={imgRef}
+            className="interview-bubbles__crowd"
+            src="/interview-crowd.png"
+            alt="Illustrated students from interview sessions"
+            width={1000}
+            height={480}
+            draggable={false}
+            sizes="(max-width: 920px) 100vw, 720px"
+            onLoad={() => {
+              measureSlot();
+              applyTail(turnRef.current.speakerIndex);
+            }}
+          />
+          <div className="interview-bubbles__hits">
+            {SPEAKERS.map((s) => (
+              <button
+                key={s.color}
+                type="button"
+                className="interview-bubbles__hit"
+                style={{ ["--head" as string]: `${s.head * 100}%` }}
+                onClick={goNext}
+                aria-label="Show next interview quote"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
       <figcaption className="sr-only">
-        Interview quotes auto-cycle. Click a student to hide the illustration
-        and show affinity-map titles marked with an up arrow if they stayed in
-        synthesis, or a down arrow if they did not.
+        Interview quotes auto-cycle over illustrated students. Click the bubble
+        or a student for the next quote.
       </figcaption>
     </figure>
   );

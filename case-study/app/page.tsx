@@ -1,7 +1,10 @@
 import Image from "next/image";
 import { CaseNav } from "@/components/CaseNav";
 import { ExpandableBody } from "@/components/ExpandableBody";
-import { InterviewBubbles } from "@/components/InterviewBubbles";
+import {
+  AffinityClusters,
+  InterviewBubbles,
+} from "@/components/InterviewBubbles";
 import { SectionSpy } from "@/components/SectionSpy";
 import { SurveyChartsStack } from "@/components/SurveyChartsStack";
 
@@ -180,7 +183,7 @@ export default function CaseStudyPage() {
             </ExpandableBody>
           </div>
 
-          <InterviewBubbles />
+          <AffinityClusters />
 
           <div className="case-section--prose">
             <h3 className="section-subhead">Quantitative research</h3>
@@ -282,6 +285,8 @@ export default function CaseStudyPage() {
               </p>
             </ExpandableBody>
           </div>
+
+          <InterviewBubbles />
         </section>
 
         <section
@@ -298,37 +303,217 @@ export default function CaseStudyPage() {
               <p className="section-body">
                 The open question was{" "}
                 <mark className="mark">Activation</mark>: how a first visit
-                could succeed under time pressure without sign-up. A few forks
-                got tested against the research.
+                could succeed under time pressure without sign-up.
               </p>
+              <ul className="section-list">
+                <li>
+                  An{" "}
+                  <mark className="mark">always-on wing colour layer</mark> that
+                  paints every wing a different colour so sections stay visible.
+                  <br />
+                  <strong>Not Selected:</strong> too many colours on the map
+                  would make the path harder to read, not clearer.
+                </li>
+                <li>
+                  A{" "}
+                  <mark className="mark">static offline map download</mark> so the
+                  path still works when indoor signal drops.
+                  <br />
+                  <strong>Not Selected:</strong> colleges already place static
+                  maps at a few points, and students still get lost.
+                </li>
+                <li>
+                  <mark className="mark">Sign-up first</mark> before search and
+                  route, so the account is ready from the first visit.
+                  <br />
+                  <strong>Not Selected:</strong> the moment someone opens the
+                  app is usually time pressure, so they need to use the product
+                  first, not set up an account.
+                </li>
+              </ul>
+            </ExpandableBody>
+          </div>
+
+          <div className="case-section--prose">
+            <h3 className="section-subhead">Concept Development</h3>
+            <ExpandableBody>
+              <ul className="section-list">
+                <li>
+                  UniLocate opens{" "}
+                  <mark className="mark">without an account</mark> because
+                  students are usually under time pressure. Getting a route
+                  first is what creates the{" "}
+                  <mark className="mark">aha moment</mark> and completes{" "}
+                  <mark className="mark">Activation</mark>.
+                </li>
+                <li>
+                  Students tell wings apart with a{" "}
+                  <mark className="mark">filter on demand</mark>, not a default
+                  colour layer, so the map stays clear and they only turn it on
+                  when they need that flexibility.
+                </li>
+                <li>
+                  To avoid the confusion of{" "}
+                  <mark className="mark">static maps</mark>,{" "}
+                  <mark className="mark">QR codes</mark> sit at set intervals.
+                  Scanning one reveals that point’s location, so students can
+                  keep navigating as they move.
+                </li>
+              </ul>
+            </ExpandableBody>
+          </div>
+        </section>
+
+        <section
+          id="journey"
+          className="case-section"
+          aria-labelledby="journey-title"
+        >
+          <div className="case-section--prose">
+            <p className="section-kicker">6. Journey Mapping</p>
+            <h2 id="journey-title" className="section-title">
+              First-visit journey
+            </h2>
+            <ExpandableBody>
               <p className="section-body">
-                An{" "}
-                <mark className="mark">always-on wing colour layer</mark> would
-                paint every wing a different colour so sections stay visible.
-                It spoke to indistinguishable wings, but as a permanent layer
-                it cluttered the path. A{" "}
-                <mark className="mark">wing filter when you need it</mark> stayed
-                instead.
-              </p>
-              <p className="section-body">
-                A{" "}
-                <mark className="mark">static offline map download</mark> looked
-                like a clean offline answer until interviews showed colleges
-                already have static maps and 3D models at the entrance, and
-                people still get lost. Offline shifted to{" "}
-                <mark className="mark">QR you-are-here checkpoints</mark> while
-                moving, with floor confirms on stairs and lifts.
-              </p>
-              <p className="section-body">
-                <mark className="mark">Sign-up first</mark> felt like the proper
-                start, but first-visit users are hurried and stressed. The bet
-                flipped to{" "}
-                <mark className="mark">
-                  search-first, route first, account after arrival
-                </mark>
-                , once the value is proven.
+                The product story was mapped across AARRR. This case study bets
+                on <mark className="mark">Activation</mark>: the first session
+                where a hurried student reaches the room. The other stages sit
+                as <mark className="mark">hypothesis</mark> around that moment.
               </p>
             </ExpandableBody>
+          </div>
+
+          <div className="journey-board">
+            <div className="journey-table-wrap sticker">
+              <div className="journey-table-scroll">
+                <div className="journey-table-rail">
+                  <table className="journey-table">
+                    <caption className="sr-only">
+                      AARRR journey map with Action, Emotion, and Touchpoints
+                      across Acquisition, Activation, Engagement, Retention, and
+                      Referral.
+                    </caption>
+                    <thead>
+                      <tr>
+                        <th scope="col" className="journey-table__corner" />
+                        <th scope="col">
+                          Acquisition
+                          <span className="journey-table__tag">Hypothesis</span>
+                        </th>
+                        <th scope="col" className="journey-table__focus">
+                          Activation
+                        </th>
+                        <th scope="col">
+                          Engagement
+                          <span className="journey-table__tag">Hypothesis</span>
+                        </th>
+                        <th scope="col">
+                          Retention
+                          <span className="journey-table__tag">Hypothesis</span>
+                        </th>
+                        <th scope="col">
+                          Referral
+                          <span className="journey-table__tag">Hypothesis</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <th scope="row">Action</th>
+                        <td>
+                          College message: “Download UniLocate to find your
+                          classes,” or a QR outside campus on day one → open link
+                          → download the app
+                        </td>
+                        <td className="journey-table__focus">
+                          Search college → select the right campus when names
+                          match → map opens → search classroom number → navigate
+                          → reached
+                        </td>
+                        <td>
+                          Seminar or event notification → open → locate →
+                          navigate. Free walkthrough in the first week.
+                        </td>
+                        <td>
+                          Classroom update from the teacher dashboard → open
+                          notification → find the new room
+                        </td>
+                        <td>
+                          Friend asks “Where are you?” → share location through
+                          the app
+                        </td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Emotion</th>
+                        <td>
+                          <mark className="mark">Realization</mark>
+                          <br />
+                          Finding class might actually be a problem
+                        </td>
+                        <td className="journey-table__focus">
+                          <mark className="mark">Nervous, Curious</mark>
+                          <br />
+                          First day of college, will I reach my class on time?
+                        </td>
+                        <td>
+                          <mark className="mark">Curious</mark>
+                          <br />
+                          Wants to explore the new college
+                        </td>
+                        <td>
+                          <mark className="mark">Relaxed</mark>
+                          <br />
+                          No worry about classroom changes or hunting for exam
+                          halls
+                        </td>
+                        <td>
+                          <mark className="mark">Confident</mark>
+                          <br />
+                          Sure enough to share location and help a friend
+                        </td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Touchpoints</th>
+                        <td>
+                          Play Store listing → icon → download → open → opening
+                          animation
+                        </td>
+                        <td className="journey-table__focus">
+                          Search bar → type college name → select college → enter
+                          destination → navigate
+                        </td>
+                        <td>
+                          Notification → map opens and locates event → navigate
+                          to event
+                        </td>
+                        <td>
+                          Notification → open app → class marker updated →
+                          navigate
+                        </td>
+                        <td>Open app → kebab menu → Share Location</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div
+                    className="journey-table__activation-frame"
+                    aria-hidden="true"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <aside className="journey-revenue sticker" aria-label="Revenue">
+              <div className="journey-revenue__inner">
+                <p className="journey-revenue__kicker">Revenue</p>
+                <p className="journey-revenue__meta">App POV</p>
+                <p className="journey-revenue__body">
+                  Charging colleges for mapping and technology, plus a
+                  subscription dashboard for assigning classrooms, updating
+                  them, or notifying students.
+                </p>
+              </div>
+            </aside>
           </div>
         </section>
 

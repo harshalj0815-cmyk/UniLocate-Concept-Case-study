@@ -9,6 +9,7 @@ const SECTIONS = [
   { id: "users", label: "Target users" },
   { id: "problem", label: "Problem Statement" },
   { id: "ideation", label: "Ideation" },
+  { id: "journey", label: "Journey Mapping" },
   { id: "decisions", label: "Decisions" },
   { id: "prototype", label: "Prototype" },
   { id: "edge", label: "Edge cases" },

@@ -47,7 +47,8 @@ export function ExpandableBody({ children, lines = 4 }: ExpandableBodyProps) {
 
     const fontSize = parseFloat(getComputedStyle(el).fontSize) || 17;
     const lineHeight = 1.7 * fontSize;
-    setNeedsToggle(full > lineHeight * lines + 2);
+    const limit = lineHeight * lines;
+    setNeedsToggle(full > limit + 4);
   }, [mobile, children, lines, expanded]);
 
   const collapsed = mobile && needsToggle && !expanded;
