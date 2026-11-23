@@ -284,6 +284,24 @@ img {
   margin-top: 0;
 }
 
+/* Tighten only the Brief → Problem Exploration handoff */
+#brief.case-section {
+  padding-bottom: 28px;
+}
+
+#research.case-section {
+  padding-top: 28px;
+}
+
+/* Tighten only Concept Development → Journey Mapping */
+#ideation.case-section {
+  padding-bottom: 28px;
+}
+
+#journey.case-section {
+  padding-top: 28px;
+}
+
 /* Prose blocks sit in the 920 column already */
 .case-section--prose {
   max-width: none;
@@ -505,6 +523,7 @@ img {
   --journey-rim: 3px;
   --journey-sticker-pad: 4px;
   --journey-inner-radius: calc(var(--ul-radius-thumb) - 2px);
+  --journey-header-bg: #ffe8d4;
   border: var(--journey-rim) solid #ffffff;
   border-radius: var(--ul-radius-thumb);
   corner-shape: squircle;
@@ -605,12 +624,12 @@ img {
   font-weight: 800;
   letter-spacing: 0.01em;
   color: var(--ul-ink);
-  background: #fafafa;
+  background: var(--journey-header-bg);
 }
 
 .journey-table__corner {
   width: var(--journey-label-col, 7.5rem);
-  background: #fafafa;
+  background: var(--journey-header-bg);
 }
 
 .journey-table tbody th {
@@ -618,7 +637,7 @@ img {
   font-size: 13px;
   font-weight: 800;
   color: var(--ul-ink);
-  background: #fafafa;
+  background: var(--journey-header-bg);
 }
 
 .journey-table__tag {
@@ -681,7 +700,7 @@ img {
   font-weight: 800;
   letter-spacing: 0.01em;
   color: var(--ul-ink);
-  background: #fafafa;
+  background: var(--journey-header-bg);
 }
 
 .journey-revenue__meta {
@@ -693,7 +712,7 @@ img {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--ul-muted);
-  background: #fafafa;
+  background: var(--journey-header-bg);
   border-bottom: 1px solid var(--ul-line);
 }
 
@@ -780,6 +799,37 @@ img {
   background: transparent;
 }
 
+.section-visual--crop {
+  aspect-ratio: 2 / 1;
+}
+
+.section-visual--crop .section-visual__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 42%;
+}
+
+.section-visual--credit {
+  position: relative;
+}
+
+.section-visual__credit {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  z-index: 1;
+  margin: 0;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.72);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  user-select: none;
+}
+
 .section-visual--slot {
   margin-top: 0;
 }
@@ -789,6 +839,60 @@ img {
   aspect-ratio: 16 / 10;
   background: rgba(17, 17, 17, 0.03);
   border: 1px dashed rgba(17, 17, 17, 0.14);
+}
+
+.section-visual--embed {
+  margin-top: 0;
+  overflow: hidden;
+  background: #f4f5f8;
+}
+
+.section-visual__embed {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border: 0;
+  background: #f4f5f8;
+  /* Let the page keep pointer events so the sticker cursor doesn't freeze over the iframe */
+  pointer-events: none;
+}
+
+/* —— Prototype: wide, interactive board (stepper + phone + stage controls) —— */
+.section-visual--prototype {
+  /* No frame: the board sits directly on the page background */
+  --proto-width: min(1180px, calc(100vw - 32px));
+  width: var(--proto-width);
+  margin-left: calc(50% - (var(--proto-width) / 2));
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.section-visual__embed--prototype {
+  display: block;
+  width: 100%;
+  /* Phone scales with this height (iframe 100dvh), so taller = larger phone */
+  height: clamp(700px, calc(100vh - 60px), 940px);
+  aspect-ratio: auto;
+  border: 0;
+  background: transparent;
+  color-scheme: normal;
+  /* Interactive: unlike the orbit embed, it must receive pointer events */
+  pointer-events: auto;
+}
+
+/* Constraints copy → orbit: pull closer and shorten empty bands */
+#brief .case-section--prose:has(+ .section-visual--embed) .expandable {
+  margin-bottom: 0;
+}
+
+#brief .section-visual--embed {
+  margin-top: -8px;
+}
+
+#brief .section-visual__embed {
+  aspect-ratio: 16 / 10;
 }
 
 /* —— Interview response bubbles (qualitative) —— */
@@ -1007,10 +1111,10 @@ img {
   text-wrap: pretty;
   color: var(--ul-ink);
   box-sizing: border-box;
-  /* Override .sticker rim into a paper sticky note */
+  /* Override .sticker rim into a paper sticky note with squircle corners */
   border: 0;
-  border-radius: 2px;
-  corner-shape: initial;
+  border-radius: var(--ul-radius-sm);
+  corner-shape: squircle;
   overflow: hidden;
   background: #fff4a3;
   box-shadow:

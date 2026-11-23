@@ -42,12 +42,7 @@ export function CaseNav() {
         UniLocate
       </a>
       <p className="case-nav__meta">Concept case study</p>
-      <a
-        className="case-nav__cta"
-        href="#prototype"
-        aria-disabled="true"
-        title="Prototype link coming once files are organised"
-      >
+      <a className="case-nav__cta" href="#prototype">
         Prototype
       </a>
     </header>

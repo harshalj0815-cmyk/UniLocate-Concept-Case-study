@@ -15,7 +15,7 @@ const P = {
  * HTML. Other charts tallied from the same survey export.
  */
 export const SURVEY_FREQUENCY = {
-  title: "How many times has this happened to you?",
+  title: "How many times has this happened to students?",
   data: [
     { k: "Once", n: 1, ...P.blue },
     { k: "2 to 3 times", n: 19, ...P.coral },
@@ -24,7 +24,7 @@ export const SURVEY_FREQUENCY = {
 };
 
 export const SURVEY_TIME_TO_FIND = {
-  title: "How long did it take you to reach there?",
+  title: "How long did it take students to reach there?",
   data: [
     { k: "Less than 5 minutes", n: 3, ...P.blue },
     { k: "5 to 10 minutes", n: 15, ...P.coral },
@@ -35,7 +35,7 @@ export const SURVEY_TIME_TO_FIND = {
 };
 
 export const SURVEY_COMFORT = {
-  title: "How long before you could get around on your own?",
+  title: "How long before students could get around on their own?",
   data: [
     { k: "Within the first week", n: 10, ...P.blue },
     { k: "1 to 2 weeks", n: 8, ...P.coral },
@@ -47,7 +47,7 @@ export const SURVEY_COMFORT = {
 
 /** 1–5 stress scale from the survey (no “1” responses in this yes-set). */
 export const SURVEY_STRESS = {
-  title: "How stressful was this situation for you?",
+  title: "How stressful was this situation for students?",
   data: [
     { k: "2", n: 4, ...P.blue },
     { k: "3", n: 14, ...P.coral },

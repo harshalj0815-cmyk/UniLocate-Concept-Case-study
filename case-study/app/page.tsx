@@ -1,10 +1,12 @@
 import Image from "next/image";
 import { CaseNav } from "@/components/CaseNav";
 import { ExpandableBody } from "@/components/ExpandableBody";
+import { PrototypeEmbed } from "@/components/PrototypeEmbed";
 import {
   AffinityClusters,
   InterviewBubbles,
 } from "@/components/InterviewBubbles";
+import { LogoOrbitEmbed } from "@/components/LogoOrbitEmbed";
 import { SectionSpy } from "@/components/SectionSpy";
 import { SurveyChartsStack } from "@/components/SurveyChartsStack";
 
@@ -32,8 +34,8 @@ export default function CaseStudyPage() {
                 className="thumbnail__img"
                 src="/thumbnail.png"
                 alt={`${TITLE}. Hero of the concept case study: phone showing an indoor campus map route, with a student sticker figure on the path.`}
-                width={1920}
-                height={1080}
+                width={2362}
+                height={1326}
                 priority
                 draggable={false}
                 sizes="(max-width: 1120px) 100vw, 1120px"
@@ -121,12 +123,14 @@ export default function CaseStudyPage() {
           </div>
 
           <figure
-            className="section-visual section-visual--slot"
-            aria-label="Constraints visual placeholder"
+            className="section-visual section-visual--embed"
+            aria-label="Constraints visual"
           >
-            <div className="section-visual__slot" />
+            <LogoOrbitEmbed />
             <figcaption className="sr-only">
-              Placeholder for a Constraints visual. Image to be added.
+              Constraints visual. UniLocate logo with orbiting stickers for
+              indoor positioning ideas: satellite, phone, router, and aha
+              moment. Plays only while this figure is on screen.
             </figcaption>
           </figure>
         </section>
@@ -157,6 +161,27 @@ export default function CaseStudyPage() {
               </p>
             </ExpandableBody>
           </div>
+
+          <figure className="section-visual section-visual--crop section-visual--credit sticker squircle">
+            <Image
+              className="section-visual__img"
+              src="/problem-discovery.png"
+              alt="Busy college hallway with students carrying backpacks between classes, the first-day campus navigation problem UniLocate addresses."
+              width={1248}
+              height={832}
+              draggable={false}
+              sizes="(max-width: 1120px) 100vw, 1120px"
+            />
+            <span className="section-visual__credit" aria-hidden="true">
+              AI Generated Image
+            </span>
+            <figcaption className="sr-only">
+              Problem Discovery visual. Students moving through a crowded campus
+              corridor between classes, grounding the freshman navigation gap
+              described above. Thick white sticker rim with squircle corners. AI
+              generated image.
+            </figcaption>
+          </figure>
 
           <div className="case-section--prose">
             <h3 className="section-subhead">Qualitative research</h3>
@@ -223,19 +248,16 @@ export default function CaseStudyPage() {
             </h2>
             <ExpandableBody>
               <p className="section-body">
-                The primary user is an{" "}
-                <mark className="mark">18 to 22 year old student</mark> on an{" "}
-                <mark className="mark">unfamiliar campus</mark>, most often a{" "}
-                <mark className="mark">newcomer</mark> trying to reach class or
-                another place in the first days and weeks. The scope card moment
-                is the same person under time pressure: a student who arrives
-                for an{" "}
-                <mark className="mark">exam or event</mark>, can’t find the
-                venue, asks nearby and still doesn’t get there, with only
-                minutes left and{" "}
-                <mark className="mark">no patience for sign-up</mark>. Event and
-                exam visits stay in scope as related moments, not the primary
-                one.
+                An{" "}
+                <mark className="mark">18 to 22 year old student</mark> arrives
+                on an <mark className="mark">unfamiliar campus</mark> for an{" "}
+                <mark className="mark">exam or event</mark>. They can’t find the
+                venue, the people nearby don’t know either, and with only
+                minutes left they have{" "}
+                <mark className="mark">no time to spare</mark>. The same person
+                shows up as a <mark className="mark">newcomer</mark> in the
+                first days and weeks, trying to reach class before the pressure
+                spikes.
               </p>
             </ExpandableBody>
           </div>
@@ -334,6 +356,23 @@ export default function CaseStudyPage() {
             </ExpandableBody>
           </div>
 
+          <figure className="section-visual">
+            <Image
+              className="section-visual__img"
+              src="/ideas-explored.png"
+              alt="Three phone mockups from ideation: a map with an always-on wing colour overlay, a sign-up first screen, and a static offline floor plan."
+              width={3680}
+              height={2152}
+              draggable={false}
+              sizes="(max-width: 1120px) 100vw, 1120px"
+            />
+            <figcaption className="sr-only">
+              Ideas explored visual. Phone mockups for the rejected directions:
+              wing colour layer on the map, sign-up before route, and a static
+              offline campus plan.
+            </figcaption>
+          </figure>
+
           <div className="case-section--prose">
             <h3 className="section-subhead">Concept Development</h3>
             <ExpandableBody>
@@ -362,6 +401,23 @@ export default function CaseStudyPage() {
               </ul>
             </ExpandableBody>
           </div>
+
+          <figure className="section-visual">
+            <Image
+              className="section-visual__img"
+              src="/concept-development.png"
+              alt="Three phone mockups for the chosen concept: Get Started without an account, wing filters on demand, and QR scan for offline navigation, with Experience First, Navigate Flexibly, and Offline Navigation stickers."
+              width={3680}
+              height={1878}
+              draggable={false}
+              sizes="(max-width: 1120px) 100vw, 1120px"
+            />
+            <figcaption className="sr-only">
+              Concept development visual. Phone mockups for experience first
+              without account, filter on demand for wings, and QR-based offline
+              navigation.
+            </figcaption>
+          </figure>
         </section>
 
         <section
@@ -517,9 +573,102 @@ export default function CaseStudyPage() {
           </div>
         </section>
 
+        <section
+          id="decisions"
+          className="case-section"
+          aria-labelledby="decisions-title"
+        >
+          <div className="case-section--prose">
+            <p className="section-kicker">7. Decisions</p>
+            <h2 id="decisions-title" className="section-title">
+              What was decided
+            </h2>
+            <ExpandableBody>
+              <p className="section-body">
+                Each call below was made against a rejected option. The cost of
+                each is written down with it, so the trade-off is visible rather
+                than hidden.
+              </p>
+              <ul className="section-list">
+                <li>
+                  <mark className="mark">Account after the first route.</mark>{" "}
+                  Rejected sign-up before search. First-visit students are
+                  hurried and already stressed, so the route comes first and the
+                  account is asked for after arrival.{" "}
+                  <strong>Trade-off:</strong> weaker identity, timetable
+                  personalisation, and retention hooks until after a first
+                  success.
+                </li>
+                <li>
+                  <mark className="mark">QR checkpoints for offline position.</mark>{" "}
+                  Rejected a static offline map download. Interviews already
+                  showed colleges have static maps and students still get lost.{" "}
+                  <strong>Trade-off:</strong> students scan at intervals while
+                  they move, which is more effort than continuous auto-locate.
+                </li>
+                <li>
+                  <mark className="mark">Navigation pauses at stairs and lifts.</mark>{" "}
+                  GPS cannot prove someone has arrived on another floor, so the
+                  user confirms the floor before the route continues.
+                </li>
+                <li>
+                  <mark className="mark">Wing filter on demand.</mark> Rejected
+                  an always-on wing colour layer, because too many colours make
+                  the path harder to read. Students turn the filter on only when
+                  they need to tell wings apart.
+                </li>
+                <li>
+                  <mark className="mark">Newcomer is the primary moment.</mark>{" "}
+                  Rejected the event visitor as the primary user. In the
+                  research, locating a classroom ranked first, wings second, and
+                  one-off exam or event places third. Exam and event visits stay
+                  in scope as related cases.
+                </li>
+              </ul>
+            </ExpandableBody>
+          </div>
+
+          <figure className="section-visual section-visual--slot">
+            <div className="section-visual__slot" aria-hidden="true" />
+            <figcaption className="sr-only">
+              Decisions visual placeholder.
+            </figcaption>
+          </figure>
+        </section>
+
+        <section
+          id="prototype"
+          className="case-section"
+          aria-labelledby="prototype-title"
+        >
+          <div className="case-section--prose">
+            <p className="section-kicker">8. Prototype</p>
+            <h2 id="prototype-title" className="section-title">
+              Try the prototype
+            </h2>
+            <ExpandableBody>
+              <p className="section-body">
+                The <mark className="mark">first-visit flow</mark>, built to be
+                tapped: search a college, open its campus map, and navigate to a
+                room. The list on the left jumps to any screen. The controls on
+                the right switch between first open and signed in, online and
+                offline, and mapped or not mapped colleges, and turn sound and
+                motion on or off.
+              </p>
+            </ExpandableBody>
+          </div>
+
+          <figure className="section-visual section-visual--prototype">
+            <PrototypeEmbed />
+            <figcaption className="sr-only">
+              Interactive UniLocate prototype. A phone frame shows the
+              first-visit flow, with a screen list on the left and stage
+              controls on the right.
+            </figcaption>
+          </figure>
+        </section>
+
         {/* Anchors so section spy links resolve until those sections are written */}
-        <div id="decisions" hidden />
-        <div id="prototype" hidden />
         <div id="edge" hidden />
         <div id="outcome" hidden />
       </main>

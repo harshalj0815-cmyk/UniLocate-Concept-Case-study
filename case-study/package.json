@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "sync:prototype": "node scripts/sync-prototype.mjs"
   },
   "dependencies": {
     "allo-font": "^1.0.3",

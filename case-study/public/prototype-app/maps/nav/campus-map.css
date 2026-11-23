@@ -1,0 +1,1093 @@
+/* UniLocate layered campus map — panel, layers and route styling */
+
+:root {
+  --ul-accent: #008aec;
+  --ul-accent-soft: #32a9ff;
+  --ul-ink: #2c2c2c;
+  --ul-muted: #7a7a7a;
+  --ul-line: #eaeaea;
+  --ul-wash: #eef8ff;
+  --ul-k: 1;
+}
+
+/* ── Layer visibility ─────────────────────────────────── */
+.map.ul-hide-rooms > [data-ul-art="rooms"],
+.map.ul-hide-paths > [data-ul-art="paths"],
+.map.ul-hide-verticals > [data-ul-art="verticals"],
+.map.ul-hide-washrooms > [data-ul-art="washrooms"],
+.map.ul-hide-exits > [data-ul-art="exits"],
+.map.ul-hide-grounds > [data-ul-art="grounds"],
+.map.ul-hide-labels > [data-ul-art="labels"],
+.map.ul-hide-rooms .ul-ov-rooms,
+.map.ul-hide-paths .ul-ov-paths,
+.map.ul-hide-outer .ul-ov-outer,
+.map.ul-hide-verticals .ul-ov-verticals,
+.map.ul-hide-washrooms .ul-ov-washrooms,
+.map.ul-hide-exits .ul-ov-exits {
+  display: none !important;
+}
+
+#ul-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2184px;
+  height: 2114px;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 7 !important;
+}
+
+/* The routing network stays in the DOM for debugging but isn't shown;
+   add `ul-debug-network` to the .map to see it. */
+.ul-ov-paths line,
+.ul-ov-outer line {
+  display: none;
+}
+
+.map.ul-debug-network .ul-ov-paths line {
+  display: inline;
+  stroke: #4f6b80;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  opacity: 0.42;
+}
+
+.map.ul-debug-network .ul-ov-outer line {
+  display: inline;
+  stroke: #5f7d56;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-dasharray: 9 7;
+  opacity: 0.6;
+}
+
+.map.ul-debug-network .ul-ov-outer line.is-unpaved {
+  stroke-dasharray: 2 7;
+}
+
+.ul-hit {
+  pointer-events: all;
+  cursor: pointer;
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 2.5;
+  transition: fill 120ms linear, stroke 120ms linear;
+}
+
+.ul-hit:hover,
+.ul-hit.is-peek {
+  fill: rgba(50, 169, 255, 0.14);
+  stroke: var(--ul-accent-soft);
+}
+
+/* ── Section highlight (wings / buildings) ────────────── */
+/* Default / buildings — #FC3477; wings stay purple */
+#ul-overlay {
+  --ul-sec: #fc3477;
+  --ul-sec-fill: rgba(252, 52, 119, 0.32);
+}
+
+#ul-overlay[data-section-mode="buildings"] {
+  --ul-sec: #fc3477;
+  --ul-sec-fill: rgba(252, 52, 119, 0.32);
+}
+
+#ul-overlay[data-section-mode="wings"] {
+  --ul-sec: #6c72e0;
+  --ul-sec-fill: rgba(108, 114, 224, 0.32);
+}
+
+.ul-ov-sections {
+  pointer-events: none;
+}
+
+.ul-sec-shape {
+  fill: var(--ul-sec-fill);
+  stroke: var(--ul-sec);
+  stroke-width: calc(4px * var(--ul-k));
+  stroke-linejoin: round;
+  animation: ul-sec-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ul-sec-tab rect {
+  fill: var(--ul-sec);
+}
+
+.ul-sec-tab text {
+  fill: #ffffff;
+  font: 700 13px/1 Inter, system-ui, sans-serif;
+  letter-spacing: 0.01em;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+@keyframes ul-sec-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ul-sec-shape {
+    animation: none;
+  }
+}
+
+.ul-hit.is-dest {
+  fill: rgba(0, 138, 236, 0.16);
+  stroke: var(--ul-accent);
+  stroke-width: 3;
+}
+
+.ul-ov-verticals .ul-hit,
+.ul-ov-washrooms .ul-hit {
+  stroke-width: 2;
+}
+
+/* ── Route ────────────────────────────────────────────── */
+.ul-route-casing {
+  display: none;
+}
+
+.ul-route-line {
+  fill: none;
+  stroke: var(--ul-accent);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ul-route-walked {
+  fill: none;
+  stroke: #9fd3fb;
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ul-route-connector {
+  fill: none;
+  stroke: var(--ul-accent);
+  stroke-width: 4;
+  stroke-dasharray: 2 6;
+  stroke-linecap: round;
+}
+
+/* Other filter — paths to all exits (#FF922D); nearest solid, rest dashed */
+.ul-poi-route-casing {
+  display: none;
+}
+
+.ul-poi-route-line {
+  fill: none;
+  stroke: #ff922d;
+  stroke-width: 5.5;
+  stroke-dasharray: 12 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.ul-poi-route-line.is-near {
+  stroke-width: 7;
+  stroke-dasharray: none;
+}
+
+.ul-poi-end {
+  fill: #ff922d;
+  stroke: #ffffff;
+  stroke-width: 2.5;
+  pointer-events: none;
+}
+
+.ul-poi-end.is-near {
+  stroke-width: 3;
+}
+
+/* Restroom / staff filters — orange footprints, no name tags */
+.ul-poi-wash,
+.ul-poi-staff {
+  fill: rgba(255, 146, 45, 0.32);
+  stroke: #ff922d;
+  stroke-width: 3;
+  pointer-events: none;
+}
+
+.ul-scale {
+  transform-box: view-box;
+}
+
+.ul-marker-pill rect {
+  fill: var(--ul-ink);
+}
+
+.ul-marker-pill text {
+  fill: #ffffff;
+  font: 600 12px "Plus Jakarta Sans", system-ui, sans-serif;
+  dominant-baseline: central;
+}
+
+.ul-marker-dest path {
+  fill: var(--ul-accent);
+  stroke: #ffffff;
+  stroke-width: 2.5;
+}
+
+.ul-marker-dest circle {
+  fill: #ffffff;
+}
+
+.ul-marker-transfer circle {
+  fill: #ffffff;
+  stroke: var(--ul-accent);
+  stroke-width: 3;
+}
+
+.ul-marker-transfer path {
+  fill: none;
+  stroke: var(--ul-accent);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── You-are-here pin ─────────────────────────────────── */
+/* Reference: disc + separate chevron with a visible gap between white rings */
+.ul-pin {
+  position: absolute;
+  width: 72px;
+  height: 44px;
+  z-index: 12 !important;
+  pointer-events: none;
+  overflow: visible;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28));
+}
+
+.ul-pin[hidden] {
+  display: none;
+}
+
+.ul-pin-spin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 72px;
+  height: 44px;
+}
+
+.ul-pin-avatar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #49b0ff;
+  border: 4px solid #ffffff;
+  box-sizing: border-box;
+  z-index: 2;
+}
+
+.ul-pin-arrow {
+  position: absolute;
+  /* 44px disc + ~2px gap between white borders */
+  left: 46px;
+  top: 8px;
+  width: 18px;
+  height: 28px;
+  overflow: visible;
+  z-index: 1;
+  /* Orbit around disc centre so heading turns the chevron only */
+  transform-origin: -24px 14px;
+  will-change: transform;
+}
+
+.ul-pin.is-placing .ul-pin-avatar {
+  box-shadow: 0 0 0 4px rgba(73, 176, 255, 0.4);
+}
+
+/* ── Face ── */
+.ul-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.ul-face-look {
+  transform: translate(var(--look-x, 0px), var(--look-y, 0px));
+  transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.ul-face .f-eye {
+  fill: #ffffff;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 160ms ease-out;
+}
+
+.ul-face .f-eyes-happy path,
+.ul-face .f-mouth-smile,
+.ul-face .f-mouth-flat {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ul-face .f-mouth-big,
+.ul-face .f-mouth-o {
+  fill: #ffffff;
+}
+
+.ul-face .f-eyes-open,
+.ul-face .f-eyes-happy,
+.ul-face .f-mouth-smile,
+.ul-face .f-mouth-big,
+.ul-face .f-mouth-o,
+.ul-face .f-mouth-flat {
+  opacity: 0;
+  transition: opacity 140ms ease-out;
+}
+
+/* idle + walk: open eyes, smile */
+.ul-pin[data-mood="idle"] .f-eyes-open,
+.ul-pin[data-mood="idle"] .f-mouth-smile,
+.ul-pin[data-mood="walk"] .f-eyes-open,
+.ul-pin[data-mood="walk"] .f-mouth-smile,
+/* excited (stairs / lift coming up) + curious (choosing a spot): open eyes, "o" mouth */
+.ul-pin[data-mood="excited"] .f-eyes-open,
+.ul-pin[data-mood="excited"] .f-mouth-o,
+.ul-pin[data-mood="curious"] .f-eyes-open,
+.ul-pin[data-mood="curious"] .f-mouth-o,
+/* confused (tap missed the paths): flat mouth */
+.ul-pin[data-mood="confused"] .f-eyes-open,
+.ul-pin[data-mood="confused"] .f-mouth-flat,
+/* happy (arrived): ^ ^ eyes, big grin */
+.ul-pin[data-mood="happy"] .f-eyes-happy,
+.ul-pin[data-mood="happy"] .f-mouth-big {
+  opacity: 1;
+}
+
+.ul-pin[data-mood="excited"] .f-eye,
+.ul-pin[data-mood="curious"] .f-eye {
+  transform: scale(1.12, 1.18);
+}
+
+.ul-pin[data-mood="confused"] .f-eye {
+  transform: scaleY(0.6);
+}
+
+.ul-pin[data-mood="idle"] .f-eye {
+  animation: ul-blink 4.2s infinite;
+}
+
+.ul-pin[data-mood="happy"] .ul-pin-avatar {
+  animation: ul-hop 520ms cubic-bezier(0.34, 1.56, 0.64, 1) 2;
+}
+
+.ul-pin[data-mood="confused"] .ul-pin-avatar {
+  animation: ul-shake 360ms ease-in-out 1;
+}
+
+@keyframes ul-blink {
+  0%, 94%, 100% {
+    transform: scaleY(1);
+  }
+  97% {
+    transform: scaleY(0.12);
+  }
+}
+
+@keyframes ul-hop {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(-7px) scale(1.06);
+  }
+}
+
+@keyframes ul-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ul-face-look,
+  .ul-face .f-eye {
+    transition: none;
+  }
+  .ul-pin[data-mood] .f-eye,
+  .ul-pin[data-mood] .ul-pin-avatar {
+    animation: none;
+  }
+}
+
+.viewport.ul-placing,
+.viewport.ul-placing * {
+  cursor: crosshair !important;
+}
+
+/* ── Panel ────────────────────────────────────────────── */
+.controls.ul-panel {
+  top: 16px;
+  bottom: auto;
+  max-height: calc(100vh - 32px);
+  left: 16px;
+  width: min(360px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--ul-line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15), 0 12px 32px rgba(0, 40, 80, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--ul-ink);
+}
+
+/* Prototype embed — panel logic stays; chrome is owned by the shell */
+html.ul-embed .controls,
+html.ul-embed .controls.ul-panel,
+html.ul-embed .ul-banner {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.ul-panel-scroll {
+  overflow-y: auto;
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.ul-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ul-brand {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.ul-brand small {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ul-muted);
+  letter-spacing: 0;
+}
+
+.ul-floors {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 12px;
+  background: #f3f5f7;
+}
+
+.ul-floors a {
+  min-width: 36px;
+  padding: 6px 8px;
+  border-radius: 9px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ul-ink);
+  position: relative;
+}
+
+.ul-floors a.is-active {
+  background: var(--ul-ink);
+  color: #ffffff;
+}
+
+.ul-floors a.has-route::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ul-accent-soft);
+}
+
+.ul-from {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--ul-line);
+  border-radius: 14px;
+}
+
+.ul-from .ul-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ul-accent-soft);
+  box-shadow: 0 0 0 3px rgba(50, 169, 255, 0.25);
+}
+
+.ul-from small,
+.ul-route-head small {
+  display: block;
+  font-size: 11px;
+  color: var(--ul-muted);
+  font-weight: 500;
+}
+
+.ul-from strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* The floor pages style `.controls button` generically; panel buttons opt out. */
+.controls.ul-panel button {
+  flex: none;
+  font-family: inherit;
+}
+
+.controls.ul-panel .ul-btn {
+  border: 1px solid var(--ul-line);
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ul-ink);
+  cursor: pointer;
+}
+
+.controls.ul-panel .ul-btn:hover {
+  border-color: #d5d5d5;
+  background: #fafafa;
+}
+
+.controls.ul-panel .ul-btn.is-on {
+  border-color: var(--ul-accent);
+  color: var(--ul-accent);
+}
+
+.ul-search {
+  display: grid;
+  gap: 8px;
+}
+
+.ul-search input {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--ul-line);
+  border-radius: 14px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ul-ink);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  outline: none;
+}
+
+.ul-search input:focus {
+  border-color: var(--ul-accent-soft);
+  box-shadow: 0 0 0 3px rgba(50, 169, 255, 0.2);
+}
+
+.ul-search input::placeholder {
+  color: #9c9c9c;
+}
+
+.ul-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.controls.ul-panel .ul-chips button:hover {
+  background: #e2f2fe;
+}
+
+.controls.ul-panel .ul-chips button {
+  border: 1px solid var(--ul-line);
+  background: var(--ul-wash);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #00589a;
+  cursor: pointer;
+}
+
+.ul-filter {
+  display: grid;
+  gap: 8px;
+}
+
+.ul-filter-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ul-muted);
+}
+
+.ul-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+  border-radius: 10px;
+  background: #f3f5f7;
+}
+
+.controls.ul-panel .ul-seg button {
+  border: 0;
+  background: transparent;
+  border-radius: 7px;
+  padding: 5px 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ul-muted);
+  cursor: pointer;
+}
+
+.controls.ul-panel .ul-seg button.is-on {
+  background: #ffffff;
+  color: var(--ul-ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.ul-sec-chips {
+  --ul-sec: #fc3477;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ul-sec-chips[data-mode="buildings"] {
+  --ul-sec: #fc3477;
+}
+
+.ul-sec-chips[data-mode="wings"] {
+  --ul-sec: #6c72e0;
+}
+
+.controls.ul-panel .ul-sec-chips button {
+  border: 1px solid var(--ul-line);
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 5px 11px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ul-ink);
+  cursor: pointer;
+}
+
+.controls.ul-panel .ul-sec-chips button:hover {
+  border-color: var(--ul-sec);
+}
+
+.controls.ul-panel .ul-sec-chips button.is-on {
+  background: var(--ul-sec);
+  border-color: var(--ul-sec);
+  color: #ffffff;
+}
+
+.ul-results .ul-list-head {
+  cursor: default;
+  grid-template-columns: 1fr;
+  padding: 7px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ul-muted);
+  background: #fafafa;
+}
+
+.ul-results .ul-list-head:hover {
+  background: #fafafa;
+}
+
+.ul-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--ul-line);
+  border-radius: 14px;
+}
+
+.ul-results:empty {
+  display: none;
+}
+
+.ul-results li {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f2f2f2;
+}
+
+.ul-results li:last-child {
+  border-bottom: 0;
+}
+
+.ul-results li:hover,
+.ul-results li.is-active {
+  background: #f4f9fd;
+}
+
+.ul-results .ul-ic {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #f1f4f6;
+  display: grid;
+  place-items: center;
+}
+
+.ul-results strong {
+  font-size: 14px;
+  font-weight: 600;
+  display: block;
+}
+
+.ul-results small {
+  font-size: 11px;
+  color: var(--ul-muted);
+}
+
+.ul-results .ul-eta {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ul-muted);
+  white-space: nowrap;
+}
+
+.ul-results .ul-empty {
+  cursor: default;
+  grid-template-columns: 1fr;
+  color: var(--ul-muted);
+  font-size: 13px;
+}
+
+.ul-route {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--ul-wash);
+  border: 1px solid #d7ecfb;
+}
+
+.ul-route[hidden] {
+  display: none;
+}
+
+.ul-route-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 8px;
+}
+
+.ul-route-head strong {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.controls.ul-panel .ul-close,
+.controls.ul-panel .ul-close:hover {
+  border: 0;
+  background: transparent;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--ul-muted);
+  padding: 2px 4px;
+}
+
+.ul-pref {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+  border-radius: 11px;
+  background: #ffffff;
+  border: 1px solid #d7ecfb;
+}
+
+.controls.ul-panel .ul-pref button {
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  padding: 6px 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ul-muted);
+  cursor: pointer;
+}
+
+.controls.ul-panel .ul-pref button:hover {
+  background: #f3f5f7;
+}
+
+.controls.ul-panel .ul-pref button.is-on {
+  background: var(--ul-ink);
+  color: #ffffff;
+}
+
+.ul-summary {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ul-summary small {
+  display: block;
+  font-weight: 500;
+  color: var(--ul-muted);
+  margin-top: 2px;
+}
+
+.controls.ul-panel .ul-go,
+.controls.ul-panel .ul-go:hover {
+  height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 12px;
+  background: radial-gradient(ellipse 93.75% 73.02% at 50% 0%, #32a9ff 0%, #008aec 100%);
+  color: #ffffff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.controls.ul-panel .ul-go:active {
+  background: #35abff;
+}
+
+.controls.ul-panel .ul-go:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.ul-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.ul-steps li {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 6px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ul-steps li.ul-step-floor {
+  grid-template-columns: 1fr;
+  padding: 8px 6px 2px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ul-muted);
+}
+
+.ul-steps li.is-transfer {
+  font-weight: 700;
+}
+
+.ul-steps li.is-active {
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.ul-steps li.is-done {
+  opacity: 0.45;
+}
+
+.ul-steps .ul-m {
+  font-size: 11px;
+  color: var(--ul-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ul-steps svg,
+.ul-results svg {
+  display: block;
+}
+
+.ul-section {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 12px;
+}
+
+.ul-section > summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+}
+
+.ul-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ul-section > summary::after {
+  content: "+";
+  color: var(--ul-muted);
+}
+
+.ul-section[open] > summary::after {
+  content: "–";
+}
+
+.ul-layer-list {
+  display: grid;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.ul-layer-list label {
+  display: grid;
+  grid-template-columns: 18px 22px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 5px 4px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ul-layer-list label:hover {
+  background: #f7f7f7;
+}
+
+.ul-layer-list input {
+  margin: 0;
+  accent-color: var(--ul-accent);
+}
+
+.ul-layer-list .ul-sw {
+  width: 22px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.ul-layer-list small {
+  font-size: 11px;
+  color: var(--ul-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ul-section .control-row {
+  margin: 8px 0 0;
+}
+
+.ul-section .control-actions {
+  margin-top: 8px;
+}
+
+.ul-status {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ul-muted);
+  min-height: 1.2em;
+}
+
+/* ── Banner (transfers / arrival) ─────────────────────── */
+.ul-banner {
+  position: fixed;
+  left: 50%;
+  top: 18px;
+  transform: translate(-50%, -12px);
+  opacity: 0;
+  z-index: 30;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--ul-ink);
+  color: #ffffff;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: opacity 160ms ease-out, transform 160ms ease-out;
+  pointer-events: none;
+  max-width: calc(100vw - 32px);
+}
+
+.ul-banner.is-on {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+
+.ul-banner button {
+  border: 0;
+  border-radius: 9px;
+  padding: 7px 10px;
+  background: #ffffff;
+  color: var(--ul-ink);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+@media (min-width: 900px) {
+  .ul-banner {
+    left: calc(50% + 190px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ul-banner {
+    transition: none;
+  }
+}
