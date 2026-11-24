@@ -8,8 +8,8 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
  */
 const SPEAKERS = [
   {
-    head: 0.175,
-    color: "#0051F2",
+    head: 0.18,
+    color: "#7B3FE4",
     quotes: [
       "There is also no sign showing that this classroom number is here.",
       "There's only one 3D model right at the entrance of our college.",
@@ -17,7 +17,7 @@ const SPEAKERS = [
     ],
   },
   {
-    head: 0.339,
+    head: 0.34,
     color: "#E0206A",
     quotes: [
       "I'll be moving from mechanical department to electronics and I won't even notice.",
@@ -26,7 +26,7 @@ const SPEAKERS = [
     ],
   },
   {
-    head: 0.521,
+    head: 0.53,
     color: "#0E8F6B",
     quotes: [
       "It was difficult to find the classroom during my exam times.",
@@ -35,7 +35,7 @@ const SPEAKERS = [
     ],
   },
   {
-    head: 0.7,
+    head: 0.71,
     color: "#E8A200",
     quotes: [
       "I was roaming here and there for at least 15 to 20 minutes.",
@@ -44,7 +44,7 @@ const SPEAKERS = [
     ],
   },
   {
-    head: 0.833,
+    head: 0.843,
     color: "#F26A0F",
     quotes: [
       "The campus is very huge. There are so many wings.",

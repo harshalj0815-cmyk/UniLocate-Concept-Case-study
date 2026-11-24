@@ -149,6 +149,60 @@ img {
   font-weight: 600;
 }
 
+/* Hover: morph into the prototype's primary CTA (blue radial + dashed inset) */
+.case-nav__cta {
+  position: relative;
+  isolation: isolate;
+}
+
+.case-nav__cta::before,
+.case-nav__cta::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.case-nav__cta::before {
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  corner-shape: squircle;
+  background-image: radial-gradient(
+    ellipse 93.75% 73.02% at 50% 0%,
+    #32a9ff 0%,
+    #008aec 100%
+  );
+}
+
+.case-nav__cta::after {
+  inset: 3px;
+  border-radius: 10px;
+  corner-shape: squircle;
+  border: 2px dashed #76c6ff;
+}
+
+.case-nav__cta:hover,
+.case-nav__cta:focus-visible {
+  box-shadow: 0 0 0 1px #005490;
+}
+
+.case-nav__cta:hover::before,
+.case-nav__cta:hover::after,
+.case-nav__cta:focus-visible::before,
+.case-nav__cta:focus-visible::after {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .case-nav__cta,
+  .case-nav__cta::before,
+  .case-nav__cta::after {
+    transition: none;
+  }
+}
+
 .case-nav__cta[aria-disabled="true"] {
   opacity: 0.45;
   pointer-events: none;
@@ -857,6 +911,91 @@ img {
   pointer-events: none;
 }
 
+/* —— Walking crowd (Target users): bare animation on the page background —— */
+.section-visual--crowd {
+  margin-top: 24px;
+  overflow: hidden;
+  background: transparent;
+}
+
+/* —— Target users: stat stickers (white rim, soft shadow, slight tilt) —— */
+.stat-stickers {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 16px;
+}
+
+.stat-sticker {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px 16px;
+  border-width: 5px;
+  border-radius: 24px;
+  background: var(--ul-blue-soft);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    var(--ul-sticker-shadow);
+}
+
+.stat-sticker:nth-child(6n + 1) { transform: rotate(-1.2deg); }
+.stat-sticker:nth-child(6n + 2) { transform: rotate(0.9deg); }
+.stat-sticker:nth-child(6n + 3) { transform: rotate(-0.7deg); }
+.stat-sticker:nth-child(6n + 4) { transform: rotate(0.8deg); }
+.stat-sticker:nth-child(6n + 5) { transform: rotate(-0.9deg); }
+.stat-sticker:nth-child(6n + 6) { transform: rotate(1.1deg); }
+
+.stat-note {
+  margin: 18px 0 0;
+  max-width: none;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ul-muted);
+}
+
+.stat-sticker__label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--ul-muted);
+}
+
+.stat-sticker__value {
+  font-size: clamp(26px, 3.6vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--ul-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-sticker__unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ul-blue-deep);
+}
+
+@media (max-width: 720px) {
+  .stat-stickers {
+    margin-top: 20px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 12px;
+  }
+}
+
+.section-visual__embed--crowd {
+  aspect-ratio: auto;
+  --crowd-h: clamp(150px, 20vw, 220px);
+  height: var(--crowd-h);
+  /* The top of the animation is empty sky; crop it so the crowd sits close to the stats */
+  margin-top: calc(var(--crowd-h) * -0.3);
+  background: transparent;
+  color-scheme: normal;
+}
+
 /* —— Prototype: wide, interactive board (stepper + phone + stage controls) —— */
 .section-visual--prototype {
   /* No frame: the board sits directly on the page background */
@@ -1414,8 +1553,8 @@ img {
 
 .thumbnail__frame {
   width: 100%;
-  aspect-ratio: 16 / 9;
-  max-height: min(72vh, 640px);
+  aspect-ratio: 2.2 / 1;
+  max-height: min(62vh, 500px);
   border-radius: var(--ul-radius-thumb);
   corner-shape: squircle;
   box-shadow:

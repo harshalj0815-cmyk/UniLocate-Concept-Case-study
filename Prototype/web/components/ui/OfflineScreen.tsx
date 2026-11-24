@@ -25,6 +25,8 @@ type Props = {
   variant: OfflineVariant;
   /** Signed-in offline — bottom CTA for saved campus maps */
   signedIn?: boolean;
+  /** Signed-in offline — opens the offline campus map */
+  onUseOfflineMaps?: () => void;
 };
 
 /** Preload only for college results + campus map */
@@ -47,7 +49,7 @@ function OfflineMapLoader({ reduce }: { reduce: boolean }) {
               <iframe
                 className="mf__loading-frame"
                 title="Loading campus map"
-                src={`/animations/campus-map-loading.html?embed=1&v=5&dur=4.2&reduce=${reduce ? "1" : "0"}`}
+                src={`/animations/campus-map-loading.html?embed=1&v=6&dur=4.2&reduce=${reduce ? "1" : "0"}`}
                 tabIndex={-1}
                 aria-hidden
               />
@@ -92,9 +94,11 @@ function OfflineResultsSkeleton() {
 function OfflineWifi({
   reduce,
   signedIn,
+  onUseOfflineMaps,
 }: {
   reduce: boolean;
   signedIn: boolean;
+  onUseOfflineMaps?: () => void;
 }) {
   const textIn = reduce
     ? false
@@ -136,7 +140,7 @@ function OfflineWifi({
             key={`wifi-${reduce ? "0" : "1"}`}
             className="scf__offline-frame"
             title=""
-            src={`/animations/wifi-elastic-entrance.html?embed=1&v=4&reduce=${reduce ? "1" : "0"}`}
+            src={`/animations/wifi-elastic-entrance.html?embed=1&v=5&reduce=${reduce ? "1" : "0"}`}
             tabIndex={-1}
             aria-hidden
             scrolling="no"
@@ -187,6 +191,7 @@ function OfflineWifi({
               className="ul-empty-cta__btn"
               label="Use Offline Maps"
               animate={false}
+              onClick={onUseOfflineMaps}
             />
           </div>
         </motion.div>
@@ -203,6 +208,7 @@ function OfflineWifi({
 export default function OfflineScreen({
   variant,
   signedIn = false,
+  onUseOfflineMaps,
 }: Props) {
   const reduce = useDemoReduceMotion();
   const withPreload = usesPreload(variant);
@@ -266,7 +272,11 @@ export default function OfflineScreen({
             exit={{ opacity: 0 }}
             transition={crossfade}
           >
-            <OfflineWifi reduce={reduce} signedIn={signedIn} />
+            <OfflineWifi
+              reduce={reduce}
+              signedIn={signedIn}
+              onUseOfflineMaps={onUseOfflineMaps}
+            />
           </motion.div>
         )}
       </AnimatePresence>

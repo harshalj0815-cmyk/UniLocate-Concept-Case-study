@@ -12,6 +12,16 @@ import { SurveyChartsStack } from "@/components/SurveyChartsStack";
 
 const TITLE = "UniLocate: Activation design for an indoor campus navigator";
 
+/* Target users: sourced from AISHE 2023-24; ages kept at the 18 to 22 range */
+const USER_STATS = [
+  { label: "Average age of students in India", value: "18–22", unit: "years" },
+  { label: "New entrants in India", value: "~1.3 crore", unit: "students per year" },
+  { label: "Enrolled students in India", value: "4.50 crore", unit: "students in 2023–24" },
+  { label: "Total colleges in India", value: "46,468", unit: "colleges" },
+  { label: "Average college size in India", value: "~5–10", unit: "acres per college" },
+  { label: "Average college size in India", value: "~2.0–4.0", unit: "hectares per college" },
+];
+
 export default function CaseStudyPage() {
   return (
     <>
@@ -167,14 +177,11 @@ export default function CaseStudyPage() {
               className="section-visual__img"
               src="/problem-discovery.png"
               alt="Busy college hallway with students carrying backpacks between classes, the first-day campus navigation problem UniLocate addresses."
-              width={1248}
-              height={832}
+              width={3072}
+              height={2048}
               draggable={false}
               sizes="(max-width: 1120px) 100vw, 1120px"
             />
-            <span className="section-visual__credit" aria-hidden="true">
-              AI Generated Image
-            </span>
             <figcaption className="sr-only">
               Problem Discovery visual. Students moving through a crowded campus
               corridor between classes, grounding the freshman navigation gap
@@ -248,8 +255,7 @@ export default function CaseStudyPage() {
             </h2>
             <ExpandableBody>
               <p className="section-body">
-                An{" "}
-                <mark className="mark">18 to 22 year old student</mark> arrives
+                <mark className="mark">18 to 22 year old students</mark> arrive
                 on an <mark className="mark">unfamiliar campus</mark> for an{" "}
                 <mark className="mark">exam or event</mark>. They can’t find the
                 venue, the people nearby don’t know either, and with only
@@ -261,6 +267,36 @@ export default function CaseStudyPage() {
               </p>
             </ExpandableBody>
           </div>
+          <p className="stat-note">
+            <strong>Approximate market size (TAM).</strong> These figures are
+            estimates compiled from several public sources, mainly AISHE 2023–24
+            (All India Survey on Higher Education) and UGC campus norms.
+          </p>
+          <ul className="stat-stickers" aria-label="Who the students are in India, in numbers">
+            {USER_STATS.map((s) => (
+              <li key={`${s.label}-${s.unit}`} className="stat-sticker sticker squircle">
+                <span className="stat-sticker__label">{s.label}</span>
+                <strong className="stat-sticker__value">{s.value}</strong>
+                <span className="stat-sticker__unit">{s.unit}</span>
+              </li>
+            ))}
+          </ul>
+          <figure
+            className="section-visual section-visual--crowd"
+            aria-label="Students walking across a campus"
+          >
+            <iframe
+              className="section-visual__embed section-visual__embed--crowd"
+              src="/crowd-hero-animation.html?v=2"
+              title="Students walking across a campus"
+              loading="lazy"
+              tabIndex={-1}
+            />
+            <figcaption className="sr-only">
+              Animated crowd of students walking in both directions, in layers
+              of depth. Decorative.
+            </figcaption>
+          </figure>
         </section>
 
         <section

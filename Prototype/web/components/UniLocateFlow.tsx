@@ -137,6 +137,12 @@ export default function UniLocateFlow() {
     setJumpKey((k) => k + 1);
   }, []);
 
+  /** Offline + signed in — saved campus map opens the offline map screen */
+  const openOfflineMap = useCallback(() => {
+    const college = mapCollege ?? COLLEGE_RESULTS[0];
+    if (college) openMap(college);
+  }, [mapCollege, openMap]);
+
   const onCollegeScene = useCallback((scene: CollegeScene) => {
     if (scene === "home") setDemoStep("college-home");
     else if (scene === "search") setDemoStep("college-search");
@@ -260,6 +266,7 @@ export default function UniLocateFlow() {
                   onSceneChange={onCollegeScene}
                   onGetStarted={openSignup}
                   onSelectCollege={openMap}
+                  onUseOfflineMaps={openOfflineMap}
                 />
               </div>
               {!signedIn && (screen === "signup" || screen === "login") ? (
@@ -276,32 +283,32 @@ export default function UniLocateFlow() {
                   />
                 )
               ) : null}
-              {screen === "map" && mapCollege ? (
-                offline ? (
-                  <OfflineScreen
-                    key={`map-offline-${jumpKey}`}
-                    variant="map"
-                    signedIn={signedIn}
-                  />
-                ) : (
-                  <MapFirstTime
-                    key={`map-${jumpKey}`}
-                    collegeName={mapCollege.name}
-                    needsProfile={mapNeedsProfile && !signedIn}
-                    signedIn={signedIn}
-                    campusMapHome={demoStep === "map-idle"}
-                    scene={
-                      signedIn && mapScene === "profile" ? "idle" : mapScene
-                    }
-                    soundEnabled={soundOn}
-                    onSceneChange={onMapScene}
-                    onNeedsProfile={
-                      signedIn ? undefined : markMapNeedsProfile
-                    }
-                    onBack={backToCollege}
-                    onCreateProfile={openSignup}
-                  />
-                )
+              {/*
+                First open + offline: nothing is downloaded yet, so there is no
+                offline map. Show the wifi empty state with no CTA instead.
+              */}
+              {screen === "map" && mapCollege && offline && !signedIn ? (
+                <OfflineScreen key={`map-offline-${jumpKey}`} variant="map" />
+              ) : null}
+              {screen === "map" && mapCollege && !(offline && !signedIn) ? (
+                <MapFirstTime
+                  key={`map-${jumpKey}`}
+                  collegeName={mapCollege.name}
+                  needsProfile={mapNeedsProfile && !signedIn}
+                  signedIn={signedIn}
+                  campusMapHome={demoStep === "map-idle"}
+                  offline={offline}
+                  scene={
+                    signedIn && mapScene === "profile" ? "idle" : mapScene
+                  }
+                  soundEnabled={soundOn}
+                  onSceneChange={onMapScene}
+                  onNeedsProfile={
+                    signedIn ? undefined : markMapNeedsProfile
+                  }
+                  onBack={backToCollege}
+                  onCreateProfile={openSignup}
+                />
               ) : null}
             </IPhoneFrame>
           </MotionConfig>

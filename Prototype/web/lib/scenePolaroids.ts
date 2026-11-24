@@ -104,3 +104,11 @@ export const SCENE_POLAROIDS: ScenePolaroid[] = [
     },
   },
 ];
+
+/* Warm the photos at load so the home entrance never waits on the network */
+if (typeof window !== "undefined") {
+  for (const card of SCENE_POLAROIDS) {
+    const img = new Image();
+    img.src = card.src;
+  }
+}

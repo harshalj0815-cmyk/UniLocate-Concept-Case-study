@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { motion } from "motion/react";
 import { useDemoReduceMotion } from "@/lib/demoMotion";
 import { paperSquircleClip } from "@/lib/continuousCorner";
@@ -76,6 +76,38 @@ export default function PolaroidCard({
   const delay = 0.78 + enterIndex * 0.055;
   const skipEnter = muted || !animate || reduce;
 
+  /*
+   * Hold the entrance until the photo is decoded so a card never slides in
+   * empty and fills in afterwards. The stagger still counts from mount, so
+   * cached photos keep the original timing; slow ones start as soon as ready.
+   */
+  const mountedAt = useRef(0);
+  const [enterDelay, setEnterDelay] = useState<number | null>(null);
+  useEffect(() => {
+    if (skipEnter) return;
+    mountedAt.current = performance.now();
+    let alive = true;
+    const go = () => {
+      if (!alive) return;
+      const elapsed = (performance.now() - mountedAt.current) / 1000;
+      setEnterDelay(Math.max(0, delay - elapsed));
+    };
+    const img = new Image();
+    img.src = src;
+    if (typeof img.decode === "function") {
+      img.decode().then(go, go);
+    } else if (img.complete) {
+      go();
+    } else {
+      img.onload = go;
+      img.onerror = go;
+    }
+    return () => {
+      alive = false;
+    };
+  }, [delay, skipEnter, src]);
+  const entering = !skipEnter && enterDelay === null;
+
   if (muted) {
     return (
       <div
@@ -107,12 +139,16 @@ export default function PolaroidCard({
                 rotate: kick,
               }
         }
-        animate={{ opacity: 1, x: 0, y: 0, rotate: 0 }}
+        animate={
+          entering
+            ? { opacity: 0, x: offset.x, y: offset.y, rotate: kick }
+            : { opacity: 1, x: 0, y: 0, rotate: 0 }
+        }
         transition={
           skipEnter
             ? { duration: 0 }
             : {
-                delay,
+                delay: enterDelay ?? delay,
                 duration: 0.32,
                 ease: [0.23, 1, 0.32, 1],
               }

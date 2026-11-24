@@ -103,6 +103,12 @@
   const urlTrip = readTripFromUrl();
   const isEmbed = new URLSearchParams(location.search).get("embed") === "1";
   /*
+   * Offline (shell ?offline=1): no GPS, so the map never shows where the user is
+   * and a search / tap only marks the place — no route from the user to it.
+   */
+  const isOffline =
+    isEmbed && new URLSearchParams(location.search).get("offline") === "1";
+  /*
    * Embed prototype: shell owns destination. Don't revive the last route from
    * sessionStorage on refresh — only honor an explicit ?trip= (floor handoff).
    */
@@ -1519,7 +1525,161 @@
   });
 
   // ── Route ─────────────────────────────────────────────
+  /** Where to drop the destination pin for a place (room centre, else first door) */
+  function placePoint(t) {
+    if (t.rect) {
+      const [x, y, w, h] = t.rect;
+      return { x: x + w / 2, y: y + h / 2 };
+    }
+    const d = t.doors && t.doors[0];
+    if (d) return { x: d[0], y: d[1] };
+    const pts = t.accessPoints && t.accessPoints[FLOOR];
+    if (pts && pts[0]) return { x: pts[0][0], y: pts[0][1] };
+    return null;
+  }
+
+  /**
+   * Offline — a QR checkpoint fixes the user's position. The checkpoint hangs in
+   * the ground-floor main corridor (y≈831), so scanning it reveals the pin there.
+   */
+  const QR_SPOT = { floor: "ground", x: 785, y: 831, label: "Main corridor" };
+
+  /** Offline hop length: each QR on the route sits about this far past the last one */
+  const HOP_M = 30;
+
+  function pointAlong(points, dist) {
+    let left = dist;
+    for (let i = 1; i < points.length; i++) {
+      const a = points[i - 1];
+      const b = points[i];
+      const seg = Math.hypot(b.x - a.x, b.y - a.y);
+      if (seg > 0 && left <= seg) {
+        const t = left / seg;
+        return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+      }
+      left -= seg;
+    }
+    const last = points[points.length - 1];
+    return { x: last.x, y: last.y };
+  }
+
+  /**
+   * Offline — where the next QR sits along the current route, or null with no route.
+   * Long stretch: one hop ahead on this floor. Short stretch: the stair/lift exit's
+   * far side (next floor), or the destination itself when it is the last leg.
+   */
+  function nextCheckpoint() {
+    const r = state.route;
+    if (!r || !r.legs || !r.legs.length) return null;
+    const L0 = r.legs[0];
+    const step = HOP_M / MPP;
+    const round = (p, floor, extra) => ({ floor, x: Math.round(p.x), y: Math.round(p.y), ...extra });
+    if (L0.px > step * 1.5) {
+      return round(pointAlong(L0.points, step), L0.floor, { final: false, label: "Checkpoint" });
+    }
+    if (r.legs.length === 1) {
+      const end = L0.points[L0.points.length - 1];
+      return round(end, L0.floor, { final: true, label: "Destination" });
+    }
+    const L1 = r.legs[1];
+    return round(L1.points[0], L1.floor, { final: false, label: "Checkpoint" });
+  }
+
+  /** Walk-less arrival: the last QR is at the destination, so finish the trip there */
+  function arriveHere(end) {
+    const t = state.to && router.targets.get(state.to);
+    if (!t) return;
+    showBanner(`${icon("arrive", "#fff")}<span>You’ve arrived at ${t.name}</span>`, 4000);
+    status(`Arrived at ${t.name}. Your location is now set here.`);
+    state.playing = null;
+    state.from = { floor: FLOOR, x: Math.round(end.x), y: Math.round(end.y), label: t.name };
+    state.costs = null;
+    notifyShell({ type: "arrived", destination: t.name });
+    state.to = null;
+    persist();
+    refreshRoute();
+    renderFrom();
+    setMood("happy", 6000);
+  }
+
+  function revealUser(opts = {}) {
+    const spot = opts.spot && opts.spot.floor ? opts.spot : QR_SPOT;
+    const snap = router.snap(spot.floor, spot.x, spot.y);
+    state.from = {
+      floor: spot.floor,
+      x: Math.round(snap ? snap.x : spot.x),
+      y: Math.round(snap ? snap.y : spot.y),
+      label: spot.label || "Checkpoint",
+    };
+    state.costs = null;
+    persist();
+    document.documentElement.classList.add("ul-located");
+    renderFrom();
+    const dest = opts.to ? router.targets.get(String(opts.to)) : null;
+    if (dest) {
+      /* A place was already picked: route to it from the QR spot */
+      stopPlaying();
+      state.to = dest.id;
+      state.confirmQueued = false;
+      state.confirmedLeg = null;
+      $("ulQuery").value = "";
+      persist();
+      renderResults();
+      if (opts.final) {
+        arriveHere({ x: state.from.x, y: state.from.y });
+        return true;
+      }
+      refreshRoute({ fit: true });
+      publishNav(0);
+      if (state.from.floor === FLOOR) setMood("happy", 2200);
+      notifyShell({ type: "located", floor: state.from.floor, routed: !!state.route });
+      return true;
+    }
+    if (state.from.floor === FLOOR) {
+      setMood("happy", 2200);
+      if (opts.center) centerOnUser({ zoom: 0.95, duration: reduceMotion ? 0 : 720 });
+    }
+    notifyShell({ type: "located", floor: state.from.floor });
+    return true;
+  }
+
+  /** Remove the offline place pin + highlight */
+  function clearPlace() {
+    G.marks.innerHTML = "";
+    overlay.querySelectorAll(".ul-hit.is-dest").forEach((n) => n.classList.remove("is-dest"));
+  }
+
+  /**
+   * Offline — show where a place is. No route, no steps, no nav card.
+   * Places on another floor are handed to the shell, which opens that floor.
+   */
+  function showPlace(id, opts = {}) {
+    stopPlaying();
+    const t = router.targets.get(id);
+    if (!t) return false;
+    state.to = null;
+    state.route = null;
+    $("ulQuery").value = "";
+    renderResults();
+    renderRouteCard(null);
+    drawRoute();
+    clearPlace();
+    const floor = t.floor || (t.floors && t.floors[0]) || FLOOR;
+    notifyShell({ type: "place", id: t.id, floor, name: t.name });
+    if (floor !== FLOOR) return true;
+    const p = placePoint(t);
+    if (!p) return false;
+    destMarker(p);
+    overlay.querySelectorAll(`.ul-hit[data-id="${t.id}"]`).forEach((n) => n.classList.add("is-dest"));
+    if (opts.fit !== false) fitPoints([p], 170, { duration: 720 });
+    return true;
+  }
+
   function selectTarget(id, opts = {}) {
+    if (isOffline) {
+      showPlace(id, opts);
+      return;
+    }
     stopPlaying();
     state.to = id;
     state.confirmQueued = false;
@@ -2026,7 +2186,28 @@
     const vz = Number(new URLSearchParams(location.search).get("vz"));
     return Number.isFinite(vz) && vz > 0;
   })();
-  if (!resumingPlay && !urlHasView) {
+  if (isOffline) {
+    /* No user location — stay on the wide cover view; open straight on a place if asked */
+    const q = new URLSearchParams(location.search);
+    const placeId = q.get("place");
+    /* Already scanned a QR — keep the pin when stepping between floors */
+    /* A later QR (not the first) puts the pin at that checkpoint instead */
+    const spot = q.get("ff")
+      ? { floor: q.get("ff"), x: Number(q.get("fx")), y: Number(q.get("fy")), label: "Checkpoint" }
+      : null;
+    if (q.get("located") === "1" && q.get("reveal") !== "1") {
+      revealUser({ center: false, spot });
+    }
+    if (q.get("reveal") === "1") {
+      setTimeout(
+        () => revealUser({ center: true, to: q.get("go"), spot }),
+        reduceMotion ? 0 : 320,
+      );
+    }
+    if (placeId) {
+      setTimeout(() => showPlace(placeId), reduceMotion ? 0 : isEmbed ? 320 : 0);
+    }
+  } else if (!resumingPlay && !urlHasView) {
     const focus = () => {
       if (
         centerOnUser({
@@ -2058,6 +2239,10 @@
     router,
     state,
     selectTarget,
+    showPlace,
+    clearPlace,
+    revealUser,
+    nextCheckpoint,
     setFrom,
     play,
     stopPlaying,

@@ -82,6 +82,12 @@ export const UL_ASSETS = {
   appleIcon: "/icons/Apple.svg",
   mailIcon: "/icons/Mail.svg",
   filterIcon: "/icons/Filter.svg",
+  /** Offline map — Prototype/Icons/QR Code.svg (28×28) */
+  qrIcon: "/icons/QrCode.svg",
+  /** QR scanner — close (X) in place of the scan button (Paper 6HU-0) */
+  qrCloseIcon: "/icons/QrClose.svg",
+  /** QR scanner — camera photo behind the viewfinder (360×284 crop) */
+  qrScanPhoto: "/images/QrSign.jpg",
   kebabIcon: "/icons/Kebab.svg",
   plusIcon: "/icons/Plus.svg",
   minusIcon: "/icons/Minus.svg",

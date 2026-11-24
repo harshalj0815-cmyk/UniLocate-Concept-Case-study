@@ -22,6 +22,9 @@
   if (params.get("embed") !== "1" && !framed) return;
 
   document.documentElement.classList.add("ul-embed");
+  /* Offline — no GPS: never show the "you are here" pin */
+  const offline = params.get("offline") === "1";
+  if (offline) document.documentElement.classList.add("ul-offline");
 
   const MAP_W = 2184;
   const MAP_H = 2114;
@@ -65,6 +68,9 @@
     html.ul-embed .ul-hit {
       cursor: grab !important;
       transition: none !important;
+    }
+    html.ul-offline:not(.ul-located) .ul-pin {
+      display: none !important;
     }
     /* Create Profile — pan/zoom ok; places not tappable */
     html.ul-embed.ul-lock-hits .ul-hit {
@@ -258,6 +264,12 @@
       if (!input) return;
       input.value = d.query;
       input.dispatchEvent(new Event("input", { bubbles: true }));
+      if (d.submit && offline) {
+        /* Offline — mark the first match, never route to it */
+        const first = document.querySelector("#ulResults li[data-id]");
+        if (first) window.ulNav?.showPlace?.(first.dataset.id);
+        return;
+      }
       if (d.submit) {
         input.dispatchEvent(
           new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
@@ -319,6 +331,22 @@
 
     if (d.type === "poi-focus" && d.kind) {
       window.ulNav?.focusPoi?.(String(d.kind), d.on !== false);
+      return;
+    }
+
+    /* Offline — a QR scan fixed the position: show the pin + center on it */
+    if (d.type === "reveal-user") {
+      window.ulNav?.revealUser?.({
+        center: true,
+        to: d.to,
+        spot: d.spot,
+        final: !!d.final,
+      });
+      return;
+    }
+
+    if (d.type === "clear-place") {
+      window.ulNav?.clearPlace?.();
       return;
     }
 

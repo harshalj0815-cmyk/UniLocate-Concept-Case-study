@@ -70,6 +70,8 @@ type SearchCollegeFlowProps = {
   signedIn?: boolean;
   /** Stage Online | Offline — offline replaces college UI with wifi empty */
   offline?: boolean;
+  /** Offline + signed in — "Use Offline Maps" opens the offline campus map */
+  onUseOfflineMaps?: () => void;
 };
 
 /** Prototype flow: FirstTime ↔ OnClick ↔ CollegeResults */
@@ -82,6 +84,7 @@ export default function SearchCollegeFlow({
   recVariant = "recommendation",
   signedIn = false,
   offline = false,
+  onUseOfflineMaps,
 }: SearchCollegeFlowProps) {
   const reduce = useDemoReduceMotion();
   const [phase, setPhase] = useState<Phase>(() =>
@@ -478,6 +481,7 @@ export default function SearchCollegeFlow({
         key={offlineVariant}
         variant={offlineVariant}
         signedIn={signedIn}
+        onUseOfflineMaps={onUseOfflineMaps}
       />
     );
   }

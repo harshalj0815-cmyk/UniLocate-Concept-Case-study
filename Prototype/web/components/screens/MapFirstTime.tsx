@@ -17,6 +17,7 @@ import IosKeyboard from "@/components/ui/IosKeyboard";
 import NavManeuverSign from "@/components/ui/NavManeuverSign";
 import MapFilterPanel from "@/components/ui/MapFilterPanel";
 import PrimaryCta from "@/components/ui/PrimaryCta";
+import QrScannerCard from "@/components/ui/QrScannerCard";
 import SearchField from "@/components/ui/SearchField";
 import { OTHER_FILTERS, type OtherFilter } from "@/lib/mapFilters";
 import { UL_ASSETS } from "@/lib/uniLocateTokens";
@@ -24,6 +25,14 @@ import { UL_ASSETS } from "@/lib/uniLocateTokens";
 type MapNavApi = {
   confirmFloor?: () => boolean;
   play?: (leg: number) => void;
+  /** Offline: next QR along the current route */
+  nextCheckpoint?: () => {
+    floor: FloorId;
+    x: number;
+    y: number;
+    final: boolean;
+  } | null;
+  state?: { to?: string | null };
   setSection?: (id: string | null) => void;
   setSectionIds?: (ids: string[]) => void;
   toggleSectionId?: (id: string) => void;
@@ -99,6 +108,8 @@ type Props = {
    * False for Arrived / Navigating / Create profile (even if scene is idle).
    */
   campusMapHome?: boolean;
+  /** Offline map — shows the QR scan button bottom-left (Paper 6VJ-0) */
+  offline?: boolean;
   /** Demo board — jump into a map beat (applied on remount) */
   scene?: MapScene;
   /** Stage card — mute arrival burst SFX when false */
@@ -125,9 +136,32 @@ function buildMapSrc(
   floor: FloorId,
   view: ViewState,
   reduceMotion = false,
+  /** Offline — no user pin / no route; `place` opens straight on that place */
+  opts: {
+    offline?: boolean;
+    place?: string;
+    /** QR already scanned — keep the user pin at the checkpoint */
+    located?: boolean;
+    /** Scan just finished — drop the pin in with a centre-on-user */
+    reveal?: boolean;
+    /** Place picked before scanning: route to it from the QR spot */
+    go?: string;
+    /** A later checkpoint (not the first QR) the pin should sit at */
+    spot?: { floor: FloorId; x: number; y: number };
+  } = {},
 ) {
-  const params = new URLSearchParams({ embed: "1", v: "40" });
+  const params = new URLSearchParams({ embed: "1", v: "42" });
   if (reduceMotion) params.set("reduce", "1");
+  if (opts.offline) params.set("offline", "1");
+  if (opts.offline && opts.place) params.set("place", opts.place);
+  if (opts.offline && opts.located) params.set("located", "1");
+  if (opts.offline && opts.reveal) params.set("reveal", "1");
+  if (opts.offline && opts.reveal && opts.go) params.set("go", opts.go);
+  if (opts.offline && opts.spot) {
+    params.set("ff", opts.spot.floor);
+    params.set("fx", String(opts.spot.x));
+    params.set("fy", String(opts.spot.y));
+  }
   if (view.zoom != null && Number.isFinite(view.zoom)) {
     params.set("vx", String(view.x));
     params.set("vy", String(view.y));
@@ -143,7 +177,7 @@ function buildHandoffSrc(
   view: ViewState,
   reduceMotion = false,
 ) {
-  const params = new URLSearchParams({ embed: "1", v: "40" });
+  const params = new URLSearchParams({ embed: "1", v: "41" });
   if (reduceMotion) params.set("reduce", "1");
   params.set(
     "trip",
@@ -257,7 +291,7 @@ const MapLayers = memo(function MapLayers({
             <iframe
               className="mf__loading-frame"
               title="Loading campus map"
-              src={`/animations/campus-map-loading.html?embed=1&v=5&dur=4.2&reduce=${reduce ? "1" : "0"}`}
+              src={`/animations/campus-map-loading.html?embed=1&v=6&dur=4.2&reduce=${reduce ? "1" : "0"}`}
               tabIndex={-1}
               aria-hidden
             />
@@ -275,6 +309,7 @@ export default function MapFirstTime({
   needsProfile = false,
   signedIn = false,
   campusMapHome = false,
+  offline = false,
   scene = "idle",
   soundEnabled = true,
   onSceneChange,
@@ -294,19 +329,41 @@ export default function MapFirstTime({
     {
       key: `L${layerSeq.current++}`,
       floor: "ground",
-      src: buildMapSrc("ground", { x: 0, y: 0, zoom: null }, reduce),
+      src: buildMapSrc("ground", { x: 0, y: 0, zoom: null }, reduce, {
+        offline,
+      }),
     },
   ]);
   const [query, setQuery] = useState("");
   const [mapReady, setMapReady] = useState(false);
-  /** Campus map stepper page only — never after arrival / nav / profile */
+  /**
+   * Campus map stepper page only — never after arrival / nav / profile.
+   * Offline opens straight on the saved map (no loading sticker).
+   */
   const showMapLoadIntro =
-    !reduce && campusMapHome && scene === "idle" && !needsProfile;
+    !reduce && !offline && campusMapHome && scene === "idle" && !needsProfile;
   const [mapRevealed, setMapRevealed] = useState(!showMapLoadIntro);
   const mapLoadGenRef = useRef(0);
   const MAP_LOAD_MS = 4500;
   /** Map-Search-FirstTime — shrink map, lift search, show keyboard */
   const [searching, setSearching] = useState(false);
+  /** Offline QR scanner (Paper 6HU-0) — camera card above a shorter map */
+  const [scanning, setScanning] = useState(false);
+  /** Scanner locked onto the code (brackets snap in) just before it closes */
+  const [scanHit, setScanHit] = useState(false);
+  const locatedRef = useRef(false);
+  const revealTimer = useRef<number | null>(null);
+  /** Latest checkpoint the user scanned; floor swaps keep the pin here */
+  const spotRef = useRef<{ floor: FloorId; x: number; y: number } | null>(null);
+  const navigatingRef = useRef(false);
+  /** Offline: the place last marked on the map, routed to once the QR is scanned */
+  const placeRef = useRef<{ id: string; name: string } | null>(null);
+  useEffect(
+    () => () => {
+      if (revealTimer.current != null) window.clearTimeout(revealTimer.current);
+    },
+    [],
+  );
   /** Map-Filter-FirstTime — Wings / Building / Other sheet */
   const [filtering, setFiltering] = useState(false);
   /** Filter opened from search+keyboard — sheet rises into freed space */
@@ -324,8 +381,14 @@ export default function MapFirstTime({
   const filterSectionIdsRef = useRef(filterSectionIds);
   filterSectionIdsRef.current = filterSectionIds;
   /** Map-Navigation-FirstTime — nav card after a destination search */
+  /**
+   * Offline demo jump onto Navigating: nothing is located yet, so land on the
+   * saved map with O104 marked and the QR scanner opening. Scanning then drops
+   * the pin and starts the route, same as the live flow.
+   */
+  const offlineDemoNavRef = useRef(offline && scene === "navigating");
   const [navigating, setNavigating] = useState(
-    () => scene === "navigating",
+    () => scene === "navigating" && !offlineDemoNavRef.current,
   );
   /** Map-Success-FirstTime — after the pin reaches the room */
   const [arrived, setArrived] = useState(() => scene === "success");
@@ -350,12 +413,14 @@ export default function MapFirstTime({
   const onSceneChangeRef = useRef(onSceneChange);
   onSceneChangeRef.current = onSceneChange;
   const [destination, setDestination] = useState(() =>
-    scene === "navigating" || scene === "success" || scene === "profile"
+    (scene === "navigating" && !offlineDemoNavRef.current) ||
+    scene === "success" ||
+    scene === "profile"
       ? DEMO_NAV_DEST.name
       : "",
   );
   const [navStep, setNavStep] = useState<NavStep | null>(() =>
-    scene === "navigating"
+    scene === "navigating" && !offlineDemoNavRef.current
       ? {
           icon: "walk",
           text: `Head to ${DEMO_NAV_DEST.name}`,
@@ -364,8 +429,12 @@ export default function MapFirstTime({
         }
       : null,
   );
-  /** Seed O104 once when jumping into Navigating via the stepper */
-  const demoNavSeededRef = useRef(false);
+  /**
+   * Seed O104 only when the screen is opened straight into Navigating via the
+   * stepper. A search (or QR scan) that starts navigation later keeps its own
+   * destination, so mark it as already seeded.
+   */
+  const demoNavSeededRef = useRef(scene !== "navigating");
   const playTimerRef = useRef<number | null>(null);
   const floorIndexRef = useRef(0);
   const arrivedRef = useRef(false);
@@ -377,6 +446,7 @@ export default function MapFirstTime({
    */
   const searchReturnBlurRef = useRef(false);
   arrivedRef.current = arrived;
+  navigatingRef.current = navigating;
   if (navigating || arrived) searchReturnBlurRef.current = true;
 
   /** Idle after first arrival — Create Profile CTA; pan ok, places locked */
@@ -582,6 +652,35 @@ export default function MapFirstTime({
         setFilterSectionIds(new Set(ids));
         return;
       }
+      if (d.type === "place") {
+        /* Offline search — place sits on another floor: open that floor on it */
+        if (typeof d.id === "string" && d.id) {
+          placeRef.current = {
+            id: d.id,
+            name: typeof d.name === "string" ? d.name : "",
+          };
+        }
+        const nextId = d.floor as FloorId;
+        const nextIndex = FLOORS.findIndex((f) => f.id === nextId);
+        if (nextIndex < 0 || nextIndex === floorIndexRef.current) return;
+        if (typeof d.id !== "string" || !d.id) return;
+        const dir: 1 | -1 = nextIndex > floorIndexRef.current ? 1 : -1;
+        captureView();
+        const src = buildMapSrc(nextId, viewRef.current, reduce, {
+          offline: true,
+          place: d.id,
+          located: locatedRef.current,
+          spot: spotRef.current ?? undefined,
+        });
+        setStepDir(dir);
+        setMapReady(false);
+        setFloor(nextId);
+        setLayers((prev) => [
+          ...prev,
+          { key: `L${layerSeq.current++}`, floor: nextId, src },
+        ]);
+        return;
+      }
       if (d.type === "floor-handoff") {
         const nextId = d.floor as FloorId;
         if (!FLOORS.some((f) => f.id === nextId)) return;
@@ -684,6 +783,26 @@ export default function MapFirstTime({
     return () => window.removeEventListener("message", onMessage);
   }, [captureView, mapWin, post, reduce]);
 
+  /** Offline Navigating jump — mark O104, then open the QR scanner */
+  useEffect(() => {
+    if (!mapReady || !offlineDemoNavRef.current) return;
+    offlineDemoNavRef.current = false;
+    post({ type: "select", id: DEMO_NAV_DEST.id, fit: true });
+    /* O104 sits on the first floor: give the floor swap time to land */
+    /* Not cleared on re-run: the floor swap flips mapReady and would cancel it */
+    demoScanTimer.current = window.setTimeout(
+      () => setScanning(true),
+      reduce ? 500 : 3200,
+    );
+  }, [mapReady, post, reduce]);
+  const demoScanTimer = useRef<number | null>(null);
+  useEffect(
+    () => () => {
+      if (demoScanTimer.current != null) window.clearTimeout(demoScanTimer.current);
+    },
+    [],
+  );
+
   /** Demo Navigating jump — select O104 as soon as the map is ready */
   useEffect(() => {
     if (!mapReady || !navigating || arrived) return;
@@ -725,13 +844,16 @@ export default function MapFirstTime({
     if (!navigating || arrived) return;
     post({ type: "nav-sync" });
     const syncAgain = window.setTimeout(() => post({ type: "nav-sync" }), 120);
-    playTimerRef.current = window.setTimeout(
-      () => {
-        playTimerRef.current = null;
-        post({ type: "play", leg: 0 });
-      },
-      reduce ? 0 : 3000,
-    );
+    /* Offline: no walking animation. The user advances by scanning the next QR. */
+    if (!offline) {
+      playTimerRef.current = window.setTimeout(
+        () => {
+          playTimerRef.current = null;
+          post({ type: "play", leg: 0 });
+        },
+        reduce ? 0 : 3000,
+      );
+    }
     return () => {
       window.clearTimeout(syncAgain);
       if (playTimerRef.current != null) {
@@ -739,7 +861,7 @@ export default function MapFirstTime({
         playTimerRef.current = null;
       }
     };
-  }, [arrived, navigating, post, reduce]);
+  }, [arrived, navigating, offline, post, reduce]);
 
   /** Motion off — skip burst; otherwise fallback if settled never posts */
   useEffect(() => {
@@ -797,7 +919,11 @@ export default function MapFirstTime({
       const next = FLOORS[floorIndex + dir];
       if (!next || swapping) return;
       captureView();
-      const src = buildMapSrc(next.id, viewRef.current, reduce);
+      const src = buildMapSrc(next.id, viewRef.current, reduce, {
+        offline,
+        located: locatedRef.current,
+        spot: spotRef.current ?? undefined,
+      });
       setStepDir(dir);
       setMapReady(false);
       setFloor(next.id);
@@ -806,8 +932,102 @@ export default function MapFirstTime({
         { key: `L${layerSeq.current++}`, floor: next.id, src },
       ]);
     },
-    [captureView, floorIndex, reduce, swapping],
+    [captureView, floorIndex, offline, reduce, swapping],
   );
+
+  /* Offline scan: one full sweep → code locks → scanner closes → pin drops at the QR corridor */
+  useEffect(() => {
+    if (!offline || !scanning) {
+      setScanHit(false);
+      return;
+    }
+    const sweep = reduce ? 900 : 3000;
+    const timers: number[] = [];
+    timers.push(
+      window.setTimeout(() => {
+        setScanHit(true);
+        timers.push(
+          window.setTimeout(() => {
+            setScanning(false);
+            locatedRef.current = true;
+            /* Own timer: closing the scanner re-runs this effect and must not cancel the reveal */
+            revealTimer.current = window.setTimeout(
+                () => {
+                  /* Already navigating: this QR is the next checkpoint. Hop straight there. */
+                  if (navigatingRef.current) {
+                    const api = mapWin()?.ulNav;
+                    const cp = api?.nextCheckpoint?.();
+                    const to = api?.state?.to;
+                    if (!cp || !to) return;
+                    spotRef.current = { floor: cp.floor, x: cp.x, y: cp.y };
+                    if (cp.floor === FLOORS[floorIndexRef.current]?.id) {
+                      post({ type: "reveal-user", to, spot: cp, final: cp.final });
+                      return;
+                    }
+                    const nextIndex = FLOORS.findIndex((f) => f.id === cp.floor);
+                    captureView();
+                    const hopSrc = buildMapSrc(cp.floor, viewRef.current, reduce, {
+                      offline: true,
+                      located: true,
+                      reveal: true,
+                      go: to,
+                      spot: spotRef.current,
+                    });
+                    setStepDir(nextIndex > floorIndexRef.current ? 1 : -1);
+                    setMapReady(false);
+                    setFloor(cp.floor);
+                    setLayers((prev) => [
+                      ...prev,
+                      { key: `L${layerSeq.current++}`, floor: cp.floor, src: hopSrc },
+                    ]);
+                    return;
+                  }
+                  /* Place already picked: start navigating to it from the QR spot */
+                  spotRef.current = null;
+                  const picked = placeRef.current;
+                  if (picked) {
+                    /* Real destination chosen: don't let the stepper demo seed O104 */
+                    demoNavSeededRef.current = true;
+                    setDestination(picked.name || picked.id);
+                    setNavigating(true);
+                    onSceneChangeRef.current?.("navigating");
+                  }
+                  if (floorIndexRef.current === 0) {
+                    post({ type: "reveal-user", to: picked?.id });
+                    return;
+                  }
+                  captureView();
+                  const src = buildMapSrc("ground", viewRef.current, reduce, {
+                    offline: true,
+                    located: true,
+                    reveal: true,
+                    go: picked?.id,
+                  });
+                  setStepDir(-1);
+                  setMapReady(false);
+                  setFloor("ground");
+                  setLayers((prev) => [
+                    ...prev,
+                    { key: `L${layerSeq.current++}`, floor: "ground", src },
+                  ]);
+                },
+                reduce ? 0 : 420,
+            );
+          }, reduce ? 300 : 900),
+        );
+      }, sweep),
+    );
+    return () => {
+      timers.forEach((t) => window.clearTimeout(t));
+    };
+  }, [offline, scanning, reduce, post, captureView, mapWin]);
+
+  /* Offline navigation: 2 to 3 seconds at each QR, then the next scan moves the user on */
+  useEffect(() => {
+    if (!offline || !navigating || arrived || scanning || !mapReady) return;
+    const t = window.setTimeout(() => setScanning(true), reduce ? 800 : 2600);
+    return () => window.clearTimeout(t);
+  }, [arrived, mapReady, navigating, offline, reduce, scanning]);
 
   const floorLabelVariants = {
     enter: (d: 1 | -1) => ({
@@ -852,12 +1072,23 @@ export default function MapFirstTime({
   const queryRef = useRef(query);
   queryRef.current = query;
 
+  /* Offline — emptying the search field drops the place pin */
+  const prevQueryRef = useRef(query);
+  useEffect(() => {
+    const emptied = prevQueryRef.current.trim() !== "" && !query.trim();
+    prevQueryRef.current = query;
+    if (emptied) placeRef.current = null;
+    if (!offline || !mapReady || navigating || query.trim()) return;
+    post({ type: "clear-place" });
+  }, [mapReady, navigating, offline, post, query]);
+
   const endNavigation = useCallback(() => {
     if (playTimerRef.current != null) {
       window.clearTimeout(playTimerRef.current);
       playTimerRef.current = null;
     }
     post({ type: "stop" });
+    placeRef.current = null;
     setNavigating(false);
     setArrived(false);
     setArrivalScrim(false);
@@ -959,15 +1190,22 @@ export default function MapFirstTime({
   const submitSearch = useCallback(() => {
     const q = queryRef.current.trim();
     if (!q) return;
+    if (offline) {
+      /* Offline — no location to route from: just mark where the place is */
+      post({ type: "search", query: q, submit: true });
+      setSearching(false);
+      return;
+    }
     post({ type: "search", query: q, submit: true });
     setDestination(q);
     setSearching(false);
     setNavigating(true);
     onSceneChange?.("navigating");
-  }, [onSceneChange, post]);
+  }, [offline, onSceneChange, post]);
 
   const openSearch = useCallback(() => {
     if (navigating || needsProfile || filtering) return;
+    setScanning(false);
     setSearching(true);
   }, [filtering, navigating, needsProfile]);
   const closeSearch = useCallback(() => setSearching(false), []);
@@ -1017,6 +1255,10 @@ export default function MapFirstTime({
       closeFilter();
       return;
     }
+    if (scanning) {
+      setScanning(false);
+      return;
+    }
     if (searching) {
       closeSearch();
       return;
@@ -1034,6 +1276,7 @@ export default function MapFirstTime({
     filtering,
     navigating,
     onBack,
+    scanning,
     searching,
   ]);
 
@@ -1061,6 +1304,7 @@ export default function MapFirstTime({
     navigating && !arrived ? "mf--navigating" : "",
     searching && !filtering && !arrived ? "mf--searching" : "",
     profileGate ? "mf--profile" : "",
+    scanning ? "mf--scanning" : "",
     !mapRevealed ? "mf--loading" : "",
   ]
     .filter(Boolean)
@@ -1121,6 +1365,10 @@ export default function MapFirstTime({
         animate={{ opacity: 1, transform: "translate3d(0, 0, 0)" }}
         transition={enterTx(0.06)}
       >
+        {offline ? (
+          <QrScannerCard active={scanning} reduce={reduce} hit={scanHit} />
+        ) : null}
+
         <div className="mf__frame">
           <div className="mf__frame-inner">
             <MapLayers
@@ -1178,6 +1426,26 @@ export default function MapFirstTime({
               </button>
             </div>
           </div>
+        ) : null}
+
+        {offline && !navigating && !arrived ? (
+          <button
+            type="button"
+            className="mf__scan"
+            aria-label={scanning ? "Close QR scanner" : "Scan QR code"}
+            aria-pressed={scanning}
+            onClick={() => setScanning((s) => !s)}
+          >
+            <span className="mf__scan-face">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={scanning ? UL_ASSETS.qrCloseIcon : UL_ASSETS.qrIcon}
+                alt=""
+                width={28}
+                height={28}
+              />
+            </span>
+          </button>
         ) : null}
       </motion.div>
 
@@ -1287,7 +1555,18 @@ export default function MapFirstTime({
               transition={arrivalCardTx}
               onClick={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
+              data-settled={burstSettled ? "true" : "false"}
             >
+              {/* White while the burst plays, blue sky fades in once it settles */}
+              <motion.div
+                className="mf__success-sky"
+                aria-hidden
+                initial={false}
+                animate={{ opacity: burstSettled ? 1 : 0 }}
+                transition={
+                  reduce ? { duration: 0 } : { duration: 0.9, ease: EASE_OUT }
+                }
+              />
               {/* Motion off — mount already at settled end (no fade/blur enter) */}
               <motion.div
                 className="mf__success-inner"
@@ -1339,7 +1618,7 @@ export default function MapFirstTime({
                 <iframe
                   className="mf__success-burst"
                   title="Arrival celebration"
-                  src={`/animations/campus-sticker-burst.html?embed=1&v=13&mute=${soundEnabled && !reduce ? "0" : "1"}&reduce=${reduce ? "1" : "0"}&sub=${encodeURIComponent(successSubtitle)}`}
+                  src={`/animations/campus-sticker-burst.html?embed=1&v=14&mute=${soundEnabled && !reduce ? "0" : "1"}&reduce=${reduce ? "1" : "0"}&sub=${encodeURIComponent(successSubtitle)}`}
                   style={{ background: "transparent" }}
                   allow="autoplay"
                   tabIndex={-1}
@@ -1382,9 +1661,9 @@ export default function MapFirstTime({
               >
                 {needsProfile
                   ? "Create profile for more navigation"
-                  : signedIn
+                  : signedIn && !offline
                     ? "Share your location with a friend"
-                    : "Nice — ready for the next stop"}
+                    : "Nice, ready for the next stop"}
               </motion.p>
               <motion.div
                 className="mf__success-cta-wrap"
@@ -1410,7 +1689,7 @@ export default function MapFirstTime({
                   label={
                     needsProfile
                       ? "Create Profile"
-                      : signedIn
+                      : signedIn && !offline
                         ? "Share"
                         : "Done"
                   }

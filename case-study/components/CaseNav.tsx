@@ -43,7 +43,7 @@ export function CaseNav() {
       </a>
       <p className="case-nav__meta">Concept case study</p>
       <a className="case-nav__cta" href="#prototype">
-        Prototype
+        AI Prototype
       </a>
     </header>
   );
