@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Isometric map and buildings</title>
+<script>
+/* UniLocate phone embed: ?embed=1 hides chrome + goes transparent, ?reduce=1 skips motion */
+(function(){
+  var p = new URLSearchParams(location.search);
+  if (p.get("embed") === "1") document.documentElement.classList.add("ul-embed");
+  if (p.get("reduce") === "1") document.documentElement.classList.add("ul-reduce");
+})();
+</script>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --land:#dfe3e0; --block:#cdd3d1; --park:#b9d6a8; --water:#8fc1e3; --road:#fff; --edge:#fff; --line:#2f7bff;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*{box-sizing:border-box}
+body{margin:0;height:100%;background:var(--bg);overflow:hidden;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.stage{position:fixed;inset:0;display:grid;place-items:center;overflow:hidden}
+.scale{width:420px;height:420px;transform:scale(var(--s,1))}
+.rise{width:100%;height:100%;transform:translateY(110vh)}
+
+.map{position:relative;width:420px;height:420px;transform-style:preserve-3d;transform:rotateX(58deg) rotateZ(-45deg)}
+.plane{position:absolute;inset:0;border:18px solid var(--edge);background:var(--land);overflow:hidden;border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,.4)}
+.plane svg{width:100%;height:100%;display:block}
+.bld{position:absolute;transform-style:preserve-3d}
+.grow{position:absolute;inset:0;transform-style:preserve-3d;transform:scaleZ(0);transform-origin:0 0 0;animation:grow .7s cubic-bezier(0.23,1,0.32,1) both paused}
+.go .grow{animation-play-state:running}
+.b1 .grow{animation-delay:0s}
+.q{position:absolute;left:50%;top:50%;transform-style:preserve-3d;transform:translateZ(55px)}
+.q span{position:absolute;left:0;top:0;transform-style:flat;transform:rotateZ(45deg) rotateX(-58deg) translate(-50%,-50%)}
+.q em{display:block;font:800 84px/1 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-style:normal;color:#ff2d2d;opacity:0;transform:scale(.9);animation:pop .5s cubic-bezier(0.23,1,0.32,1) .55s both paused}
+.go .q em{animation-play-state:running}
+@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.b2 .grow{animation-delay:.3s}
+@keyframes grow{from{transform:scaleZ(0)}to{transform:scaleZ(1)}}
+.f{position:absolute;background-repeat:no-repeat}
+button{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));font:inherit;font-size:14px;color:#fff;background:transparent;border:1px solid rgba(255,255,255,.5);padding:8px 14px;border-radius:6px;cursor:pointer}
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.rise,.grow,.q em{animation-duration:.01s;animation-delay:0s}}
+html.ul-reduce .rise,html.ul-reduce .grow,html.ul-reduce .q em{animation-duration:.01s;animation-delay:0s}
+
+/* Phone embed: transparent, no replay button, matches the light prototype */
+html.ul-embed{color-scheme:normal}
+html.ul-embed,html.ul-embed body{background:transparent!important;overflow:hidden!important}
+html.ul-embed #replay{display:none!important}
+/* The 420px stage is bigger than the frame: center the grid track itself, not just the item */
+html.ul-embed .stage{justify-content:center;align-content:center}
+/* Phone embed plays a touch faster than the standalone page */
+html.ul-embed:not(.ul-reduce) .grow{animation-duration:.5s}
+html.ul-embed:not(.ul-reduce) .b2 .grow{animation-delay:.2s}
+html.ul-embed:not(.ul-reduce) .q em{animation-duration:.4s;animation-delay:.35s}
+html.ul-embed .plane{box-shadow:0 0 0 1px rgba(0,80,160,.12)}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@800&display=swap">
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="scale" id="scale">
+    <div class="rise" id="rise">
+      <div class="map">
+        <div class="plane">
+          <svg viewBox="0 0 384 384" preserveAspectRatio="none" aria-hidden="true">
+            <rect width="384" height="384" fill="#dfe3e0"/>
+            <g fill="#cdd3d1">
+              <rect x="14" y="14" width="86" height="64"/><rect x="120" y="14" width="70" height="64"/>
+              <rect x="14" y="98" width="86" height="90"/><rect x="214" y="14" width="60" height="110"/>
+              <rect x="294" y="14" width="76" height="60"/><rect x="120" y="228" width="80" height="60"/>
+              <rect x="14" y="300" width="100" height="70"/><rect x="230" y="300" width="70" height="70"/>
+              <rect x="320" y="230" width="50" height="70"/>
+            </g>
+            <g fill="#b9d6a8"><rect x="120" y="98" width="70" height="104" rx="6"/><rect x="294" y="94" width="76" height="52" rx="6"/><rect x="14" y="208" width="86" height="64" rx="6"/></g>
+            <path d="M-10 262 C70 240 110 300 190 282 S310 214 400 238" fill="none" stroke="#8fc1e3" stroke-width="22" stroke-linecap="round"/>
+            <g stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round">
+              <path d="M0 88H384"/><path d="M0 214H384" opacity=".0"/><path d="M110 0V384"/><path d="M204 0V384"/><path d="M284 0V384"/>
+              <path d="M0 196H384"/><path d="M0 292H384"/><path d="M0 130L110 88" opacity=".0"/>
+            </g>
+            <g stroke="#f4b860" stroke-width="3" fill="none" stroke-dasharray="10 8"><path d="M0 142C80 150 170 120 384 160"/></g>
+          </svg>
+        </div>
+
+        <!-- taller building -->
+        <div class="bld b1" style="left:95px;top:200px;width:80px;height:80px" data-h="230"><div class="grow"></div><div class="q"><span><em>?</em></span></div></div>
+        <!-- shorter building -->
+        <div class="bld b2" style="left:175px;top:200px;width:90px;height:80px" data-h="120"><div class="grow"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<button id="replay" type="button">Replay</button>
+<script>
+(function(){
+  var params=new URLSearchParams(location.search);
+  var embed=params.get('embed')==='1';
+  var reduceQ=params.get('reduce')==='1';
+  // Build the six faces of each box (w x d footprint, h tall) as dashed outlines only
+  document.querySelectorAll('.bld').forEach(function(b){
+    var w=parseFloat(b.style.width), d=parseFloat(b.style.height), h=parseFloat(b.dataset.h);
+    var g=b.querySelector('.grow');
+    var sk=b.classList.contains('b2');
+    var H='repeating-linear-gradient(90deg,var(--line) 0 14px,transparent 14px 18px)',V=H.replace('90deg','180deg');
+    function edges(s){var im=[],sz=[],po=[];
+      if(s.indexOf('t')>-1){im.push(H);sz.push('100% 4px');po.push('0 0');}
+      if(s.indexOf('b')>-1){im.push(H);sz.push('100% 4px');po.push('0 100%');}
+      if(s.indexOf('l')>-1){im.push(V);sz.push('4px 100%');po.push('0 0');}
+      if(s.indexOf('r')>-1){im.push(V);sz.push('4px 100%');po.push('100% 0');}
+      return ';background-image:'+im.join(',')+';background-size:'+sz.join(',')+';background-position:'+po.join(',');}
+    // each edge is drawn by exactly one face, so no doubled lines
+    function face(css,e){var f=document.createElement('div');f.className='f';f.style.cssText=css+edges(e);g.appendChild(f);}
+    face('left:0;top:0;width:'+w+'px;height:'+d+'px;transform:translateZ(0)',sk?'tbr':'tblr');
+    face('left:0;top:0;width:'+w+'px;height:'+d+'px;transform:translateZ('+h+'px)','tblr');
+    face('left:0;top:'+(d-h/2)+'px;width:'+w+'px;height:'+h+'px;transform:translateZ('+h/2+'px) rotateX(90deg)',sk?'r':'lr');
+    face('left:0;top:'+(-h/2)+'px;width:'+w+'px;height:'+h+'px;transform:translateZ('+h/2+'px) rotateX(90deg)',sk?'r':'lr');
+  });
+  // Fit to viewport
+  var scale=document.getElementById('scale');
+  function fit(){var s=Math.min(innerWidth/620,innerHeight/640,1.3);scale.style.setProperty('--s',Math.max(s,.45));}
+  fit();addEventListener('resize',fit);
+  // Spring (mass 1, stiffness 100, damping 10) sampled into a linear() easing
+  var stage=document.getElementById('stage'), rise=document.getElementById('rise'), anim;
+  function springEasing(){
+    var m=1,k=100,c=10,w0=Math.sqrt(k/m),z=c/(2*Math.sqrt(k*m)),wd=w0*Math.sqrt(1-z*z),pts=[],T=1.6,N=60;
+    for(var i=0;i<=N;i++){var t=i/N*T;pts.push((1-Math.exp(-z*w0*t)*(Math.cos(wd*t)+(z*w0/wd)*Math.sin(wd*t))).toFixed(4));}
+    pts[N]='1';return 'linear('+pts.join(',')+')';
+  }
+  function play(){
+    stage.classList.remove('go');
+    document.querySelectorAll('.grow,.q em').forEach(function(g){g.style.animation='none';void g.offsetWidth;g.style.animation='';});
+    if(anim)anim.cancel();
+    var reduce=reduceQ||matchMedia('(prefers-reduced-motion: reduce)').matches;
+    anim=rise.animate(reduce?[{opacity:0,transform:'none'},{opacity:1,transform:'none'}]:[{transform:'translateY(110vh)'},{transform:'translateY(0)'}],{duration:reduce?300:(embed?1100:1600),easing:reduce?'ease-out':springEasing(),fill:'both'});
+    anim.finished.then(function(){
+      stage.classList.add('go');
+      // Tell the phone screen the buildings have settled so it can reveal the copy
+      if(embed&&parent!==window)setTimeout(function(){parent.postMessage({type:'ul-anim-done',name:'isometric-map'},'*');},reduce?60:(embed?750:1100));
+    }).catch(function(){});
+  }
+  document.getElementById('replay').addEventListener('click',play);
+  play();
+})();
+</script>
+</body>
+</html>

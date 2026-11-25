@@ -12,7 +12,9 @@ const SECTIONS = [
   { id: "journey", label: "Journey Mapping" },
   { id: "decisions", label: "Decisions" },
   { id: "prototype", label: "Prototype" },
+  { id: "tradeoffs", label: "Trade-offs" },
   { id: "edge", label: "Edge cases" },
+  { id: "iterations", label: "Design iterations" },
   { id: "outcome", label: "Outcome" },
 ] as const;
 
@@ -24,25 +26,35 @@ export function SectionSpy({ activeId }: { activeId?: string }) {
   }, [activeId]);
 
   useEffect(() => {
-    const nodes = SECTIONS.map((s) => document.getElementById(s.id)).filter(
-      Boolean,
-    ) as HTMLElement[];
-    if (!nodes.length) return;
+    let frame = 0;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        if (visible[0]?.target?.id) {
-          setCurrent(visible[0].target.id);
-        }
-      },
-      { rootMargin: "-30% 0px -45% 0px", threshold: [0, 0.25, 0.5, 1] },
-    );
+    const update = () => {
+      frame = 0;
+      // Reading line: a section is current once its top has passed this line.
+      const line = window.innerHeight * 0.35;
+      let active: string = SECTIONS[0].id;
+      for (const s of SECTIONS) {
+        const el = document.getElementById(s.id);
+        // Skip anchors that are not rendered yet (hidden placeholders).
+        if (!el || el.hidden || el.getClientRects().length === 0) continue;
+        if (el.getBoundingClientRect().top <= line) active = s.id;
+        else break;
+      }
+      setCurrent(active);
+    };
 
-    nodes.forEach((n) => observer.observe(n));
-    return () => observer.disconnect();
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
   return (

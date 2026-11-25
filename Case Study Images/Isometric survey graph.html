@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How many times has this happened to you?</title>
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+  --bg:#F5F5F7; --ink:#1D1D1F; --muted:#6E6E73; --card:#FFFFFF; --edge:#FFFFFF; --shadow:rgba(0,0,0,.10);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;line-height:1.45}
+main{max-width:760px;margin:0 auto;padding:28px 18px 36px}
+h1{font-size:clamp(22px,4.6vw,30px);margin:0 0 4px;font-weight:650;letter-spacing:-.01em}
+.sub{margin:0 0 4px;color:var(--muted);font-size:15px}
+.stage{position:relative}
+svg{display:block;width:100%;height:auto;touch-action:manipulation}
+.slice{pointer-events:none;transition:transform .28s ease,opacity .28s ease}
+.slice.hov{transform:translate(var(--dx),var(--dy))}
+.slice.dim{opacity:.45}
+.hit{cursor:pointer;outline:none}
+.hit polygon{fill:transparent}
+.pct{font-size:24px;font-weight:700;text-anchor:middle}
+.cat{font-size:13px;text-anchor:middle}
+.out{text-anchor:start}
+.tip{position:absolute;left:0;top:0;width:max-content;max-width:210px;background:var(--card);border:2px solid var(--edge);border-radius:12px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.14);font-size:13px;color:var(--muted);pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .18s,transform .18s}
+.tip.on{opacity:1;transform:none}
+.tip strong{display:flex;align-items:center;gap:8px;color:var(--ink);font-size:15px;margin-bottom:4px}
+.tip i{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
+.tip p{margin:0}
+.tip .rank{margin-top:6px;color:var(--ink);font-weight:600}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:2px}
+.card{font:inherit;color:inherit;text-align:left;background:var(--card);border:2px solid var(--edge);border-left:6px solid var(--c);border-radius:10px;padding:10px 12px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:transform .2s,box-shadow .2s,opacity .2s}
+.card b{display:block;font-size:22px;line-height:1.2}
+.card span{font-size:13px;color:var(--muted)}
+.card.on{box-shadow:0 8px 20px var(--shadow);transform:translateY(-3px)}
+.card.dim{opacity:.55}
+.card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+#note{margin:14px 2px 0;min-height:44px;font-size:15px}
+@media (max-width:520px){.cards{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.slice,.card,.tip{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <h1>How many times has this happened to you?</h1>
+  <p class="sub">31 responses. Hover or tap a slice to pull it out and see the details.</p>
+  <div class="stage" id="stage">
+    <svg id="chart" viewBox="0 0 700 440" role="img" aria-label="Isometric pie chart of survey responses: once 3.2%, 2 to 3 times 61.3%, 4 or more times 35.5%"></svg>
+    <div class="tip" id="tip"></div>
+  </div>
+  <div class="cards" id="cards"></div>
+  <p id="note" aria-live="polite"></p>
+</main>
+<script>
+(function(){
+  var data=[
+    {k:'Once',n:1,c:'#3366CC',t:'#FFFFFF'},
+    {k:'2 to 3 times',n:19,c:'#DC3912',t:'#FFFFFF'},
+    {k:'4 or more times',n:11,c:'#FF9900',t:'#1B1B1B'}
+  ];
+  var TOTAL=31, CX=350, CY=255, A=208, B=120, H=34, TAU=Math.PI*2, EDGE='#FFFFFF';
+  var svg=document.getElementById('chart'), stage=document.getElementById('stage'), tip=document.getElementById('tip');
+  var cardsEl=document.getElementById('cards'), note=document.getElementById('note');
+  var hov=null, sel=null;
+
+  // slice angles: start at 3 o'clock, run clockwise like the original chart
+  var acc=0;
+  data.forEach(function(d){d.a1=acc;acc+=TAU*d.n/TOTAL;d.a2=acc;d.mid=(d.a1+d.a2)/2;});
+  var ranked=data.slice().sort(function(a,b){return b.n-a.n;});
+  data.forEach(function(d){d.rank=ranked.indexOf(d);});
+  var RANK=['Most common answer','Second most common answer','Least common answer'];
+
+  // isometric ground circle = ellipse with minor/major ratio 1/sqrt(3)
+  function pt(phi,r,z){return [CX+r*A*Math.cos(phi), CY+r*B*Math.sin(phi)-z];}
+  function str(a){return a.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');}
+  function arc(p1,p2,r,z){
+    var n=Math.max(2,Math.ceil((p2-p1)/(Math.PI/45))),a=[];
+    for(var i=0;i<=n;i++)a.push(pt(p1+(p2-p1)*i/n,r,z));
+    return a;
+  }
+  function mix(hex,t,amt){
+    var n=parseInt(hex.slice(1),16),r=n>>16,g=(n>>8)&255,b=n&255;
+    function f(v){return Math.round(v+(t-v)*amt);}
+    return 'rgb('+f(r)+','+f(g)+','+f(b)+')';
+  }
+  function pct(n){return (n/TOTAL*100).toFixed(1)+'%';}
+  function poly(a,fill,w){return '<polygon points="'+str(a)+'" fill="'+fill+'" stroke="'+EDGE+'" stroke-width="'+w+'" stroke-linejoin="round"/>';}
+
+  function wallPoly(d,h){
+    var lo=Math.max(d.a1,0),hi=Math.min(d.a2,Math.PI);
+    if(hi<=lo)return null;
+    return arc(lo,hi,1,h).concat(arc(lo,hi,1,0).reverse());
+  }
+
+  function slice(d,i,h,t){
+    var dx=Math.cos(d.mid)*A*0.09, dy=Math.sin(d.mid)*B*0.09-10;
+    var s='<g class="slice" data-s="'+i+'" style="--dx:'+dx.toFixed(1)+'px;--dy:'+dy.toFixed(1)+'px">';
+    var wp=wallPoly(d,h);
+    if(wp)s+=poly(wp,mix(d.c,0,.28),1.5);
+    if(Math.cos(d.a1)<0)s+=poly([pt(d.a1,0,h),pt(d.a1,1,h),pt(d.a1,1,0),pt(d.a1,0,0)],mix(d.c,0,.4),1.5);
+    if(Math.cos(d.a2)>0)s+=poly([pt(d.a2,0,h),pt(d.a2,1,h),pt(d.a2,1,0),pt(d.a2,0,0)],mix(d.c,0,.2),1.5);
+    s+=poly([pt(0,0,h)].concat(arc(d.a1,d.a2,1,h)),d.c,2);
+    if(d.n/TOTAL>=.2){
+      var p=pt(d.mid,.58,h);
+      s+='<text class="pct" x="'+p[0].toFixed(1)+'" y="'+(p[1]+2).toFixed(1)+'" fill="'+d.t+'" opacity="'+t+'">'+pct(d.n)+'</text>';
+      s+='<text class="cat" x="'+p[0].toFixed(1)+'" y="'+(p[1]+20).toFixed(1)+'" fill="'+d.t+'" opacity="'+t+'">'+d.k+'</text>';
+    }else{
+      var a=pt(d.mid,1,h), b=pt(d.mid,1.14,h);
+      s+='<line x1="'+a[0].toFixed(1)+'" y1="'+a[1].toFixed(1)+'" x2="'+b[0].toFixed(1)+'" y2="'+b[1].toFixed(1)+'" stroke="var(--muted)" stroke-width="1.2" opacity="'+t+'"/>';
+      s+='<text class="pct out" x="'+(b[0]+6).toFixed(1)+'" y="'+(b[1]+2).toFixed(1)+'" fill="var(--ink)" opacity="'+t+'">'+pct(d.n)+'</text>';
+      s+='<text class="cat out" x="'+(b[0]+6).toFixed(1)+'" y="'+(b[1]+20).toFixed(1)+'" fill="var(--muted)" opacity="'+t+'">'+d.k+'</text>';
+    }
+    return s+'</g>';
+  }
+
+  function render(t){
+    var h=H*t, s='<ellipse cx="'+CX+'" cy="'+(CY+16)+'" rx="'+(A*1.04)+'" ry="'+(B*1.04)+'" fill="var(--shadow)"/>';
+    var order=data.map(function(d,i){return i;}).sort(function(a,b){return Math.sin(data[a].mid)-Math.sin(data[b].mid);});
+    order.forEach(function(i){s+=slice(data[i],i,h,t);});
+    // static hit layer so a slice that moves away from the pointer does not flicker
+    data.forEach(function(d,i){
+      s+='<g class="hit" data-i="'+i+'" tabindex="0" role="button" aria-label="'+d.k+': '+d.n+' responses, '+pct(d.n)+'">';
+      s+='<polygon points="'+str([pt(0,0,H)].concat(arc(d.a1,d.a2,1,H)))+'"/>';
+      var wp=wallPoly(d,H); if(wp)s+='<polygon points="'+str(wp)+'"/>';
+      s+='</g>';
+    });
+    svg.innerHTML=s;
+    apply();
+  }
+
+  function ratio(d){
+    var share=d.n/TOTAL;
+    return share<.1?'About 1 in '+Math.round(1/share)+' people':'About '+Math.round(share*10)+' in 10 people';
+  }
+
+  function showTip(a){
+    if(a===null){tip.classList.remove('on');return;}
+    var d=data[a];
+    tip.style.setProperty('--c',d.c);
+    tip.innerHTML='<strong><i></i>'+d.k+'</strong>'+
+      '<p>'+d.n+' of '+TOTAL+' respondents ('+pct(d.n)+')</p>'+
+      '<p>'+ratio(d)+'</p>'+
+      '<p class="rank">'+RANK[d.rank]+'</p>';
+    var k=stage.clientWidth/700, p=pt(d.mid,1.12,H);
+    var w=tip.offsetWidth, h=tip.offsetHeight, right=Math.cos(d.mid)>=0;
+    var x=p[0]*k+(right?10:-10-w), y=p[1]*k-h/2;
+    x=Math.max(0,Math.min(x,stage.clientWidth-w));
+    y=Math.max(0,Math.min(y,stage.clientHeight-h));
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+    tip.classList.add('on');
+  }
+
+  function active(){return hov!==null?hov:sel;}
+
+  function apply(){
+    var a=active(), sl=svg.querySelectorAll('.slice'), cards=cardsEl.children, i;
+    for(i=0;i<sl.length;i++){
+      var k=+sl[i].getAttribute('data-s');
+      sl[i].classList.toggle('hov',a===k);
+      sl[i].classList.toggle('dim',a!==null&&a!==k);
+    }
+    for(i=0;i<cards.length;i++){
+      cards[i].classList.toggle('on',a===i);
+      cards[i].classList.toggle('dim',a!==null&&a!==i);
+    }
+    showTip(a);
+    if(a===null){note.textContent='96.8% of respondents (30 of 31) say this has happened to them more than once.';}
+    else{
+      var d=data[a];
+      note.textContent=d.k+': '+d.n+(d.n===1?' response':' responses')+' out of '+TOTAL+' ('+pct(d.n)+').';
+    }
+  }
+
+  data.forEach(function(d,i){
+    var b=document.createElement('button');
+    b.className='card'; b.type='button'; b.style.setProperty('--c',d.c);
+    b.innerHTML='<b>'+pct(d.n)+'</b><span>'+d.k+', '+d.n+(d.n===1?' response':' responses')+'</span>';
+    b.addEventListener('mouseenter',function(){hov=i;apply();});
+    b.addEventListener('mouseleave',function(){hov=null;apply();});
+    b.addEventListener('click',function(){sel=(sel===i?null:i);apply();});
+    cardsEl.appendChild(b);
+  });
+
+  function idx(e){var g=e.target.closest&&e.target.closest('.hit');return g?+g.getAttribute('data-i'):null;}
+  svg.addEventListener('pointerover',function(e){if(e.pointerType==='mouse'){hov=idx(e);apply();}});
+  svg.addEventListener('pointerleave',function(e){if(e.pointerType==='mouse'){hov=null;apply();}});
+  svg.addEventListener('click',function(e){var i=idx(e);sel=(i===null||sel===i)?null:i;apply();});
+  svg.addEventListener('focusin',function(e){var i=idx(e);if(i!==null){hov=i;apply();}});
+  svg.addEventListener('focusout',function(){hov=null;apply();});
+  svg.addEventListener('keydown',function(e){
+    if(e.key==='Enter'||e.key===' '){var i=idx(e);if(i!==null){e.preventDefault();sel=(sel===i?null:i);apply();}}
+  });
+  window.addEventListener('resize',function(){showTip(active());});
+
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){render(1);}
+  else{
+    var start=null;
+    (function step(ts){
+      if(start===null)start=ts;
+      var p=Math.min((ts-start)/900,1), t=1-Math.pow(1-p,3);
+      render(t);
+      if(p<1)requestAnimationFrame(step);
+    })(performance.now());
+  }
+})();
+</script>
+</body>
+</html>

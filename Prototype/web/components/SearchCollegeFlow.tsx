@@ -14,6 +14,7 @@ import CollegeResultsList from "@/components/ui/CollegeResultsList";
 import FocusedSearchField from "@/components/ui/FocusedSearchField";
 import IosKeyboard from "@/components/ui/IosKeyboard";
 import CollegeNotMappedEmpty from "@/components/ui/CollegeNotMappedEmpty";
+import CollegeNotExistEmpty from "@/components/ui/CollegeNotExistEmpty";
 import OfflineScreen from "@/components/ui/OfflineScreen";
 import PrimaryCta from "@/components/ui/PrimaryCta";
 import RecommendationList from "@/components/ui/RecommendationList";
@@ -27,6 +28,13 @@ type Phase = "home" | "search" | "closing" | "results";
 
 const DEMO_QUERY_REC = "Pillai College";
 const DEMO_QUERY_EMPTY = "Sies College";
+const DEMO_QUERY_NOT_EXIST = "Punk College";
+
+function demoQueryFor(variant: SearchRecVariant) {
+  if (variant === "empty") return DEMO_QUERY_EMPTY;
+  if (variant === "not-exist") return DEMO_QUERY_NOT_EXIST;
+  return DEMO_QUERY_REC;
+}
 /** Matches .scf__title — home stack centered on 874px screen */
 const HOME_TITLE_Y = 332;
 const FOCUS_TITLE_Y = 65;
@@ -53,7 +61,8 @@ const EASE_DRAWER = [0.32, 0.72, 0, 1] as const;
 
 type CollegeScene = "home" | "search" | "results";
 
-export type SearchRecVariant = "recommendation" | "empty";
+/** Mapped college · not mapped yet · college doesn't exist */
+export type SearchRecVariant = "recommendation" | "empty" | "not-exist";
 
 type SearchCollegeFlowProps = {
   onGetStarted?: () => void;
@@ -97,14 +106,9 @@ export default function SearchCollegeFlow({
   /** After first search open — shared title/search/polaroid scene */
   const [useShared, setUseShared] = useState(() => scene !== "home");
   const [query, setQuery] = useState(() =>
-    scene === "results"
-      ? recVariant === "empty"
-        ? DEMO_QUERY_EMPTY
-        : DEMO_QUERY_REC
-      : "",
+    scene === "results" ? demoQueryFor(recVariant) : "",
   );
-  const demoQuery =
-    recVariant === "empty" ? DEMO_QUERY_EMPTY : DEMO_QUERY_REC;
+  const demoQuery = demoQueryFor(recVariant);
   const prevRecVariantRef = useRef(recVariant);
   const [showRecs, setShowRecs] = useState(false);
   /** Remount blueprint unfold each empty-results enter */
@@ -125,8 +129,8 @@ export default function SearchCollegeFlow({
   const resultsTimerRef = useRef<number | null>(null);
 
   const showingResults = phase === "results";
-  /** College results empty — not-mapped (Sies) */
-  const resultsEmpty = showingResults && recVariant === "empty";
+  /** College results empty — not mapped (Sies) or doesn't exist (Punk) */
+  const resultsEmpty = showingResults && recVariant !== "recommendation";
   const kbOpen = focused && !showingResults;
   const searchChrome = focused || showingResults;
   const duration = reduce ? 0 : MOVE_S;
@@ -200,7 +204,7 @@ export default function SearchCollegeFlow({
     onSceneChange?.("results");
 
     /* Empty results — unfold map, no skeleton cards */
-    if (recVariant === "empty") {
+    if (recVariant !== "recommendation") {
       setResultsLoading(false);
       setResultsHeader(true);
       setEmptyChromeReady(false);
@@ -304,7 +308,7 @@ export default function SearchCollegeFlow({
       setQuery("");
 
       /* Empty: type only — map empty reveals on Enter */
-      const revealWhileTyping = recVariant !== "empty";
+      const revealWhileTyping = recVariant === "recommendation";
 
       if (reduce) {
         setQuery(demoQuery);
@@ -349,7 +353,7 @@ export default function SearchCollegeFlow({
     if (showingResults) {
       setQuery(demoQuery);
       setResultsHeader(true);
-      if (recVariant === "empty") {
+      if (recVariant !== "recommendation") {
         setResultsLoading(false);
         setEmptyPlayKey((k) => k + 1);
       } else if (!reduce) {
@@ -411,8 +415,8 @@ export default function SearchCollegeFlow({
       startTyping();
       return;
     }
-    /* Empty waits for Enter; recs restore on tap */
-    if (recVariant !== "empty") setShowRecs(true);
+    /* Empty states wait for Enter; recs restore on tap */
+    if (recVariant === "recommendation") setShowRecs(true);
   }, [
     clearResultsTimer,
     onSceneChange,
@@ -774,11 +778,21 @@ export default function SearchCollegeFlow({
             }
             transition={{ duration: fade, ease: EASE_OUT }}
           >
-            <CollegeNotMappedEmpty
-              playKey={emptyPlayKey}
-              copyReady={emptyChromeReady}
-              onUnfoldComplete={() => setEmptyChromeReady(true)}
-            />
+            {recVariant === "not-exist" ? (
+              <CollegeNotExistEmpty
+                playKey={emptyPlayKey}
+                copyReady={emptyChromeReady}
+                onUnfoldComplete={() => setEmptyChromeReady(true)}
+              />
+            ) : (
+              <CollegeNotMappedEmpty
+                playKey={emptyPlayKey}
+                copyReady={emptyChromeReady}
+                onUnfoldComplete={() => setEmptyChromeReady(true)}
+              />
+            )}
+            {/* Not-exist has nothing to request, so no CTA under it */}
+            {recVariant !== "not-exist" ? (
             <motion.div
               className="ul-empty-cta"
               initial={false}
@@ -816,6 +830,7 @@ export default function SearchCollegeFlow({
                 />
               </div>
             </motion.div>
+            ) : null}
           </motion.div>
         ) : null}
       </AnimatePresence>

@@ -94,9 +94,16 @@ const INTERVAL = 3000;
 type Turn = { speakerIndex: number; quoteIndex: number };
 
 export function AffinityClusters() {
+  /* Phone: only the first two notes until "Show more" (hidden via CSS, so no flash) */
+  const [expanded, setExpanded] = useState(false);
+
   return (
-    <figure className="interview-bubbles interview-bubbles--affinity section-visual">
-      <ol className="interview-bubbles__affinity">
+    <figure
+      className={`interview-bubbles interview-bubbles--affinity section-visual${
+        expanded ? "" : " is-collapsed"
+      }`}
+    >
+      <ol className="interview-bubbles__affinity" id="affinity-notes">
         {AFFINITY.map((item) => (
           <li
             key={item.title}
@@ -117,6 +124,15 @@ export function AffinityClusters() {
           </li>
         ))}
       </ol>
+      <button
+        type="button"
+        className="interview-bubbles__more"
+        aria-expanded={expanded}
+        aria-controls="affinity-notes"
+        onClick={() => setExpanded((v) => !v)}
+      >
+        {expanded ? "Show less" : "Show more"}
+      </button>
       <figcaption className="sr-only">
         Affinity-map titles marked with an up arrow if they stayed in
         synthesis, or a down arrow if they did not.

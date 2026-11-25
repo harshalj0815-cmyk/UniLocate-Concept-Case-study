@@ -86,3 +86,7 @@ Next:       molades_brief
   Chrome: floating nav, section spy ticks, Allo (`allo-font`), squircle + white thick border + soft shadow on thumbnail.
   Thumbnail size ~1120×538 vs Matiks ~1100×526 — close enough; leave as-is.
   Content: Thumbnail section only; remaining section anchors stubbed.
+
+- 2026-11-21 — DECISION · Brief / Constraints copy
+  Included: concept / no backend so accuracy can’t be live-tested; GPS unsuitable indoors; indoor positioning needs BLE RSSI or RTT (or similar), not GPS alone.
+  Kept out of Constraints: full QR / signup solution story (Decisions later).

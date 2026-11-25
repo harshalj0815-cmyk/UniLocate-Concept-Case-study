@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blueprint map unfold, opens at center</title>
+<style>
+:root {
+  box-sizing: border-box;
+  color-scheme: light;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);       /* strong ease-out */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);   /* strong ease-in-out */
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+html, body { height: 100%; margin: 0; background: #eef8ff; }
+
+/* The component. Size it by changing --w (width of one panel). */
+.stage {
+  --w: min(84px, 14vw);
+  --h: calc(var(--w) * 2.6667);       /* 8 grid rows */
+  --a: 34deg;                          /* resting fold angle (static, never animated) */
+  --light: #0090ff;
+  --dark: #0077d9;
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: #eef8ff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Soft grey shadow thrown down and to the right */
+.cast {
+  position: absolute; inset: 0;
+  filter: drop-shadow(calc(var(--w) * .35) calc(var(--w) * .65) calc(var(--w) * .12) rgba(0,0,0,.27));
+}
+.float, .rise, .persp {
+  position: absolute; left: 50%; top: 50%;
+  width: 0; height: 0;
+}
+.persp { perspective: 1100px; perspective-origin: 50% 40%; }
+.scene {
+  position: absolute; left: 0; top: 0; width: 0; height: 0;
+  transform-style: preserve-3d;
+  transform: rotateZ(7deg) rotateX(30deg) rotateY(-12deg);
+}
+
+/* Resting (final) transforms. The unfold itself is driven per element in JS (WAAPI),
+   so no child transform depends on an animated parent variable. */
+.map {
+  position: absolute; left: 0; top: calc(var(--h) / -2);
+  width: var(--w); height: var(--h);
+  transform-style: preserve-3d;
+  transform: translateX(calc(var(--w) * -2.5 * cos(var(--a))));
+}
+.p {
+  position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+  transform-style: preserve-3d;
+  transform-origin: 0 50%;
+  transform: rotateY(calc(var(--a) * var(--k)));
+}
+.p .p { left: 100%; }
+
+.face {
+  position: absolute; inset: 0;
+  background-color: var(--c);
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,.38) 1.2px, transparent 1.2px),
+    linear-gradient(to bottom, rgba(255,255,255,.38) 1.2px, transparent 1.2px);
+  background-size: calc(var(--w) / 3) calc(var(--w) / 3);
+}
+.e > .face { --c: var(--light); --edge: #fff; }
+.o > .face { --c: var(--dark);  --edge: #dcdcdc; }  /* only right-facing panels get the shaded edge */
+
+/* Fold shading on right-facing panels; fades out as the map opens (opacity only) */
+.shade {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  background: linear-gradient(90deg, rgba(40,90,170,.5), rgba(40,90,170,.14));
+}
+
+/* Thick white margin around the outline only: top and bottom of every panel, left of the first,
+   right of the last. No lines across the folds. */
+.face::after {
+  content: ""; position: absolute; inset: 0; box-sizing: border-box; pointer-events: none;
+  --b: calc(var(--w) * .15);
+  border-top: var(--b) solid var(--edge);
+  border-bottom: var(--b) solid var(--edge);
+}
+.f > .face::after { border-left: var(--b) solid #fff; }
+.l > .face::after { border-right: var(--b) solid #fff; }
+
+/* Motion (transform only). Without .play the component shows its final, unfolded state. */
+/* Sequence: fast rise to the center folded (0 to .6s), opening starts the moment it arrives (.4s) */
+.play .rise  { animation: rise .6s both; }
+.play .scene { animation: tilt 1.3s .4s both; }
+.play .float { animation: float 4s var(--ease-in-out) 1.8s infinite alternate; }
+
+@keyframes rise {
+  0%   { transform: translateY(calc(50vh + 220px)); animation-timing-function: var(--ease-out); }
+  55%  { transform: translateY(-26px); animation-timing-function: var(--ease-in-out); }
+  75%  { transform: translateY(8px); animation-timing-function: var(--ease-in-out); }
+  90%  { transform: translateY(-3px); animation-timing-function: var(--ease-in-out); }
+  100% { transform: translateY(0); }
+}
+@keyframes tilt {
+  0%   { transform: rotateZ(8deg) rotateX(34deg) rotateY(-14deg); animation-timing-function: var(--ease-out); }
+  35%  { transform: rotateZ(4deg) rotateX(26deg) rotateY(-8deg); animation-timing-function: var(--ease-in-out); }
+  65%  { transform: rotateZ(8.5deg) rotateX(31deg) rotateY(-13deg); animation-timing-function: var(--ease-in-out); }
+  100% { transform: rotateZ(7deg) rotateX(30deg) rotateY(-12deg); }
+}
+@keyframes float { to { transform: translateY(-9px); } }
+
+/* Reduced motion: fewer and gentler, not zero. Movement is dropped, a short fade stays. */
+@keyframes fadein { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .stage.play .rise, .stage.play .scene, .stage.play .float { animation: none; }
+  .stage.play .cast { animation: fadein .4s var(--ease-out) both; }
+}
+</style>
+</head>
+<body>
+<div class="stage" role="img" aria-label="Blueprint map unfolding">
+  <div class="cast"><div class="float"><div class="rise"><div class="persp"><div class="scene"><div class="map"></div></div></div></div></div></div>
+</div>
+
+<script>
+(function () {
+  var ks = [-1, 2, -2, 2, -2];
+  var panels = [], shades = [];
+  var host = document.querySelector('.map');
+  for (var i = 0; i < 5; i++) {
+    var p = document.createElement('div');
+    p.className = 'p ' + (i % 2 ? 'o' : 'e') + (i === 0 ? ' f' : '') + (i === 4 ? ' l' : '');
+    p.style.setProperty('--k', ks[i]);
+    var f = document.createElement('div');
+    f.className = 'face';
+    if (i % 2) { var s = document.createElement('div'); s.className = 'shade'; f.appendChild(s); shades.push(s); }
+    p.appendChild(f);
+    host.appendChild(p);
+    panels.push(p);
+    host = p;
+  }
+
+  /* Curves: same two tokens as the CSS */
+  function bezier(x1, y1, x2, y2) {
+    return function (t) {
+      if (t <= 0 || t >= 1) return t;
+      var lo = 0, hi = 1, s = .5, i;
+      for (i = 0; i < 28; i++) {
+        s = (lo + hi) / 2;
+        var x = 3 * (1 - s) * (1 - s) * s * x1 + 3 * (1 - s) * s * s * x2 + s * s * s;
+        if (x < t) lo = s; else hi = s;
+      }
+      return 3 * (1 - s) * (1 - s) * s * y1 + 3 * (1 - s) * s * s * y2 + s * s * s;
+    };
+  }
+  var FN = { out: bezier(.23, 1, .32, 1), inout: bezier(.77, 0, .175, 1), lin: function (t) { return t; } };
+  var CSS = { out: 'cubic-bezier(0.23, 1, 0.32, 1)', inout: 'cubic-bezier(0.77, 0, 0.175, 1)', lin: 'linear' };
+
+  /* o = offset, a = fold angle (deg), t = shading opacity, e = easing of the segment that starts here */
+  var STOPS = [{ o: 0, a: 86, t: 1, e: 'out' }, { o: .38, a: 12, t: .1, e: 'inout' },
+    { o: .58, a: 46, t: .2, e: 'inout' }, { o: .74, a: 26, t: .05, e: 'inout' },
+    { o: .88, a: 37, t: .02, e: 'inout' }, { o: 1, a: 34, t: 0, e: 'lin' }];
+  var DUR = 1300, DELAY = 400;
+
+  /* Sample the eased angle so the map's centering (cos of the angle) stays exact at every frame */
+  function sample() {
+    var out = [], j, k;
+    for (j = 0; j < STOPS.length - 1; j++) {
+      var A = STOPS[j], B = STOPS[j + 1], n = A.a === B.a ? 1 : 14;
+      for (k = 0; k < n; k++) {
+        var u = k / n;
+        out.push({ o: A.o + (B.o - A.o) * u, a: A.a + (B.a - A.a) * FN[A.e](u) });
+      }
+    }
+    var L = STOPS[STOPS.length - 1];
+    out.push({ o: L.o, a: L.a });
+    return out;
+  }
+
+  var st = document.querySelector('.stage'), map = document.querySelector('.map');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var anims = [];
+
+  function play() {
+    anims.forEach(function (a) { a.cancel(); });
+    anims = [];
+    st.classList.remove('play');
+    void st.offsetWidth;
+    st.classList.add('play');
+    if (reduce.matches || !panels[0].animate) return;
+
+    var W = panels[0].offsetWidth, frames = sample();
+    var opt = { duration: DUR, delay: DELAY, fill: 'both', easing: 'linear' };
+    panels.forEach(function (p, i) {
+      anims.push(p.animate(frames.map(function (f) {
+        return { offset: f.o, transform: 'rotateY(' + (ks[i] * f.a) + 'deg)' };
+      }), opt));
+    });
+    anims.push(map.animate(frames.map(function (f) {
+      return { offset: f.o, transform: 'translateX(' + (-2.5 * W * Math.cos(f.a * Math.PI / 180)) + 'px)' };
+    }), opt));
+    shades.forEach(function (sh) {
+      anims.push(sh.animate(STOPS.map(function (s) {
+        return { offset: s.o, opacity: s.t, easing: CSS[s.e] };
+      }), opt));
+    });
+  }
+  play();
+  st.addEventListener('click', play);
+})();
+</script>
+</body>
+</html>

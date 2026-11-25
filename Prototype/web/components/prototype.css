@@ -337,6 +337,15 @@
   background: rgba(0, 138, 236, 0.08);
 }
 
+/* Mapped | Not mapped | Not exist */
+.proto-segment__track--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.proto-segment__track--3 .proto-segment__btn {
+  padding-inline: 6px;
+}
+
 .proto-segment__btn {
   margin: 0;
   padding: 8px 12px;
@@ -693,7 +702,8 @@
   --bezel: 12px;
   --phone-w: calc(var(--screen-w) + 2 * var(--bezel));
   --phone-h: calc(var(--screen-h) + 2 * var(--bezel));
-  --fit-scale: min(1, calc((100dvh - 32px) / var(--phone-h)));
+  /* Keep ~70px clear above and below the phone so its shadow isn't cut off by the iframe */
+  --fit-scale: min(1.1, calc((100dvh - 140px) / var(--phone-h)));
   --btn-overhang: 8px;
   width: calc(
     (var(--phone-w) + 2 * var(--btn-overhang)) * var(--fit-scale)
@@ -728,7 +738,15 @@
   background: #111113;
   border-radius: var(--frame-radius);
   overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  /* Matched to the reference device shot: tight contact edge, then a long soft fall-off below */
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    1px 2px 2px rgba(0, 0, 0, 0.26),
+    3px 6px 4px rgba(0, 0, 0, 0.2),
+    7px 13px 10px rgba(0, 0, 0, 0.17),
+    14px 25px 22px rgba(0, 0, 0, 0.13),
+    25px 44px 42px rgba(0, 0, 0, 0.1),
+    40px 70px 72px rgba(0, 0, 0, 0.07);
 }
 
 .iphone-frame__btn {
@@ -2183,6 +2201,37 @@
   line-height: 1.35;
   text-align: center;
   flex-shrink: 0;
+}
+
+/* College doesn't exist — isometric map + buildings instead of the blueprint */
+.sco-empty__iso {
+  display: block;
+  width: 340px;
+  height: 300px;
+  border: 0;
+  background: transparent;
+  color-scheme: normal;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+/*
+ * The frame must stay 340×300 (the animation scales to its viewport), but the
+ * drawing only fills y 63–224 of it. Trim the dead space above and below so the
+ * map + caption sit together and center as one group.
+ */
+.sco-empty--iso .sco-empty__iso {
+  margin-top: -56px;
+  margin-bottom: -58px;
+}
+
+/* No CTA on this screen: center the group in the space under the search bar */
+.sco-empty--iso {
+  bottom: 100px;
+}
+
+.sco-empty--iso .sco-empty__label {
+  margin: 0;
 }
 
 /* Same slot as Create Profile / map idle search — 874 − 28 − 48 */

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flat map, endless scroll (cool saturated)</title>
+<style>
+:root {
+  box-sizing: border-box;
+  color-scheme: light;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --scroll-time: 36s; /* time for one full diagonal loop; raise to slow down */
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+html, body { height: 100%; margin: 0; background: #eef8ff; }
+
+.stage {
+  --w: min(84px, 14vw);
+  --mw: calc(var(--w) * 5);          /* same footprint as the unfolded blueprint */
+  --mh: calc(var(--w) * 2.6667);
+  position: relative; height: 100%; overflow: hidden;
+  background: #eef8ff; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Same soft grey shadow, thrown down and to the right */
+.cast {
+  position: absolute; inset: 0;
+  filter: drop-shadow(calc(var(--w) * .35) calc(var(--w) * .65) calc(var(--w) * .12) rgba(0,0,0,.27));
+}
+.float, .rise, .persp { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+.persp { perspective: 1100px; perspective-origin: 50% 40%; }
+.scene {
+  position: absolute; left: 0; top: 0; width: 0; height: 0;
+  transform-style: preserve-3d;
+  transform: rotateZ(7deg) rotateX(30deg) rotateY(-12deg);
+}
+
+/* The flat card: white margin all the way round, map clipped inside */
+.card {
+  position: absolute; left: calc(var(--mw) / -2); top: calc(var(--mh) / -2);
+  width: var(--mw); height: var(--mh);
+  background: #e6e4dc; overflow: hidden;
+}
+.card::after {
+  content: ""; position: absolute; inset: 0; box-sizing: border-box; pointer-events: none;
+  border: calc(var(--w) * .15) solid #fff;
+}
+
+/* Strip is two identical tiles side by side. Moving it by exactly one tile (50%)
+   lands on an identical picture, so the loop has no visible seam. Left to right. */
+.strip {
+  position: absolute; left: 0; top: 0; height: 300%; width: 200%;
+  transform: translate(-50%, 0);
+  will-change: transform;
+}
+.strip svg { display: block; width: 100%; height: 100%; }
+.play .strip { animation: pan var(--scroll-time) linear infinite; }
+/* Right by one tile width and up by two tile heights (about 45 degrees on screen), then the picture is identical to the start */
+@keyframes pan { from { transform: translate(-50%, 0); } to { transform: translate(0, -66.6667%); } }
+
+.play .rise  { animation: rise .6s both; }
+.play .scene { animation: tilt 1.3s .4s both; }
+.play .float { animation: float 4s var(--ease-in-out) 1.8s infinite alternate; }
+
+@keyframes rise {
+  0%   { transform: translateY(calc(50vh + 220px)); animation-timing-function: var(--ease-out); }
+  55%  { transform: translateY(-26px); animation-timing-function: var(--ease-in-out); }
+  75%  { transform: translateY(8px); animation-timing-function: var(--ease-in-out); }
+  90%  { transform: translateY(-3px); animation-timing-function: var(--ease-in-out); }
+  100% { transform: translateY(0); }
+}
+@keyframes tilt {
+  0%   { transform: rotateZ(8deg) rotateX(34deg) rotateY(-14deg); animation-timing-function: var(--ease-out); }
+  35%  { transform: rotateZ(4deg) rotateX(26deg) rotateY(-8deg); animation-timing-function: var(--ease-in-out); }
+  65%  { transform: rotateZ(8.5deg) rotateX(31deg) rotateY(-13deg); animation-timing-function: var(--ease-in-out); }
+  100% { transform: rotateZ(7deg) rotateX(30deg) rotateY(-12deg); }
+}
+@keyframes float { to { transform: translateY(-9px); } }
+
+@keyframes fadein { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .stage.play .rise, .stage.play .scene, .stage.play .float, .stage.play .strip { animation: none; }
+  .stage.play .strip { transform: translate(-25%, -33.3333%); }
+  .stage.play .cast { animation: fadein .4s var(--ease-out) both; }
+}
+</style>
+</head>
+<body>
+<div class="stage" role="img" aria-label="Colorful map scrolling slowly diagonally from bottom left to top right">
+  <div class="cast"><div class="float"><div class="rise"><div class="persp"><div class="scene">
+    <div class="card"><div class="strip">
+      <svg id="map" viewBox="0 0 1800 1440" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div></div>
+  </div></div></div></div></div>
+</div>
+
+<script>
+(function () {
+  /* Saturated cool palette: blues, teals, periwinkle */
+  var C = {
+    land: '#e3eefc', block: '#d4e3f8', bld: ['#c2d6f3', '#b8cef0', '#cbddf6'],
+    park: '#9fdc8a', tree: '#6fc45a', water: '#45a5f7',
+    casing: '#bfd0ea', road: '#ffffff', major: '#ffd25e', majorCase: '#e5ab2e'
+  };
+  var TW = 900, TH = 480;                 /* one tile; the strip holds two */
+  var VX = [0, 150, 300, 450, 600, 750, 900];   /* vertical roads, first and last sit on the tile edge */
+  var HY = [0, 80, 200, 320, 430, 480];          /* horizontal road lines (0 and 480 are the edges) */
+  var MAJOR_Y = 200;
+
+  var seed = 7;
+  function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+
+  /* Everything is built once for a tile, then repeated at x + 900. All shapes stay
+     inside their blocks or sit on the tile edge, so nothing is cut at the join. */
+  function tile() {
+    var s = '';
+    s += '<rect width="' + TW + '" height="' + TH + '" fill="' + C.land + '"/>';
+
+    var i, j, x0, x1, y0, y1, cells = [];
+    for (j = 0; j < HY.length - 1; j++) {
+      for (i = 0; i < VX.length - 1; i++) {
+        x0 = VX[i] + 12; x1 = VX[i + 1] - 12;
+        y0 = HY[j] + (HY[j] === MAJOR_Y ? 15 : 10);
+        y1 = HY[j + 1] - (HY[j + 1] === MAJOR_Y ? 15 : 10);
+        cells.push({ x0: x0, y0: y0, x1: x1, y1: y1, row: j });
+      }
+    }
+
+    cells.forEach(function (c) {
+      var w = c.x1 - c.x0, h = c.y1 - c.y0;
+      s += '<rect x="' + c.x0 + '" y="' + c.y0 + '" width="' + w + '" height="' + h + '" rx="4" fill="' + C.block + '"/>';
+      var park = rnd() < 0.2;
+      if (park) {
+        s += '<rect x="' + (c.x0 + 5) + '" y="' + (c.y0 + 5) + '" width="' + (w - 10) + '" height="' + (h - 10) + '" rx="6" fill="' + C.park + '"/>';
+        for (var t = 0; t < 7; t++) {
+          s += '<circle cx="' + (c.x0 + 14 + rnd() * (w - 28)).toFixed(1) + '" cy="' + (c.y0 + 14 + rnd() * (h - 28)).toFixed(1) +
+               '" r="' + (5 + rnd() * 5).toFixed(1) + '" fill="' + C.tree + '"/>';
+        }
+      } else if (c.row <= 2) {
+        var cols = 2 + Math.floor(rnd() * 2), rows = h > 90 ? 2 : 1, g = 5;
+        var bw = (w - g * (cols + 1)) / cols, bh = (h - g * (rows + 1)) / rows;
+        for (var r = 0; r < rows; r++) for (var q = 0; q < cols; q++) {
+          if (rnd() < 0.12) continue;
+          var sh = 0.6 + rnd() * 0.4, sw = 0.7 + rnd() * 0.3;
+          s += '<rect x="' + (c.x0 + g + q * (bw + g)).toFixed(1) + '" y="' + (c.y0 + g + r * (bh + g)).toFixed(1) +
+               '" width="' + (bw * sw).toFixed(1) + '" height="' + (bh * sh).toFixed(1) + '" rx="2" fill="' + C.bld[Math.floor(rnd() * 3)] + '"/>';
+        }
+      }
+    });
+
+    /* River: a periodic curve (same height and slope at x=0 and x=900), so it joins itself */
+    var river = 'M0 380 C150 330 300 330 450 380 C600 430 750 430 900 380';
+    s += '<path d="' + river + '" fill="none" stroke="' + C.water + '" stroke-width="46" stroke-linecap="butt"/>';
+
+    /* Roads over the river read as bridges */
+    function line(x1, y1, x2, y2, w, col) {
+      return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + col + '" stroke-width="' + w + '"/>';
+    }
+    var cas = '', fil = '';
+    VX.forEach(function (x) { cas += line(x, -10, x, TH + 10, 12, C.casing); fil += line(x, -10, x, TH + 10, 8, C.road); });
+    HY.forEach(function (y) {
+      if (y === MAJOR_Y) { cas += line(-10, y, TW + 10, y, 24, C.majorCase); fil += line(-10, y, TW + 10, y, 19, C.major); }
+      else { cas += line(-10, y, TW + 10, y, 12, C.casing); fil += line(-10, y, TW + 10, y, 8, C.road); }
+    });
+    s += cas + fil;
+    return s;
+  }
+
+  var svg = document.getElementById('map');
+  var NS = 'http://www.w3.org/2000/svg';
+  var defs = document.createElementNS(NS, 'defs');
+  var g = document.createElementNS(NS, 'g');
+  g.setAttribute('id', 't');
+  g.innerHTML = tile();
+  defs.appendChild(g);
+  svg.appendChild(defs);
+  /* 2 columns x 3 rows of the same tile; roads sit on all four tile edges so it repeats both ways */
+  [0, 1].forEach(function (cx) {
+    [0, 1, 2].forEach(function (cy) {
+      var u = document.createElementNS(NS, 'use');
+      u.setAttribute('href', '#t');
+      u.setAttribute('x', cx * TW);
+      u.setAttribute('y', cy * TH);
+      svg.appendChild(u);
+    });
+  });
+
+  var st = document.querySelector('.stage');
+  function play() {
+    st.classList.remove('play');
+    void st.offsetWidth;
+    st.classList.add('play');
+  }
+  play();
+  st.addEventListener('click', play);
+})();
+</script>
+</body>
+</html>

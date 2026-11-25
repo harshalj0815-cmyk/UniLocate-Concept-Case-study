@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wi-Fi elastic entrance</title>
+<style>
+:root{--bg:#ffffff;--fg:#1a2233;--muted:#6b7488;--btn:#1456e0;--btnfg:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;overflow:hidden}
+.stage{width:72px;aspect-ratio:1230/1270;overflow:visible}
+svg{width:100%;height:100%;overflow:visible}
+h1{margin:0;font-size:1rem;letter-spacing:-0.01em}
+p{margin:0;color:var(--muted);font-size:.8rem}
+button{font:inherit;font-size:.85rem;font-weight:600;border:0;border-radius:999px;padding:7px 16px;background:var(--btn);color:var(--btnfg);cursor:pointer}
+button:active{transform:scale(.97)}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+</style>
+</head>
+<body>
+<div class="stage">
+<svg viewBox="0 0 1230 1270" aria-label="No internet connection" role="img">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3f93ff"/><stop offset="1" stop-color="#1250dc"/>
+    </linearGradient>
+    <linearGradient id="r" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff6b6b"/><stop offset="1" stop-color="#d81c1c"/>
+    </linearGradient>
+    <radialGradient id="d" cx=".4" cy=".3" r=".8">
+      <stop offset="0" stop-color="#3f93ff"/><stop offset="1" stop-color="#1250dc"/>
+    </radialGradient>
+    <filter id="s" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1830" height="1900"><feDropShadow dx="0" dy="16" stdDeviation="13" flood-color="#1a3fb0" flood-opacity=".45"/></filter>
+  </defs>
+  <!-- order: top arc first, dot last -->
+  <g id="p0"><g filter="url(#s)">
+    <path d="M158 448A745 745 0 0 1 1076 448" fill="none" stroke="#fff" stroke-width="175" stroke-linecap="round"/>
+    <path d="M158 448A745 745 0 0 1 1076 448" fill="none" stroke="url(#g)" stroke-width="130" stroke-linecap="round"/></g>
+    <path d="M230 405A745 745 0 0 1 990 400" fill="none" stroke="#9fd2ff" stroke-opacity=".55" stroke-width="22" stroke-linecap="round" transform="translate(0 -22)"/></g>
+  <g id="p1"><g filter="url(#s)">
+    <path d="M323 658A478 478 0 0 1 911 658" fill="none" stroke="#fff" stroke-width="160" stroke-linecap="round"/>
+    <path d="M323 658A478 478 0 0 1 911 658" fill="none" stroke="url(#g)" stroke-width="115" stroke-linecap="round"/></g>
+    <path d="M370 625A478 478 0 0 1 865 622" fill="none" stroke="#9fd2ff" stroke-opacity=".55" stroke-width="20" stroke-linecap="round" transform="translate(0 -20)"/></g>
+  <g id="p2"><g filter="url(#s)">
+    <path d="M460 834A255 255 0 0 1 774 834" fill="none" stroke="#fff" stroke-width="150" stroke-linecap="round"/>
+    <path d="M460 834A255 255 0 0 1 774 834" fill="none" stroke="url(#g)" stroke-width="105" stroke-linecap="round"/></g>
+    <path d="M490 815A255 255 0 0 1 745 812" fill="none" stroke="#9fd2ff" stroke-opacity=".55" stroke-width="18" stroke-linecap="round" transform="translate(0 -18)"/></g>
+  <g id="p3"><g filter="url(#s)">
+    <circle cx="627" cy="1035" r="125" fill="#fff"/><circle cx="627" cy="1035" r="95" fill="url(#d)"/></g>
+    <ellipse cx="605" cy="995" rx="38" ry="22" fill="#9fd2ff" fill-opacity=".55" transform="rotate(-25 605 995)"/></g>
+<g id="slash" style="visibility:hidden">
+    <g filter="url(#s)">
+      <path pathLength="1" d="M240 295L950 1005" fill="none" stroke="#fff" stroke-width="125" stroke-linecap="round"/>
+      <path pathLength="1" d="M240 295L950 1005" fill="none" stroke="url(#r)" stroke-width="80" stroke-linecap="round"/></g>
+    <path pathLength="1" d="M300 320L870 890" fill="none" stroke="#ffb8b8" stroke-opacity=".6" stroke-width="14" stroke-linecap="round"/></g>
+</svg>
+</div>
+<div class="wrap"><h1>No internet connection</h1><p>Check your network and try again.</p></div>
+<button id="replay" type="button">Replay</button>
+
+<script>
+// ---- Tunables ----
+const START_OFFSET = 1100;  // SVG units below final position
+const STAGGER_MS   = 40;   // ms between one piece landing and the next one starting
+const RESPONSE     = 0.28;   // seconds, lower = snappier
+const IMPACT       = 1500;   // upward kick given to earlier pieces when a new one lands
+const DIM_MIN      = 0.35;   // opacity of the dimmed piece (1 = normal)
+const STEP         = 0.75;  // seconds the dim takes to move to the next piece
+const FALLOFF      = 0.6;   // kick weakens for pieces further from the one landing
+const DAMPING      = 0.5;  // 1 = no bounce, lower = more elastic overshoot
+// ------------------
+const slash = document.getElementById('slash');
+const parts = [...[0,1,2,3].map(i => document.getElementById('p'+i)), slash];  // the red slash lands last, like the others
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let raf = 0;
+
+function play(){
+  cancelAnimationFrame(raf);
+  if (reduce){ parts.forEach(p => { p.style.opacity = 1; p.setAttribute('transform','translate(0 0)'); }); slash.style.visibility = 'visible'; return; }
+  const w = 2*Math.PI/RESPONSE, k = w*w, c = 2*DAMPING*w;
+  const st = parts.map(() => ({x: START_OFFSET, v: 0}));
+  parts.forEach(p => { p.setAttribute('transform', `translate(0 ${START_OFFSET})`); p.style.visibility = 'hidden'; p.style.opacity = 1; });
+  const t0 = performance.now(); let last = t0; let cur = 0, gapUntil = 0, waveStart = null;
+  (function tick(now){
+    const dt = Math.min((now-last)/1000, 1/30); last = now;
+    let alive = false;
+    parts.forEach((p,i) => {
+      if (i > cur || (i === cur && now < gapUntil)){ alive = true; return; }  // one at a time
+      p.style.visibility = 'visible';
+      if (i < cur && st[i].x === 0 && st[i].v === 0) return;
+      const s = st[i];
+      s.v += (-k*s.x - c*s.v)*dt;   // spring toward 0
+      const prev = s.x; s.x += s.v*dt;
+      if (i === cur && !s.hit && prev > 0 && s.x <= 0){   // landing nudges the pieces above
+        s.hit = true; cur++; gapUntil = now + STAGGER_MS;   // next piece starts as this one lands
+        const last = i === parts.length-1, boost = last ? 1.6 : 1;   // the final landing hits hardest
+        for (let j = 0; j < i; j++) st[j].v -= boost*IMPACT*Math.pow(FALLOFF, i-1-j);
+        if (last) waveStart = now;
+      }
+      if (Math.abs(s.x) < .05 && Math.abs(s.v) < .5){ s.x = 0; s.v = 0; if (i === cur){ cur++; gapUntil = now + STAGGER_MS; } }
+      else alive = true;
+      p.setAttribute('transform', `translate(0 ${s.x.toFixed(2)})`);
+    });
+    if (waveStart !== null){   // after the dot lands: the dim travels dot -> small -> middle -> top, then loops
+      const tt = (now - waveStart)/1000, ramp = Math.min(1, tt/0.2), n = 4;   // dim loop covers the 4 blue pieces only
+      const pos = (tt/STEP) % (n + 1);                 // one extra slot = short pause between loops
+      parts.slice(0, 4).forEach((p,i) => {
+        const k = n-1-i;                               // 0 = dot (bottom) ... 3 = top arc
+        let d = Math.abs(pos - k); d = Math.min(d, n + 1 - d);
+        const dim = Math.max(0, 1 - d);                // linear in and out
+        p.style.opacity = (1 - (1-DIM_MIN)*dim*ramp).toFixed(3);
+      });
+    }
+    raf = requestAnimationFrame(tick);
+  })(last);
+}
+document.getElementById('replay').addEventListener('click', play);
+play();
+</script>
+</body>
+</html>

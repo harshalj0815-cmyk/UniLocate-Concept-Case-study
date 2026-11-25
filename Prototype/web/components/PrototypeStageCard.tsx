@@ -2,7 +2,7 @@
 
 import ProtoSquircle from "@/components/ui/ProtoSquircle";
 
-type SearchRecVariant = "recommendation" | "empty";
+type SearchRecVariant = "recommendation" | "empty" | "not-exist";
 /** First open = just after download; Signed in = after signup */
 export type AudienceMode = "first-open" | "signed-in";
 /** Demo network — Online | Offline */
@@ -188,7 +188,7 @@ export default function PrototypeStageCard({
         seedHeight={36}
       >
         <div
-          className="proto-segment__track"
+          className="proto-segment__track proto-segment__track--3"
           role="tablist"
           aria-label={resultsMode ? "College results" : "Search outcomes"}
           aria-disabled={!searchActive}
@@ -225,6 +225,21 @@ export default function PrototypeStageCard({
             }}
           >
             Not mapped
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className="proto-segment__btn"
+            aria-selected={
+              searchActive && searchSegment.value === "not-exist"
+            }
+            disabled={!searchActive}
+            onClick={() => {
+              if (!searchActive) return;
+              searchSegment.onChange("not-exist");
+            }}
+          >
+            Not exist
           </button>
         </div>
       </ProtoSquircle>

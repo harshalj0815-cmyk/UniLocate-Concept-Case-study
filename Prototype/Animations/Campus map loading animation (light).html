@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Campus map loading animation (light)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600&display=swap">
+<style>
+:root{
+  --paper:#f0f0f0; --dim:rgba(0,0,0,.05);
+  --sticker:#ffffff;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;height:100%;background:#111;overflow:hidden;font-family:"Plus Jakarta Sans","Trebuchet MS",system-ui,sans-serif}
+.stage{position:relative;width:100%;height:100%;background:var(--paper);overflow:hidden}
+svg#map{position:absolute;inset:0;width:100%;height:100%}
+.dim{position:absolute;inset:0;background:var(--dim)}
+
+/* campus draw-in */
+:root{--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
+.pop{opacity:0;transform-box:fill-box;transform-origin:center;animation:pop 380ms var(--ease-out) forwards;animation-delay:var(--d)}
+.fade{opacity:0;animation:fade 700ms var(--ease-out) forwards;animation-delay:var(--d)}
+.wall{fill:none;stroke-linejoin:round;opacity:0;animation:fade 800ms var(--ease-out) forwards;animation-delay:var(--d)}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+@keyframes fade{to{opacity:1}}
+
+/* sticker */
+.center{position:absolute;inset:0;display:grid;place-items:center;perspective:600px}
+.sticker{position:relative;display:grid;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
+.sizer{grid-area:1/1;display:grid;visibility:hidden}
+.sizer span{grid-area:1/1;padding:5px 11px;border:2px solid transparent;white-space:nowrap;font-size:12px;font-weight:600;line-height:1.2}
+.flipper{position:absolute;inset:0;transform-style:preserve-3d;transition:transform 500ms var(--ease-in-out)}
+.face{position:absolute;inset:0;display:grid;place-items:center;padding:5px 11px;border:2px solid var(--sticker);border-radius:4px;backface-visibility:hidden;-webkit-backface-visibility:hidden;text-align:center;white-space:nowrap;font-weight:600;font-size:12px;line-height:1.2}
+.face.back{transform:rotateX(180deg)}
+
+@media (prefers-reduced-motion:reduce){
+  .pop{animation-name:fade;animation-duration:300ms}
+  .flipper{transform:none!important;transition:none}
+  .face,.face.back{transform:none;backface-visibility:visible;-webkit-backface-visibility:visible;transition:opacity 300ms ease}
+  .flipper[data-side="0"] .back,.flipper[data-side="1"] .front{opacity:0}
+}
+</style>
+</head>
+<body>
+<div class="stage" role="status" aria-label="Loading map">
+  <svg id="map" viewBox="0 0 390 780" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+  <div class="dim"></div>
+  <div class="center">
+    <div class="sticker">
+      <div class="sizer" id="sizer"></div>
+      <div class="flipper" id="flipper">
+        <div class="face front" id="f0"></div>
+        <div class="face back" id="f1"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var NS="http://www.w3.org/2000/svg";
+  var map=document.getElementById("map");
+
+  function el(tag,attrs,parent){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,typeof attrs[k]==="number"?+attrs[k].toFixed(1):attrs[k]);parent.appendChild(e);return e}
+  function gray(v){var h=Math.round(v).toString(16);if(h.length<2)h="0"+h;return"#"+h+h+h}
+  function R(a,b){return a+Math.random()*(b-a)}
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+  function inPoly(x,y,p){var c=false;for(var i=0,j=p.length-1;i<p.length;j=i++){var xi=p[i][0],yi=p[i][1],xj=p[j][0],yj=p[j][1];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)c=!c}return c}
+  function rectIn(x,y,w,h,p){var m=3;return inPoly(x-m,y-m,p)&&inPoly(x+w+m,y-m,p)&&inPoly(x-m,y+h+m,p)&&inPoly(x+w+m,y+h+m,p)}
+
+  /* One organised campus that fills the whole screen, new every load: walled site
+     (notched / chamfered), several small building clusters around quads on one side,
+     a sports side with courts and turf on the other. Drawn once, then it stays. */
+  function buildMap(){
+    map.innerHTML="";
+    var gGround=el("g",{},map),gAreas=el("g",{},map),gBld=el("g",{},map),gDet=el("g",{},map);
+    var X0=8,X1=382,Y0=34,Y1=746,pad=8;
+
+    /* ---- site outline ---- */
+    var side=Math.random()<.5?"R":"L",notch=Math.random()<.7,sw=R(66,80);
+    var nw=R(sw*.75,sw+pad+4),nh=R(50,80);
+    var chamf=Math.random()<.85?(Math.random()<.5?"L":"R"):"",cs=R(30,46);
+    var poly=[];
+    if(side==="L"&&notch)poly.push([X0,Y0+nh],[X0+nw,Y0+nh],[X0+nw,Y0]);else poly.push([X0,Y0]);
+    if(side==="R"&&notch)poly.push([X1-nw,Y0],[X1-nw,Y0+nh],[X1,Y0+nh]);else poly.push([X1,Y0]);
+    if(chamf==="R")poly.push([X1,Y1-cs],[X1-cs,Y1]);else poly.push([X1,Y1]);
+    if(chamf==="L")poly.push([X0+cs,Y1],[X0,Y1-cs]);else poly.push([X0,Y1]);
+    var d="M"+poly.map(function(p){return p[0].toFixed(1)+" "+p[1].toFixed(1)}).join(" L")+"Z";
+
+    var ground=el("path",{d:d,fill:gray(252),"class":"fade"},gGround);
+    var wall=el("path",{d:d,pathLength:1,stroke:gray(206),"stroke-width":2.6,"class":"wall"},gGround);
+
+    var bl=[],ar=[],dt=[],blocks=[];
+    function block(x,y,w,h,o){
+      o=o||{};
+      if(w<7||h<7||!rectIn(x,y,w,h,poly))return null;
+      var g=el("g",{"class":"pop"},gBld);
+      el("rect",{x:x,y:y,width:w,height:h,rx:1.2,fill:gray(o.c||R(222,228))},g);
+      for(var k=1;k<(o.n||1);k++){
+        if(o.dir==="h")el("rect",{x:x,y:y+h*k/o.n-.5,width:w,height:1,fill:gray(212)},g);
+        else el("rect",{x:x+w*k/o.n-.5,y:y,width:1,height:h,fill:gray(212)},g);
+      }
+      bl.push(g);
+      blocks.push({x:x,y:y,w:w,h:h});
+    }
+    function area(x,y,w,h,rx,c){
+      if(w<4||h<4||!rectIn(x,y,w,h,poly))return null;
+      ar.push(el("rect",{x:x,y:y,width:w,height:h,rx:rx,fill:gray(c),"class":"pop"},gAreas));
+      return {x:x,y:y,w:w,h:h};
+    }
+    function stairs(x,y){
+      var g=el("g",{"class":"pop"},gDet);
+      el("rect",{x:x,y:y,width:9,height:7,rx:.8,fill:gray(206)},g);
+      for(var i=0;i<3;i++)el("rect",{x:x+1.2,y:y+1.2+i*1.8,width:6.6,height:1,fill:gray(232)},g);
+      dt.push(g);
+    }
+
+    /* ---- columns ---- */
+    var xs0,xs1,xm0,xm1;
+    if(side==="R"){xs1=X1-pad;xs0=xs1-sw;xm0=X0+pad;xm1=xs0-10}
+    else{xs0=X0+pad;xs1=xs0+sw;xm0=xs1+10;xm1=X1-pad}
+    var Wm=xm1-xm0,g=5;
+
+    /* ---- main campus: stacked small clusters, each a quad with buildings around it ---- */
+    var availH=(Y1-pad)-(Y0+pad),ngap=10;
+    var n=Math.max(2,Math.round(availH/230)),Hc=(availH-(n-1)*ngap)/n,u=.62;
+    if(Hc-274*u<44)u=(Hc-44)/274;
+
+    function row(y,h,count){
+      var ws=[],sum=0,i;
+      for(i=0;i<count;i++){ws[i]=R(.8,1.25);sum+=ws[i]}
+      var x=xm0;
+      for(i=0;i<count;i++){
+        var w=(Wm-(count-1)*g)*ws[i]/sum;
+        block(x,y,w,h*R(.8,1),{n:(w>66&&Math.random()<.5)?2:1,dir:"v"});
+        x+=w+g;
+      }
+    }
+    function cluster(yc){
+      var hT=R(96,112)*u,hA=R(34,42)*u,hM=R(66,78)*u,hq=Hc-(hT+hA+hM+60*u);
+      row(yc,hT,Math.random()<.3?2:3);
+      yc+=hT+8*u;
+      area(xm0,yc,Wm,hA,7,R(231,234));
+      area(xm0,yc,10,hA,2,246);
+      yc+=hA+8*u;
+      row(yc,hM,Math.random()<.3?2:3);
+      yc+=hM+10*u;
+      var wl=R(20,26)*u,wr=R(20,26)*u,lx=xm0+wl+5,lw=Wm-wl-wr-10;
+      area(lx,yc,lw,hq,5,R(231,234));
+      var s=Math.min(R(34,42)*u,hq*.5);
+      block(lx+lw/2-s/2,yc,s,s,{c:R(222,226)});
+      block(xm0,yc,wl,hq+8*u,{n:Math.round(R(3,4)),dir:"h"});
+      block(xm1-wr,yc,wr,hq+8*u,{n:2,dir:"h"});
+      var gapE=R(16,22)*u,hw=Math.min(R(34,42)*u,hq*.55),bw=(lw-gapE)/2;
+      block(lx,yc+hq-hw+3,bw,hw,{});
+      block(lx+bw+gapE,yc+hq-hw+3,bw,hw,{});
+      block(lx,yc+hq+8*u,bw,26*u,{});
+      block(lx+bw+gapE,yc+hq+8*u,bw,26*u,{});
+    }
+    for(var c=0;c<n;c++)cluster(Y0+pad+c*(Hc+ngap));
+
+    /* ---- sports side: gym, lawn with stage, courts, turf, small blocks ---- */
+    var ytop=notch?Y0+nh+pad:Y0+pad;
+    var ybot=Y1-pad-(chamf===side?cs*.85:0);
+    var gymH=R(30,38),rowH=26,flex=(ybot-ytop)-(gymH+2*rowH+48),W5=4.8,y=ytop;
+    function courtAt(h){
+      var ct=area(xs0,y,sw,h,2,224);
+      if(ct)dt.push(el("rect",{x:ct.x,y:ct.y+ct.h/2-.6,width:ct.w,height:1.2,fill:gray(238),"class":"pop"},gDet));
+      y+=h+8;
+    }
+    function smallRow(){
+      var bw=(sw-g)/2;
+      block(xs0,y,bw,rowH,{});block(xs0+bw+g,y,bw,rowH,{});
+      y+=rowH+8;
+    }
+    block(xs0,y,sw,gymH,{n:2,dir:"v"});y+=gymH+8;
+    var hl=flex/W5;
+    area(xs0,y,sw,hl,8,R(231,234));
+    area(side==="R"?xs1-10:xs0,y+hl*.25,10,hl*.5,2,246);
+    y+=hl+8;
+    courtAt(flex*1.2/W5);
+    smallRow();
+    courtAt(flex/W5);
+    area(xs0,y,sw,flex*1.6/W5,10,R(231,234));y+=flex*1.6/W5+8;
+    smallRow();
+
+    /* ---- small details: stairs, doors, gates ---- */
+    shuffle(blocks.slice()).filter(function(b){return b.w>=20&&b.h>=16}).slice(0,10).forEach(function(b){
+      stairs(b.x+b.w-12,b.y+3);
+    });
+    shuffle(blocks.slice()).slice(0,14).forEach(function(b){
+      dt.push(el("rect",{x:b.x+R(3,Math.max(4,b.w-9)),y:Math.random()<.5?b.y+b.h-1.2:b.y,width:6,height:1.2,fill:gray(246),"class":"pop"},gDet));
+    });
+    var edges=[];
+    for(var i=0;i<poly.length;i++){
+      var p=poly[i],q=poly[(i+1)%poly.length];
+      if((p[0]===q[0]||p[1]===q[1])&&Math.hypot(q[0]-p[0],q[1]-p[1])>60)edges.push([p,q]);
+    }
+    shuffle(edges).slice(0,3).forEach(function(e){
+      var t=R(.25,.75),x=e[0][0]+(e[1][0]-e[0][0])*t,yy=e[0][1]+(e[1][1]-e[0][1])*t,v=e[0][0]===e[1][0];
+      dt.push(el("rect",{x:v?x-1.7:x-8,y:v?yy-8:yy-1.7,width:v?3.4:16,height:v?16:3.4,rx:.8,fill:gray(248),"class":"pop"},gDet));
+    });
+
+    /* ---- random loading order, in chunks: ground and wall first, then a few buildings,
+       a few areas, a few details... each chunk loads, then pauses ---- */
+    ground.style.setProperty("--d",".2s");
+    wall.style.setProperty("--d",".3s");
+    var qs={b:shuffle(bl),r:shuffle(ar),m:shuffle(dt)};
+    var size={b:[8,14],r:[3,5],m:[8,14]};
+    var tt=1.6,last="",first=true;
+    function remaining(){return qs.b.length+qs.r.length+qs.m.length}
+    while(remaining()){
+      var kind;
+      if(first){kind="b";first=false}
+      else{
+        var opts=["b","r","m"].filter(function(k){return qs[k].length&&k!==last});
+        if(!opts.length)opts=["b","r","m"].filter(function(k){return qs[k].length});
+        kind=opts[Math.floor(Math.random()*opts.length)];
+      }
+      var cnt=Math.round(R(size[kind][0],size[kind][1])),span=.7;
+      for(var j=0;j<cnt&&qs[kind].length;j++){
+        qs[kind].pop().style.setProperty("--d",(tt+R(0,span)).toFixed(2)+"s");
+      }
+      last=kind;
+      tt+=span+R(.9,1.3);
+    }
+  }
+  buildMap();
+
+  /* ---------- vertical flipping sticker (keeps going after the map finishes) ---------- */
+  var words=["Charting your route…","Finding your bearings…","Plotting the shortest path…","Calculating corridors…","Measuring hallways…","Triangulating your position…"];
+  var colors=[["#f4504f","#fff"],["#2f5bff","#fff"],["#ffd23f","#1a1a1a"],["#2ec4a0","#0d2a22"],["#ff6fb5","#2a0d1c"],["#8b5cf6","#fff"]];
+  var faces=[document.getElementById("f0"),document.getElementById("f1")];
+  var flipper=document.getElementById("flipper");
+  var sizer=document.getElementById("sizer");
+  words.forEach(function(w){var sp=document.createElement("span");sp.textContent=w;sizer.appendChild(sp)});
+  var idx=0,visible=0,turns=0;
+  flipper.dataset.side="0";
+
+  function paint(face,i){
+    var c=colors[i%colors.length];
+    face.textContent=words[i%words.length];
+    face.style.background=c[0];
+    face.style.color=c[1];
+  }
+  paint(faces[0],0);
+  paint(faces[1],1);
+
+  function flip(){
+    turns++;
+    flipper.style.transform="rotateX("+(turns*180)+"deg)";
+    var old=visible;
+    visible=1-visible;
+    flipper.dataset.side=visible;
+    idx++;
+    setTimeout(function(){paint(faces[old],idx+1)},900);
+  }
+  setInterval(flip,2400);
+})();
+</script>
+</body>
+</html>

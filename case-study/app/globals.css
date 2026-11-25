@@ -577,7 +577,7 @@ img {
   --journey-rim: 3px;
   --journey-sticker-pad: 4px;
   --journey-inner-radius: calc(var(--ul-radius-thumb) - 2px);
-  --journey-header-bg: #ffe8d4;
+  --journey-header-bg: #ebe4fb;
   border: var(--journey-rim) solid #ffffff;
   border-radius: var(--ul-radius-thumb);
   corner-shape: squircle;
@@ -1008,17 +1008,79 @@ img {
   background: transparent;
 }
 
+.section-visual__embed--iterations {
+  /* The page inside keeps 14px side padding for card shadows; pull it back out
+     so the cards line up with the text column */
+  width: calc(100% + 28px);
+  max-width: none;
+  margin-inline: -14px;
+  aspect-ratio: auto;
+  background: transparent;
+  color-scheme: normal;
+  /* Tiles are clickable, so the frame takes pointer events */
+  pointer-events: auto;
+}
+
 .section-visual__embed--prototype {
   display: block;
   width: 100%;
   /* Phone scales with this height (iframe 100dvh), so taller = larger phone */
-  height: clamp(700px, calc(100vh - 60px), 940px);
+  height: clamp(820px, calc(100vh - 40px), 1160px);
   aspect-ratio: auto;
   border: 0;
   background: transparent;
   color-scheme: normal;
+  /* Fade the edges so the phone's shadow dissolves instead of ending on a hard line */
+  mask-image:
+    linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent),
+    linear-gradient(to bottom, #000 calc(100% - 70px), transparent);
+  mask-composite: intersect;
   /* Interactive: unlike the orbit embed, it must receive pointer events */
   pointer-events: auto;
+}
+
+/* Narrow screens: the board needs ~1000px, so show a note instead of the iframe */
+.proto-desktop-note {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.proto-desktop-note__kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #008aec;
+}
+
+.proto-desktop-note__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111111;
+}
+
+.proto-desktop-note__body {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #555555;
+}
+
+@media (max-width: 900px) {
+  .section-visual--prototype .section-visual__embed--prototype {
+    display: none;
+  }
+
+  .section-visual--prototype .proto-desktop-note {
+    display: flex;
+  }
 }
 
 /* Constraints copy → orbit: pull closer and shorten empty bands */
@@ -1311,6 +1373,36 @@ img {
 .interview-bubbles__affinity-title {
   flex: 1;
   min-width: 0;
+}
+
+/* "Show more" only exists on phones, where six notes make a very long column */
+.interview-bubbles__more {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .interview-bubbles--affinity.is-collapsed
+    .interview-bubbles__affinity-item:nth-child(n + 3) {
+    display: none;
+  }
+
+  .interview-bubbles__more {
+    appearance: none;
+    -webkit-appearance: none;
+    display: block;
+    margin: 8px auto 0;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    color: #282828;
+    font: inherit;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.7;
+    cursor: pointer;
+  }
 }
 
 .interview-bubbles__affinity-item .interview-bubbles__mark {

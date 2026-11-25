@@ -1,5 +1,6 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import { CaseNav } from "@/components/CaseNav";
+import { DesignIterationsEmbed } from "@/components/DesignIterationsEmbed";
 import { ExpandableBody } from "@/components/ExpandableBody";
 import { PrototypeEmbed } from "@/components/PrototypeEmbed";
 import {
@@ -600,9 +601,9 @@ export default function CaseStudyPage() {
                 <p className="journey-revenue__kicker">Revenue</p>
                 <p className="journey-revenue__meta">App POV</p>
                 <p className="journey-revenue__body">
-                  Charging colleges for mapping and technology, plus a
-                  subscription dashboard for assigning classrooms, updating
-                  them, or notifying students.
+                  The app charges colleges for mapping and technology, plus a
+                  subscription to a dashboard where they can assign classrooms,
+                  update them, and notify students.
                 </p>
               </div>
             </aside>
@@ -621,54 +622,22 @@ export default function CaseStudyPage() {
             </h2>
             <ExpandableBody>
               <p className="section-body">
-                Each call below was made against a rejected option. The cost of
-                each is written down with it, so the trade-off is visible rather
-                than hidden.
+                Each call was made against a rejected option, with its
+                trade-off written beside it.
               </p>
-              <ul className="section-list">
-                <li>
-                  <mark className="mark">Account after the first route.</mark>{" "}
-                  Rejected sign-up before search. First-visit students are
-                  hurried and already stressed, so the route comes first and the
-                  account is asked for after arrival.{" "}
-                  <strong>Trade-off:</strong> weaker identity, timetable
-                  personalisation, and retention hooks until after a first
-                  success.
-                </li>
-                <li>
-                  <mark className="mark">QR checkpoints for offline position.</mark>{" "}
-                  Rejected a static offline map download. Interviews already
-                  showed colleges have static maps and students still get lost.{" "}
-                  <strong>Trade-off:</strong> students scan at intervals while
-                  they move, which is more effort than continuous auto-locate.
-                </li>
-                <li>
-                  <mark className="mark">Navigation pauses at stairs and lifts.</mark>{" "}
-                  GPS cannot prove someone has arrived on another floor, so the
-                  user confirms the floor before the route continues.
-                </li>
-                <li>
-                  <mark className="mark">Wing filter on demand.</mark> Rejected
-                  an always-on wing colour layer, because too many colours make
-                  the path harder to read. Students turn the filter on only when
-                  they need to tell wings apart.
-                </li>
-                <li>
-                  <mark className="mark">Newcomer is the primary moment.</mark>{" "}
-                  Rejected the event visitor as the primary user. In the
-                  research, locating a classroom ranked first, wings second, and
-                  one-off exam or event places third. Exam and event visits stay
-                  in scope as related cases.
-                </li>
-              </ul>
             </ExpandableBody>
           </div>
 
-          <figure className="section-visual section-visual--slot">
-            <div className="section-visual__slot" aria-hidden="true" />
-            <figcaption className="sr-only">
-              Decisions visual placeholder.
-            </figcaption>
+          <figure className="section-visual">
+            <Image
+              className="section-visual__img"
+              src="/what-was-decided.png"
+              alt="What was decided: each design decision set against the option it rejected, with the trade-off written beside it."
+              width={3680}
+              height={19470}
+              draggable={false}
+              sizes="(max-width: 900px) 100vw, 920px"
+            />
           </figure>
         </section>
 
@@ -696,6 +665,16 @@ export default function CaseStudyPage() {
 
           <figure className="section-visual section-visual--prototype">
             <PrototypeEmbed />
+            <div className="proto-desktop-note" role="note">
+              <p className="proto-desktop-note__kicker">Interactive prototype</p>
+              <h3 className="proto-desktop-note__title">
+                Open this on a desktop
+              </h3>
+              <p className="proto-desktop-note__body">
+                The phone mockup and controls sit side by side, so they need a
+                wider screen. Come back on a laptop to try the flows.
+              </p>
+            </div>
             <figcaption className="sr-only">
               Interactive UniLocate prototype. A phone frame shows the
               first-visit flow, with a screen list on the left and stage
@@ -704,8 +683,97 @@ export default function CaseStudyPage() {
           </figure>
         </section>
 
+        <section
+          id="tradeoffs"
+          className="case-section"
+          aria-labelledby="tradeoffs-title"
+        >
+          <div className="case-section--prose">
+            <p className="section-kicker">9. Trade-offs</p>
+            <h2 id="tradeoffs-title" className="section-title">
+              What the bet costs
+            </h2>
+            <ExpandableBody>
+              <ul className="section-list">
+                <li>
+                  I let students navigate without an account over asking them to
+                  sign up first, because interviews and the survey showed
+                  students were nervous and anxious. The trade-off I accepted
+                  was fewer students creating an account on their first day.
+                  That was acceptable because the metric is activation (a
+                  student completing their first navigation), and sign-up is
+                  only deferred: they still create a profile before their next
+                  navigation.
+                </li>
+                <li>
+                  I chose QR scanning at intervals over real-time GPS location
+                  because the online mode can combine GPS with Wi-Fi signals,
+                  but offline only GPS is available, and GPS is too imprecise
+                  indoors. The trade-off I accepted was extra friction in offline
+                  navigation, and I expect fewer people to use offline mode
+                  because of it. That was acceptable because accuracy matters
+                  more than speed here: a student who is told the wrong location
+                  is worse off than one who has to scan a code.
+                </li>
+              </ul>
+            </ExpandableBody>
+          </div>
+        </section>
+
         {/* Anchors so section spy links resolve until those sections are written */}
-        <div id="edge" hidden />
+        <section
+          id="edge"
+          className="case-section"
+          aria-labelledby="edge-title"
+        >
+          <div className="case-section--prose">
+            <p className="section-kicker">10. Edge cases and states</p>
+            <h2 id="edge-title" className="section-title">
+              When the flow breaks
+            </h2>
+          </div>
+
+          <figure className="section-visual">
+            <Image
+              className="section-visual__img"
+              src="/edge-cases.png"
+              alt="Edge cases: search with similar college names, results loading, map loading, a college not yet mapped, a college that does not exist, and no internet connection."
+              width={3680}
+              height={13964}
+              draggable={false}
+              sizes="(max-width: 900px) 100vw, 920px"
+            />
+          </figure>
+        </section>
+
+        <section
+          id="iterations"
+          className="case-section"
+          aria-labelledby="iterations-title"
+        >
+          <div className="case-section--prose">
+            <p className="section-kicker">11. Design iterations</p>
+            <h2 id="iterations-title" className="section-title">
+              Every version I tried
+            </h2>
+            <ExpandableBody>
+              <p className="section-body">
+                One component at a time, from the first version to the final
+                one. Tap a card to step through its versions.
+              </p>
+            </ExpandableBody>
+          </div>
+
+          <figure className="section-visual">
+            <DesignIterationsEmbed />
+            <figcaption className="sr-only">
+              Design iterations: the CTA button, chips, icons, college result
+              cards, floor stepper, and the landing, map and sign-up screens,
+              each shown across the versions tried.
+            </figcaption>
+          </figure>
+        </section>
+
         <div id="outcome" hidden />
       </main>
     </>
