@@ -293,7 +293,7 @@ export function InterviewBubbles() {
           <Image
             ref={imgRef}
             className="interview-bubbles__crowd"
-            src="/interview-crowd.png"
+            src="/interview-crowd.webp"
             alt="Illustrated students from interview sessions"
             width={1000}
             height={480}

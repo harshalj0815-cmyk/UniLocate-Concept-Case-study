@@ -17,7 +17,7 @@ export const COLLEGE_RESULTS: CollegeResult[] = [
   {
     id: "art-commerce",
     name: "Pillai College of Art Commerce and Science, New Panvel",
-    image: "/images/CollegeImage-01.png",
+    image: "/images/CollegeImage-01.webp",
     chips: [
       {
         label: "Nearest",
@@ -34,7 +34,7 @@ export const COLLEGE_RESULTS: CollegeResult[] = [
   {
     id: "engineering",
     name: "Pillai College of Engineering, New Panvel",
-    image: "/images/CollegeImage-03.png",
+    image: "/images/CollegeImage-03.webp",
     chips: [
       {
         label: "Closed",
@@ -47,7 +47,7 @@ export const COLLEGE_RESULTS: CollegeResult[] = [
   {
     id: "hoc",
     name: "Pillai HOC, Rasayani",
-    image: "/images/CollegeImage-02.png",
+    image: "/images/CollegeImage-02.webp",
     chips: [
       {
         label: "On Going: Hackethon",

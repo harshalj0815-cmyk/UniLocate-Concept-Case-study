@@ -15,7 +15,7 @@ export type ScenePolaroid = {
 export const SCENE_POLAROIDS: ScenePolaroid[] = [
   {
     id: "p0",
-    src: "/images/image-7.jpg",
+    src: "/images/image-7.webp",
     rotate: -12.22,
     from: "top",
     home: { left: 54, top: -48.34 },
@@ -31,7 +31,7 @@ export const SCENE_POLAROIDS: ScenePolaroid[] = [
   },
   {
     id: "p1",
-    src: "/images/image-6.jpg",
+    src: "/images/image-6.webp",
     rotate: -18.24,
     from: "right",
     home: { left: 324, top: 104.44 },
@@ -45,7 +45,7 @@ export const SCENE_POLAROIDS: ScenePolaroid[] = [
   },
   {
     id: "p2",
-    src: "/images/image-5.jpg",
+    src: "/images/image-5.webp",
     rotate: 11.27,
     from: "left",
     home: { left: -34.37, top: 145 },
@@ -59,7 +59,7 @@ export const SCENE_POLAROIDS: ScenePolaroid[] = [
   },
   {
     id: "p3",
-    src: "/images/image-2.jpg",
+    src: "/images/image-2.webp",
     rotate: 10.44,
     from: "right",
     home: { left: 338.83, top: 574 },
@@ -73,7 +73,7 @@ export const SCENE_POLAROIDS: ScenePolaroid[] = [
   },
   {
     id: "p4",
-    src: "/images/image-3.jpg",
+    src: "/images/image-3.webp",
     rotate: -18.4,
     from: "left",
     home: { left: -58, top: 646.76 },
@@ -89,7 +89,7 @@ export const SCENE_POLAROIDS: ScenePolaroid[] = [
   },
   {
     id: "p5",
-    src: "/images/image-7.jpg",
+    src: "/images/image-7.webp",
     rotate: -12.22,
     from: "bottom",
     home: { left: 138, top: 804.66 },

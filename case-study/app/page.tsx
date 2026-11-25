@@ -1,4 +1,4 @@
-﻿import Image from "next/image";
+import Image from "next/image";
 import { CaseNav } from "@/components/CaseNav";
 import { DesignIterationsEmbed } from "@/components/DesignIterationsEmbed";
 import { ExpandableBody } from "@/components/ExpandableBody";
@@ -43,10 +43,10 @@ export default function CaseStudyPage() {
             <div className="thumbnail__frame sticker squircle">
               <Image
                 className="thumbnail__img"
-                src="/thumbnail.png"
+                src="/thumbnail.webp"
                 alt={`${TITLE}. Hero of the concept case study: phone showing an indoor campus map route, with a student sticker figure on the path.`}
-                width={2362}
-                height={1326}
+                width={2240}
+                height={1258}
                 priority
                 draggable={false}
                 sizes="(max-width: 1120px) 100vw, 1120px"
@@ -90,10 +90,10 @@ export default function CaseStudyPage() {
           <figure className="section-visual">
             <Image
               className="section-visual__img"
-              src="/what-is-unilocate.png"
+              src="/what-is-unilocate.webp"
               alt="UniLocate product overview collage: phone with Search College and Get Started; indoor floor map; campus building photo; map pin, college, and graduation stickers; campus-life polaroids; personality tags Senior energy day one and Freshman ally. App ideas: Fast, Offline support, Share location, On-time navigation, Search first, Skip signup."
-              width={2400}
-              height={1500}
+              width={2240}
+              height={1310}
               draggable={false}
               sizes="(max-width: 1120px) 100vw, 1120px"
             />
@@ -176,10 +176,10 @@ export default function CaseStudyPage() {
           <figure className="section-visual section-visual--crop section-visual--credit sticker squircle">
             <Image
               className="section-visual__img"
-              src="/problem-discovery.png"
+              src="/problem-discovery.webp"
               alt="Busy college hallway with students carrying backpacks between classes, the first-day campus navigation problem UniLocate addresses."
-              width={3072}
-              height={2048}
+              width={1840}
+              height={1227}
               draggable={false}
               sizes="(max-width: 1120px) 100vw, 1120px"
             />
@@ -396,10 +396,10 @@ export default function CaseStudyPage() {
           <figure className="section-visual">
             <Image
               className="section-visual__img"
-              src="/ideas-explored.png"
+              src="/ideas-explored.webp"
               alt="Three phone mockups from ideation: a map with an always-on wing colour overlay, a sign-up first screen, and a static offline floor plan."
-              width={3680}
-              height={2152}
+              width={1840}
+              height={1076}
               draggable={false}
               sizes="(max-width: 1120px) 100vw, 1120px"
             />
@@ -442,10 +442,10 @@ export default function CaseStudyPage() {
           <figure className="section-visual">
             <Image
               className="section-visual__img"
-              src="/concept-development.png"
+              src="/concept-development.webp"
               alt="Three phone mockups for the chosen concept: Get Started without an account, wing filters on demand, and QR scan for offline navigation, with Experience First, Navigate Flexibly, and Offline Navigation stickers."
-              width={3680}
-              height={1878}
+              width={1840}
+              height={939}
               draggable={false}
               sizes="(max-width: 1120px) 100vw, 1120px"
             />
@@ -631,10 +631,10 @@ export default function CaseStudyPage() {
           <figure className="section-visual">
             <Image
               className="section-visual__img"
-              src="/what-was-decided.png"
+              src="/what-was-decided.webp"
               alt="What was decided: each design decision set against the option it rejected, with the trade-off written beside it."
-              width={3680}
-              height={19470}
+              width={1840}
+              height={9735}
               draggable={false}
               sizes="(max-width: 900px) 100vw, 920px"
             />
@@ -736,10 +736,10 @@ export default function CaseStudyPage() {
           <figure className="section-visual">
             <Image
               className="section-visual__img"
-              src="/edge-cases.png"
+              src="/edge-cases.webp"
               alt="Edge cases: search with similar college names, results loading, map loading, a college not yet mapped, a college that does not exist, and no internet connection."
-              width={3680}
-              height={13964}
+              width={1840}
+              height={6982}
               draggable={false}
               sizes="(max-width: 900px) 100vw, 920px"
             />

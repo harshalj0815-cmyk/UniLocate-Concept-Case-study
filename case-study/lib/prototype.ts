@@ -6,6 +6,13 @@ export const PROTOTYPE_SRC = "/prototype-app/index.html";
  * Campus map / Navigating / Arrived does not start from a blank, still-loading frame.
  */
 export const PROTOTYPE_WARM_URLS = [
+  /* First screen: the map background and the polaroid photos */
+  "/images/Background.webp",
+  "/images/image-2.webp",
+  "/images/image-3.webp",
+  "/images/image-5.webp",
+  "/images/image-6.webp",
+  "/images/image-7.webp",
   "/animations/campus-map-loading.html?embed=1&v=6&dur=4.2&reduce=0",
   "/maps/ground-floor-map.html?embed=1&v=41",
   "/maps/first-floor-map.html?embed=1&v=41",

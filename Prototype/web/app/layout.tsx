@@ -15,6 +15,16 @@ export const metadata: Metadata = {
   description: "UniLocate interactive prototype",
 };
 
+/* First screen: map background and polaroids, fetched with the HTML instead of after hydration */
+const FIRST_SCREEN_IMAGES = [
+  "/images/Background.webp",
+  "/images/image-2.webp",
+  "/images/image-3.webp",
+  "/images/image-5.webp",
+  "/images/image-6.webp",
+  "/images/image-7.webp",
+];
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -22,6 +32,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {FIRST_SCREEN_IMAGES.map((href) => (
+          <link key={href} rel="preload" as="image" type="image/webp" href={href} />
+        ))}
+      </head>
       <body className={`${plusJakarta.variable} ${plusJakarta.className}`}>
         {children}
       </body>

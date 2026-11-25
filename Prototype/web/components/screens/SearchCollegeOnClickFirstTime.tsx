@@ -20,7 +20,7 @@ const POLAROIDS: {
   imageStyle?: CSSProperties;
 }[] = [
   {
-    src: "/images/image-7.jpg",
+    src: "/images/image-7.webp",
     left: 54,
     top: -110.34,
     rotate: -12.22,
@@ -35,7 +35,7 @@ const POLAROIDS: {
     },
   },
   {
-    src: "/images/image-6.jpg",
+    src: "/images/image-6.webp",
     left: 378,
     top: 104.44,
     rotate: -18.24,
@@ -50,7 +50,7 @@ const POLAROIDS: {
     },
   },
   {
-    src: "/images/image-5.jpg",
+    src: "/images/image-5.webp",
     left: -99.64,
     top: 145,
     rotate: 11.27,
@@ -65,7 +65,7 @@ const POLAROIDS: {
     },
   },
   {
-    src: "/images/image-2.jpg",
+    src: "/images/image-2.webp",
     left: 403.36,
     top: 574,
     rotate: 10.44,
@@ -80,7 +80,7 @@ const POLAROIDS: {
     },
   },
   {
-    src: "/images/image-3.jpg",
+    src: "/images/image-3.webp",
     left: -140,
     top: 647.76,
     rotate: -18.4,
@@ -95,7 +95,7 @@ const POLAROIDS: {
     },
   },
   {
-    src: "/images/image-7.jpg",
+    src: "/images/image-7.webp",
     left: 184,
     top: 866.66,
     rotate: -12.22,

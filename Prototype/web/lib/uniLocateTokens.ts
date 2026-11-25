@@ -74,7 +74,7 @@ export const UL_ASSETS = {
   searchIcon: "/icons/Search.svg",
   clearIcon: "/icons/Cross.svg",
   appIcon: "/logo/Icon.svg",
-  backgroundMap: "/images/Background.png",
+  backgroundMap: "/images/Background.webp",
   /** Keyboard — Screen Images/Keyboard.svg (402×332); v=2 clears black edge layers */
   iosKeyboard: "/images/Keyboard.svg?v=2",
   careLeft: "/icons/CareLeft.svg",
@@ -92,7 +92,7 @@ export const UL_ASSETS = {
   plusIcon: "/icons/Plus.svg",
   minusIcon: "/icons/Minus.svg",
   mapPinIcon: "/icons/MapPin.svg",
-  signupDoor: "/images/signup-door.png",
+  signupDoor: "/images/signup-door.webp",
   signupBadge: "/images/signup-badge.png",
   signupHangingIcon: "/images/signup-hanging-icon.png",
   mapGround: "/maps/ground-floor-map.html?embed=1",
