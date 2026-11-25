@@ -303,6 +303,9 @@ const MapLayers = memo(function MapLayers({
   );
 });
 
+/** Set once the Campus map loading sticker has played in this page session; later visits skip it */
+let campusMapIntroDone = false;
+
 /** Map-FirstTime — campus map chrome around the existing floor HTML + nav logic */
 export default function MapFirstTime({
   collegeName,
@@ -341,7 +344,7 @@ export default function MapFirstTime({
    * Offline opens straight on the saved map (no loading sticker).
    */
   const showMapLoadIntro =
-    !reduce && !offline && campusMapHome && scene === "idle" && !needsProfile;
+    !reduce && !offline && campusMapHome && scene === "idle" && !needsProfile && !campusMapIntroDone;
   const [mapRevealed, setMapRevealed] = useState(!showMapLoadIntro);
   const mapLoadGenRef = useRef(0);
   const MAP_LOAD_MS = 4500;
@@ -828,6 +831,7 @@ export default function MapFirstTime({
     setMapRevealed(false);
     const t = window.setTimeout(() => {
       if (mapLoadGenRef.current !== gen) return;
+      campusMapIntroDone = true;
       setMapRevealed(true);
     }, MAP_LOAD_MS);
     return () => window.clearTimeout(t);

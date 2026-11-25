@@ -3105,19 +3105,19 @@
   animation: scf-logo-tap 340ms var(--ease-out);
 }
 
-/* After polaroids (~1375ms) — blur → sharp, 60ms stagger */
+/* After polaroids (~0.8s) — blur → sharp, 40ms stagger */
 .scf--enter .scf__title {
-  animation: scf-ui-blur 240ms var(--ease-out) 1440ms both;
+  animation: scf-ui-blur 240ms var(--ease-out) 760ms both;
 }
 
 .scf--enter .scf__search {
-  animation: scf-search-enter 260ms var(--ease-out) 1500ms both;
+  animation: scf-search-enter 260ms var(--ease-out) 820ms both;
 }
 
 /* Signed-in — Destination bar enters in the bottom CTA slot */
 .scf--enter.scf--signed-in .scf__search {
   top: 798px;
-  animation: scf-search-enter-signed 260ms var(--ease-out) 1500ms both;
+  animation: scf-search-enter-signed 260ms var(--ease-out) 820ms both;
 }
 
 @keyframes scf-search-enter-signed {
@@ -3134,11 +3134,11 @@
 }
 
 .scf--enter .scf__divider {
-  animation: scf-ui-blur 220ms var(--ease-out) 1560ms both;
+  animation: scf-ui-blur 220ms var(--ease-out) 800ms both;
 }
 
 .scf--enter .scf__cta {
-  animation: scf-cta-enter 260ms var(--ease-out) 1620ms both;
+  animation: scf-cta-enter 260ms var(--ease-out) 880ms both;
 }
 
 /* Logo: bounce in at center, then rise to final top */

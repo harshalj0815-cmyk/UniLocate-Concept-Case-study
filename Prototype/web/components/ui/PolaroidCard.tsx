@@ -73,7 +73,8 @@ export default function PolaroidCard({
   const reduce = useDemoReduceMotion();
   const offset = ENTER_OFFSET[from];
   const kick = enterKick(from);
-  const delay = 0.78 + enterIndex * 0.055;
+  /* Short lead-in: the photos are already decoded before this starts (see below) */
+  const delay = 0.3 + enterIndex * 0.04;
   const skipEnter = muted || !animate || reduce;
 
   /*
