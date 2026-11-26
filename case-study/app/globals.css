@@ -918,6 +918,18 @@ img {
   background: transparent;
 }
 
+/* —— Trade-offs: balloon hands, bare on the page background —— */
+.section-visual--balloons {
+  margin-top: 24px;
+  overflow: hidden;
+  background: transparent;
+}
+
+.section-visual__embed--balloons {
+  aspect-ratio: 16 / 9;
+  background: var(--ul-bg);
+}
+
 /* —— Target users: stat stickers (white rim, soft shadow, slight tilt) —— */
 .stat-stickers {
   list-style: none;

@@ -697,28 +697,36 @@ export default function CaseStudyPage() {
             <ExpandableBody>
               <ul className="section-list">
                 <li>
-                  I let students navigate without an account over asking them to
-                  sign up first, because interviews and the survey showed
-                  students were nervous and anxious. The trade-off I accepted
-                  was fewer students creating an account on their first day.
-                  That was acceptable because the metric is activation (a
-                  student completing their first navigation), and sign-up is
-                  only deferred: they still create a profile before their next
+                  I let students navigate without an account instead of asking
+                  them to sign up first, because interviews and the survey
+                  showed they were nervous and anxious. The trade-off was fewer
+                  sign-ups on day one, which was acceptable because the metric
+                  is activation, and sign-up is only deferred to their next
                   navigation.
                 </li>
                 <li>
-                  I chose QR scanning at intervals over real-time GPS location
-                  because the online mode can combine GPS with Wi-Fi signals,
-                  but offline only GPS is available, and GPS is too imprecise
-                  indoors. The trade-off I accepted was extra friction in offline
-                  navigation, and I expect fewer people to use offline mode
-                  because of it. That was acceptable because accuracy matters
-                  more than speed here: a student who is told the wrong location
-                  is worse off than one who has to scan a code.
+                  I chose QR scanning at intervals over real-time GPS because
+                  GPS is too imprecise indoors, and offline mode can&apos;t
+                  combine it with Wi-Fi signals the way online mode can. The
+                  trade-off was extra friction in offline navigation, and I
+                  expect fewer people to use offline mode. That was acceptable
+                  because accuracy matters more than speed: a wrong location
+                  hurts a student more than a scan does.
                 </li>
               </ul>
             </ExpandableBody>
           </div>
+
+          <figure className="section-visual section-visual--balloons">
+            <iframe
+              className="section-visual__embed section-visual__embed--balloons"
+              src="/balloon-hands.html?v=1"
+              title="Two hands holding balloons; one lets go of its balloon"
+              loading="lazy"
+              aria-hidden="true"
+              tabIndex={-1}
+            />
+          </figure>
         </section>
 
         {/* Anchors so section spy links resolve until those sections are written */}
