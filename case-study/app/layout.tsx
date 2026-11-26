@@ -7,12 +7,16 @@ const siteTitle = "UniLocate · Concept case study";
 const siteDescription =
   "UniLocate: Activation design for an indoor campus navigator. Concept case study for a Type C new product focused on first-visit Activation.";
 
+const PRODUCTION_URL = "https://unilocate-case-study.vercel.app";
+
 function siteUrl() {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return new URL(process.env.NEXT_PUBLIC_SITE_URL);
   }
-  if (process.env.VERCEL_URL) {
-    return new URL(`https://${process.env.VERCEL_URL}`);
+  /* Not VERCEL_URL: that is a per-deployment address, often behind Vercel's
+     login wall, so link previews could not fetch the image from it. */
+  if (process.env.NODE_ENV === "production") {
+    return new URL(PRODUCTION_URL);
   }
   return new URL("http://localhost:3001");
 }
@@ -29,13 +33,15 @@ export const metadata: Metadata = {
     title: siteTitle,
     description: siteDescription,
     type: "website",
+    url: "/",
     siteName: "UniLocate",
     locale: "en_US",
     images: [
       {
-        url: "/thumbnail.png",
-        width: 1920,
-        height: 1080,
+        url: "/og-image.jpg",
+        width: 1280,
+        height: 720,
+        type: "image/jpeg",
         alt: "UniLocate: Activation design for an indoor campus navigator",
       },
     ],
@@ -44,7 +50,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
-    images: ["/thumbnail.png"],
+    images: ["/og-image.jpg"],
   },
 };
 
