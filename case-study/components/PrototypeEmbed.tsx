@@ -60,64 +60,6 @@ export function PrototypeEmbed() {
     return () => iframe.removeEventListener("load", run);
   }, []);
 
-  /*
-   * Replay the current screen whenever the prototype scrolls into view, so its
-   * entrance animations are seen instead of finishing off-screen. Re-entry only
-   * counts after it has been fully out of view, so scrolling a few pixels while
-   * using it never resets it.
-   */
-  useEffect(() => {
-    const iframe = iframeRef.current;
-    if (!iframe || typeof IntersectionObserver === "undefined") return;
-
-    let wasOut = true;
-    let timer = 0;
-
-    const refreshScreen = (tries = 0) => {
-      let btn: HTMLButtonElement | null = null;
-      try {
-        btn =
-          iframe.contentDocument?.querySelector<HTMLButtonElement>(
-            ".proto-stage__refresh",
-          ) ?? null;
-      } catch {
-        btn = null;
-      }
-      if (btn) {
-        btn.click();
-        return;
-      }
-      /* Prototype still booting: try again for ~3s */
-      if (tries < 30) timer = window.setTimeout(() => refreshScreen(tries + 1), 100);
-    };
-
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry) return;
-        if (entry.intersectionRatio === 0) {
-          wasOut = true;
-          window.clearTimeout(timer);
-          return;
-        }
-        /* Mostly in view, or filling at least half of a short viewport */
-        const seen =
-          entry.intersectionRatio >= 0.4 ||
-          entry.intersectionRect.height >= window.innerHeight * 0.5;
-        if (seen && wasOut) {
-          wasOut = false;
-          window.clearTimeout(timer);
-          refreshScreen();
-        }
-      },
-      { threshold: Array.from({ length: 21 }, (_, i) => i / 20) },
-    );
-    io.observe(iframe);
-    return () => {
-      io.disconnect();
-      window.clearTimeout(timer);
-    };
-  }, []);
-
   /* A pointer move on the page itself means the pointer is not in the prototype */
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
