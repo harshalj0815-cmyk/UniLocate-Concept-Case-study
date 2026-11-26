@@ -58,6 +58,10 @@ export default function UniLocateFlow() {
   /** Bump to remount map / college when jumping via stepper */
   const [jumpKey, setJumpKey] = useState(0);
   const [motionOn, setMotionOn] = useState(true);
+  /** Steps already shown once — jumping back to one opens it settled, no entrance */
+  const seenSteps = useRef(new Set<PrototypeStepId>(["college-home"]));
+  const [instant, setInstant] = useState(false);
+  const animate = motionOn && !instant;
   const [soundOn, setSoundOn] = useState(true);
   const [searchRecVariant, setSearchRecVariant] =
     useState<SearchRecVariant>("recommendation");
@@ -69,11 +73,13 @@ export default function UniLocateFlow() {
   const offline = connectivity === "offline";
 
   const refreshScreen = useCallback(() => {
+    setInstant(false);
     setJumpKey((k) => k + 1);
   }, []);
 
   const setMotion = useCallback((on: boolean) => {
     setMotionOn(on);
+    setInstant(false);
     /* Remount so CSS/Framer enter beats restart under the new reduce flag */
     setJumpKey((k) => k + 1);
   }, []);
@@ -86,6 +92,7 @@ export default function UniLocateFlow() {
 
   const setConnectivityMode = useCallback((mode: ConnectivityMode) => {
     setConnectivity(mode);
+    setInstant(false);
     /* Remount so offline skeleton / wifi sequence restarts on current step */
     setJumpKey((k) => k + 1);
   }, []);
@@ -93,6 +100,7 @@ export default function UniLocateFlow() {
   const setAudienceMode = useCallback(
     (mode: AudienceMode) => {
       setAudience(mode);
+      setInstant(false);
       if (mode === "signed-in") {
         setMapNeedsProfile(false);
         setMapScene((s) => (s === "profile" ? "idle" : s));
@@ -133,6 +141,8 @@ export default function UniLocateFlow() {
     setMapNeedsProfile(false);
     setMapScene("idle");
     setDemoStep("map-idle");
+    seenSteps.current.add("map-idle");
+    setInstant(false);
     setScreen("map");
     setJumpKey((k) => k + 1);
   }, []);
@@ -144,18 +154,29 @@ export default function UniLocateFlow() {
   }, [mapCollege, openMap]);
 
   const onCollegeScene = useCallback((scene: CollegeScene) => {
-    if (scene === "home") setDemoStep("college-home");
-    else if (scene === "search") setDemoStep("college-search");
-    else setDemoStep("college-results");
+    const step: PrototypeStepId =
+      scene === "home"
+        ? "college-home"
+        : scene === "search"
+          ? "college-search"
+          : "college-results";
+    seenSteps.current.add(step);
+    setDemoStep(step);
     setCollegeScene(scene);
   }, []);
 
   const onMapScene = useCallback(
     (scene: MapScene) => {
-      if (scene === "idle") setDemoStep("map-idle");
-      else if (scene === "navigating") setDemoStep("map-nav");
-      else if (scene === "success") setDemoStep("map-success");
-      else setDemoStep("map-profile");
+      const step: PrototypeStepId =
+        scene === "idle"
+          ? "map-idle"
+          : scene === "navigating"
+            ? "map-nav"
+            : scene === "success"
+              ? "map-success"
+              : "map-profile";
+      seenSteps.current.add(step);
+      setDemoStep(step);
       setMapScene(scene);
       if (
         !signedIn &&
@@ -168,6 +189,11 @@ export default function UniLocateFlow() {
   );
 
   const jumpTo = useCallback((id: PrototypeStepId) => {
+    const target: PrototypeStepId =
+      id === "signup" && signedIn ? "college-home" : id;
+    setInstant(seenSteps.current.has(target));
+    seenSteps.current.add(target);
+
     /* Signed-in has no auth gate — send Sign up jumps to college home */
     if (id === "signup" && signedIn) {
       setDemoStep("college-home");
@@ -237,7 +263,7 @@ export default function UniLocateFlow() {
   }, []);
 
   return (
-    <DemoMotionProvider motion={motionOn} sound={soundOn}>
+    <DemoMotionProvider motion={animate} sound={soundOn}>
       <div className="prototype-board" ref={boardRef}>
         <PrototypeControls
           active={demoStep}
@@ -247,9 +273,9 @@ export default function UniLocateFlow() {
 
         <div
           className="prototype-board__phone"
-          data-ul-motion={motionOn ? "on" : "off"}
+          data-ul-motion={animate ? "on" : "off"}
         >
-          <MotionConfig reducedMotion={motionOn ? "never" : "always"}>
+          <MotionConfig reducedMotion={animate ? "never" : "always"}>
             <IPhoneFrame>
               <div
                 className={`ul-root-screen${onCollege ? "" : " ul-root-screen--parked"}`}

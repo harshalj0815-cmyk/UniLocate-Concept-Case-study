@@ -122,7 +122,7 @@ export function PrototypeEmbed() {
       className="section-visual__embed section-visual__embed--prototype"
       src={PROTOTYPE_SRC}
       title="UniLocate interactive prototype with screen and state controls"
-      loading="lazy"
+      loading="eager"
       onMouseEnter={(e) => {
         /* Hand the cursor to the prototype at the exact crossing point */
         setLastPoint({ x: e.clientX, y: e.clientY });
