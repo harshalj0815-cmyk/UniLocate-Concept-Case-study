@@ -83,9 +83,10 @@ export function DesignIterationsEmbed() {
     <iframe
       ref={iframeRef}
       className="section-visual__embed section-visual__embed--iterations"
-      src="/design-iterations.html?v=2"
+      src="/design-iterations.html?v=3"
       title="Design iterations: every version tried, one component at a time"
       loading="lazy"
+      scrolling="no"
       style={{ height }}
       onMouseEnter={(e) => {
         setLastPoint({ x: e.clientX, y: e.clientY });

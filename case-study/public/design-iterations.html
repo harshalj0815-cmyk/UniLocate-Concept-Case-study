@@ -21,6 +21,7 @@
   --morph:700ms;        /* morph duration */
 }
 *{box-sizing:border-box;margin:0}
+html{overflow:hidden}
 body{font-family:"Plus Jakarta Sans",system-ui,sans-serif;background:transparent;color:var(--ink);padding:8px 14px 44px}.toolbar{margin-left:0}
 
 .iteration{max-width:none;margin:0}.iteration > h2,.iteration > p{display:none}
@@ -275,10 +276,14 @@ body{font-family:"Plus Jakarta Sans",system-ui,sans-serif;background:transparent
 (() => {
   // Report content height so the host page can size the iframe.
   const post = () => {
-    const h = Math.ceil(document.documentElement.getBoundingClientRect().height);
+    const de = document.documentElement;
+    const h = Math.ceil(Math.max(de.getBoundingClientRect().height, de.scrollHeight, document.body.scrollHeight));
     parent.postMessage({ type: 'ul-iter-height', height: h }, location.origin);
   };
-  new ResizeObserver(post).observe(document.body);
+  const ro = new ResizeObserver(post);
+  ro.observe(document.body);
+  ro.observe(document.documentElement);
+  addEventListener('resize', post);
   addEventListener('load', post);
   post();
 })();
