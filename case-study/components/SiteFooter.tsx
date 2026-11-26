@@ -6,23 +6,16 @@ import { useEffect, useRef } from "react";
  * Footer links. Leave a url empty to hide that button until it is ready.
  */
 const SOCIALS = [
-  { label: "LinkedIn", href: "" },
-  { label: "X", href: "" },
-  { label: "Medium", href: "" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/harshaljadhav15/" },
+  { label: "X", href: "https://x.com/Har5hal_" },
+  { label: "Medium", href: "https://medium.com/@harshalj0815" },
 ];
 
 const CTAS = [
   { label: "Contact me", href: "mailto:harshalj0815@gmail.com" },
+  /* Portfolio not ready yet: add the url to show this button */
   { label: "Portfolio", href: "" },
 ];
-
-function DashedStitch() {
-  return (
-    <svg aria-hidden="true">
-      <rect />
-    </svg>
-  );
-}
 
 export function SiteFooter() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -92,7 +85,6 @@ export function SiteFooter() {
                     : {})}
                 >
                   {c.label}
-                  <DashedStitch />
                 </a>
               </li>
             );

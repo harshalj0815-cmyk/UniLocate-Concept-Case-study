@@ -1750,11 +1750,12 @@ img {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 20px;
+  height: 44px;
+  padding: 0 20px;
   background: #ffffff;
   color: #1d1d22;
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   line-height: 1;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   transition:
@@ -1766,58 +1767,65 @@ img {
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
 }
 
-/* CTA: black by default, blue + dashed stitch on hover */
+/* CTA: same recipe as the nav bar button — black, morphs to the prototype's blue CTA on hover */
 .ft__cta {
-  --r: 14px;
   position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 22px;
-  background: #111111;
-  border: 1.5px solid #111111;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: var(--ul-radius-sm);
+  corner-shape: squircle;
+  background: var(--ul-ink);
   color: #ffffff;
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   line-height: 1;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.15s ease;
 }
-.ft__cta svg {
+.ft__cta::before,
+.ft__cta::after {
+  content: "";
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s ease;
 }
-.ft__cta svg rect {
-  x: 5px;
-  y: 5px;
-  width: calc(100% - 10px);
-  height: calc(100% - 10px);
-  rx: 9px;
-  ry: 9px;
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.85);
-  stroke-width: 1.5px;
-  stroke-dasharray: 5 5.5;
-  stroke-linecap: round;
+.ft__cta::before {
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  corner-shape: squircle;
+  background-image: radial-gradient(
+    ellipse 93.75% 73.02% at 50% 0%,
+    #32a9ff 0%,
+    #008aec 100%
+  );
+}
+.ft__cta::after {
+  inset: 3px;
+  border-radius: 10px;
+  corner-shape: squircle;
+  border: 2px dashed #76c6ff;
 }
 .ft__cta:hover,
 .ft__cta:focus-visible {
-  background: #209ef8;
-  border-color: #1b7fd6;
+  box-shadow: 0 0 0 1px #005490;
 }
-.ft__cta:hover svg,
-.ft__cta:focus-visible svg {
+.ft__cta:hover::before,
+.ft__cta:hover::after,
+.ft__cta:focus-visible::before,
+.ft__cta:focus-visible::after {
   opacity: 1;
 }
-.ft__cta:active { transform: scale(0.98); }
+@media (prefers-reduced-motion: reduce) {
+  .ft__cta,
+  .ft__cta::before,
+  .ft__cta::after {
+    transition: none;
+  }
+}
 
 .ft a:focus-visible {
   outline: 3px solid #0051f2;
