@@ -1,5 +1,14 @@
 "use client";
 
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  MotionIcon,
+  RefreshIcon,
+  VolumeHighIcon,
+  VolumeOffIcon,
+  Wifi01Icon,
+  WifiOff01Icon,
+} from "@hugeicons/core-free-icons";
 import ProtoSquircle from "@/components/ui/ProtoSquircle";
 
 type SearchRecVariant = "recommendation" | "empty" | "not-exist";
@@ -57,8 +66,6 @@ export default function PrototypeStageCard({
       <ProtoSquircle
         className="proto-stage"
         radius={16}
-        seedWidth={286}
-        seedHeight={44}
         aria-label="Stage controls"
       >
         <button
@@ -67,43 +74,16 @@ export default function PrototypeStageCard({
           aria-label="Refresh screen"
           onClick={onRefresh}
         >
-          <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden>
-            <path
-              d="M16.5 10a6.5 6.5 0 1 1-1.7-4.4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-            <path
-              d="M16.5 3.8v3.8h-3.8"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <HugeiconsIcon icon={RefreshIcon} size={16} strokeWidth={2} />
         </button>
 
         <div className="proto-stage__chip">
           <span className="proto-stage__chip-lead">
-            <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden>
-              <path
-                d="M3.5 8.2v3.6c0 .6.4 1.1 1 1.2l5.2 1.1c.5.1 1-.3 1-.8V7.7c0-.5-.5-.9-1-.8L4.5 8c-.6.1-1 .6-1 1.2Z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M13.2 7.2a3.2 3.2 0 0 1 0 5.6M15.4 5.4a6 6 0 0 1 0 9.2"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-              />
-            </svg>
+            <HugeiconsIcon
+              icon={sound ? VolumeHighIcon : VolumeOffIcon}
+              size={16}
+              strokeWidth={1.8}
+            />
             <span className="proto-stage__label" id="proto-sound-label">
               Sound
             </span>
@@ -122,16 +102,7 @@ export default function PrototypeStageCard({
 
         <div className="proto-stage__chip">
           <span className="proto-stage__chip-lead">
-            <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden>
-              <path
-                d="M2.5 10c1.4-2.8 2.8-2.8 4.2 0s2.8 2.8 4.2 0 2.8-2.8 4.2 0 2.8 2.8 4.2 0"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <HugeiconsIcon icon={MotionIcon} size={16} strokeWidth={1.8} />
             <span className="proto-stage__label" id="proto-motion-label">
               Motion
             </span>
@@ -152,8 +123,6 @@ export default function PrototypeStageCard({
       <ProtoSquircle
         className="proto-segment"
         radius={16}
-        seedWidth={286}
-        seedHeight={36}
       >
         <div
           className="proto-segment__track"
@@ -184,8 +153,6 @@ export default function PrototypeStageCard({
       <ProtoSquircle
         className={`proto-segment${searchActive ? "" : " proto-segment--disabled"}`}
         radius={16}
-        seedWidth={286}
-        seedHeight={36}
       >
         <div
           className="proto-segment__track proto-segment__track--3"
@@ -247,8 +214,6 @@ export default function PrototypeStageCard({
       <ProtoSquircle
         className="proto-segment"
         radius={16}
-        seedWidth={286}
-        seedHeight={36}
       >
         <div
           className="proto-segment__track"
@@ -262,6 +227,7 @@ export default function PrototypeStageCard({
             aria-selected={connectivity.value === "online"}
             onClick={() => connectivity.onChange("online")}
           >
+            <HugeiconsIcon icon={Wifi01Icon} size={14} strokeWidth={2} />
             Online
           </button>
           <button
@@ -271,6 +237,7 @@ export default function PrototypeStageCard({
             aria-selected={connectivity.value === "offline"}
             onClick={() => connectivity.onChange("offline")}
           >
+            <HugeiconsIcon icon={WifiOff01Icon} size={14} strokeWidth={2} />
             Offline
           </button>
         </div>

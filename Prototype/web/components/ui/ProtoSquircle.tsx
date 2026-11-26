@@ -1,69 +1,31 @@
 "use client";
 
-import {
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
-import { paperSquirclePath } from "@/lib/continuousCorner";
+import type { CSSProperties, ReactNode } from "react";
 
 type Props = {
   children: ReactNode;
   className?: string;
-  /** Continuous corner radius — matches app controls (16) / cards (20) */
+  /** Corner radius of the inner surface */
   radius?: number;
-  /** Seed size before measure — avoids first-paint flash */
-  seedWidth?: number;
-  seedHeight?: number;
   "aria-label"?: string;
 };
 
 /**
- * White squircle sticker shell — same SVG + drop-shadow approach as
- * CollegeResultCard (shadow follows the continuous corner).
+ * Case-study sticker shell: thick white rim, squircle corners, soft shadow.
+ * Same recipe as `.sticker` / `.stat-sticker` on the case study page.
  */
 export default function ProtoSquircle({
   children,
   className = "",
   radius = 20,
-  seedWidth = 280,
-  seedHeight = 48,
   "aria-label": ariaLabel,
 }: Props) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [w, setW] = useState(seedWidth);
-  const [h, setH] = useState(seedHeight);
-  const path = paperSquirclePath(w, h, radius);
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const apply = () => {
-      setW(Math.max(1, Math.round(el.offsetWidth)));
-      setH(Math.max(1, Math.round(el.offsetHeight)));
-    };
-    apply();
-    const ro = new ResizeObserver(apply);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
   return (
     <div
-      ref={ref}
       className={`proto-squircle ${className}`.trim()}
+      style={{ "--proto-r": `${radius + 6}px` } as CSSProperties}
       aria-label={ariaLabel}
     >
-      <svg
-        className="proto-squircle__shape"
-        viewBox={`0 0 ${w} ${h}`}
-        width={w}
-        height={h}
-        aria-hidden
-      >
-        <path d={path} fill="#ffffff" stroke="#eaeaea" strokeWidth={1} />
-      </svg>
       <div className="proto-squircle__body">{children}</div>
     </div>
   );

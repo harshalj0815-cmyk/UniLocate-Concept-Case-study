@@ -33,6 +33,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <link
+          rel="preload"
+          as="font"
+          type="font/woff2"
+          href="/fonts/AlloVariable.woff2"
+          crossOrigin="anonymous"
+        />
         {FIRST_SCREEN_IMAGES.map((href) => (
           <link key={href} rel="preload" as="image" type="image/webp" href={href} />
         ))}

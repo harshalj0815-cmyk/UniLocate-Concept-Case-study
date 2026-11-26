@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "Allo";
+  src: url("/fonts/AlloVariable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 .prototype-canvas {
   --case-board: #f5f5f7;
   --font-ui: var(--font-plus-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
@@ -103,33 +111,43 @@
   pointer-events: none;
   box-sizing: border-box;
   padding: 16px 18px;
-  border: 1px solid transparent;
+  border: 5px solid transparent;
 }
 
 /* Demo board sticker shells — match CollegeResultCard squircle + shadow */
+/* Case-study sticker: thick white rim, squircle, soft fill + shadow */
 .proto-squircle {
+  --proto-sticker-shadow:
+    0 0 0 1px rgba(17, 17, 17, 0.05),
+    0 4px 12px rgba(17, 17, 17, 0.08),
+    0 1px 3px rgba(17, 17, 17, 0.05);
   position: relative;
   box-sizing: border-box;
-  background: transparent;
-  border: none;
+  border: 5px solid #ffffff;
+  border-radius: var(--proto-r, 22px);
+  corner-shape: squircle;
+  background: #e8f5ff;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    var(--proto-sticker-shadow);
   overflow: visible;
-}
-
-.proto-squircle__shape {
-  position: absolute;
-  left: 0;
-  top: 0;
-  z-index: 0;
-  display: block;
-  pointer-events: none;
-  overflow: visible;
-  filter: var(--ul-control-shadow);
 }
 
 .proto-squircle__body {
   position: relative;
-  z-index: 1;
   box-sizing: border-box;
+  border-radius: inherit;
+}
+
+/* Control labels use the case study typeface */
+.proto-controls-shell,
+.proto-stage-stack {
+  font-family: "Allo", var(--font-ui);
+}
+
+.proto-controls-shell button,
+.proto-stage-stack button {
+  font-family: inherit;
 }
 
 .proto-controls {
@@ -222,7 +240,7 @@
   min-height: 18px;
   margin: 4px 0 2px;
   border-radius: 1px;
-  background: #e4e4e8;
+  background: rgba(0, 138, 236, 0.2);
 }
 
 .proto-stepper__copy {
@@ -234,19 +252,35 @@
 }
 
 .proto-stepper__label {
-  color: #9c9c9c;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  color: #7d8896;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
   line-height: 1.25;
+  transition: color 160ms var(--ease-out);
 }
 
 .proto-stepper__hint {
-  color: #b4b4b8;
-  font-size: 12px;
+  color: #9aa4b1;
+  font-size: 12.5px;
   font-weight: 500;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.005em;
   line-height: 1.3;
+}
+
+@media (hover: hover) {
+  .proto-stepper__btn:hover .proto-stepper__label {
+    color: #111111;
+  }
+  .proto-stepper__btn:hover .proto-stepper__dot {
+    transform: scale(1.08);
+  }
+}
+
+.proto-stepper__btn:focus-visible {
+  outline: 2px solid #008aec;
+  outline-offset: 2px;
+  border-radius: 10px;
 }
 
 /* Done */
@@ -261,7 +295,7 @@
 }
 
 .proto-stepper__item[data-state="done"] .proto-stepper__label {
-  color: #2c2c2c;
+  color: #1d2733;
 }
 
 /* Current */
@@ -273,12 +307,12 @@
 }
 
 .proto-stepper__item[data-state="current"] .proto-stepper__label {
-  color: #2c2c2c;
-  font-weight: 700;
+  color: #111111;
+  font-weight: 750;
 }
 
 .proto-stepper__item[data-state="current"] .proto-stepper__hint {
-  color: #6b6b70;
+  color: #52606f;
 }
 
 /* Upcoming */
@@ -334,7 +368,14 @@
   gap: 2px;
   padding: 0;
   border-radius: 12px;
-  background: rgba(0, 138, 236, 0.08);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.proto-segment__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 /* Mapped | Not mapped | Not exist */
@@ -352,11 +393,11 @@
   border: none;
   border-radius: 12px;
   background: transparent;
-  color: #6b6b70;
+  color: #52606f;
   font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
   line-height: 1.2;
   white-space: nowrap;
   cursor: pointer;
@@ -479,8 +520,19 @@
 }
 
 .proto-stage__refresh svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
+}
+
+/* Slight sticker tilt, same idea as the stat stickers on the page */
+.proto-controls { transform: rotate(-0.8deg); }
+.proto-stage-stack > :nth-child(1) { transform: rotate(0.6deg); }
+.proto-stage-stack > :nth-child(2) { transform: rotate(-0.5deg); }
+.proto-stage-stack > :nth-child(3) { transform: rotate(0.5deg); }
+.proto-stage-stack > :nth-child(4) { transform: rotate(-0.6deg); }
+@media (prefers-reduced-motion: reduce) {
+  .proto-controls,
+  .proto-stage-stack > * { transform: none; }
 }
 
 .proto-stage__refresh:hover {
@@ -499,7 +551,7 @@
   min-height: 32px;
   padding: 4px 6px 4px 10px;
   border-radius: 12px;
-  background: rgba(0, 138, 236, 0.08);
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .proto-stage__chip-lead {
@@ -510,15 +562,16 @@
 }
 
 .proto-stage__chip-lead svg {
-  width: 13px;
-  height: 13px;
+  width: 16px;
+  height: 16px;
+  color: #008aec;
 }
 
 .proto-stage__label {
-  color: #2c2c2c;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  color: #1d2733;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
   line-height: 1.2;
   white-space: nowrap;
 }

@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 /** Prototype snapshot lives in public/prototype-app and links assets from the site root. */
-const prototypeAssetFolders = ["maps", "images", "animations", "icons", "logo"];
+const prototypeAssetFolders = ["maps", "images", "animations", "icons", "logo", "fonts"];
 
 /* Public files are served with max-age=0 by default, so every visit revalidates
    each image, map page and script one by one (many of them inside nested iframes). */
