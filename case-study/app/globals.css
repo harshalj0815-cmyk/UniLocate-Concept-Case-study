@@ -1827,6 +1827,12 @@ img {
   }
 }
 
+.ft__cta:active { transform: scale(0.98); }
+.ft__cta[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
 .ft a:focus-visible {
   outline: 3px solid #0051f2;
   outline-offset: 3px;

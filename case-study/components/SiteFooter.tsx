@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Footer links. Leave a url empty to hide that button until it is ready.
+ * Footer links. A CTA with an empty url shows greyed out until it is ready.
  */
 const SOCIALS = [
   { label: "LinkedIn", href: "https://www.linkedin.com/in/harshaljadhav15/" },
@@ -13,7 +13,7 @@ const SOCIALS = [
 
 const CTAS = [
   { label: "Contact me", href: "mailto:harshalj0815@gmail.com" },
-  /* Portfolio not ready yet: add the url to show this button */
+  /* Portfolio not live yet: add the url to turn this button on */
   { label: "Portfolio", href: "" },
 ];
 
@@ -39,8 +39,6 @@ export function SiteFooter() {
   }, []);
 
   const socials = SOCIALS.filter((s) => s.href);
-  const ctas = CTAS.filter((c) => c.href);
-
   return (
     <footer className="ft">
       <video
@@ -73,7 +71,17 @@ export function SiteFooter() {
               </a>
             </li>
           ))}
-          {ctas.map((c) => {
+          {CTAS.map((c) => {
+            /* No link yet: the button stays, greyed out and not clickable */
+            if (!c.href) {
+              return (
+                <li key={c.label}>
+                  <a className="ft__cta ft-sq" aria-disabled="true">
+                    {c.label}
+                  </a>
+                </li>
+              );
+            }
             const external = !c.href.startsWith("mailto:");
             return (
               <li key={c.label}>
