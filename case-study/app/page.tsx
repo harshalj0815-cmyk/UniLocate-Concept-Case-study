@@ -720,7 +720,7 @@ export default function CaseStudyPage() {
           <figure className="section-visual section-visual--balloons">
             <iframe
               className="section-visual__embed section-visual__embed--balloons"
-              src="/balloon-hands.html?v=1"
+              src="/balloon-hands.html?v=2"
               title="Two hands holding balloons; one lets go of its balloon"
               loading="lazy"
               aria-hidden="true"

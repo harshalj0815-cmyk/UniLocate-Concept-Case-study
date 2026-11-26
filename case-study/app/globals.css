@@ -920,13 +920,13 @@ img {
 
 /* —— Trade-offs: balloon hands, bare on the page background —— */
 .section-visual--balloons {
-  margin-top: 24px;
+  margin-top: 0;
   overflow: hidden;
   background: transparent;
 }
 
 .section-visual__embed--balloons {
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16 / 6;
   background: var(--ul-bg);
 }
 
