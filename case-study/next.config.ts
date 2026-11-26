@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
     return [
       cache("/prototype-app/:path*", CACHE_PAGES),
       ...prototypeAssetFolders.map((folder) => cache(`/${folder}/:path*`, CACHE_PAGES)),
-      cache("/:all*(png|jpg|jpeg|webp|avif|gif|svg|woff2)", CACHE_IMAGES),
+      cache("/:all*(png|jpg|jpeg|webp|avif|gif|svg|woff2|mp4)", CACHE_IMAGES),
       cache("/prototype-app/_next/static/:path*", CACHE_IMMUTABLE),
     ];
   },

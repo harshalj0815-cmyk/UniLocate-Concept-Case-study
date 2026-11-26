@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { CaseNav } from "@/components/CaseNav";
 import { DesignIterationsEmbed } from "@/components/DesignIterationsEmbed";
+import { SiteFooter } from "@/components/SiteFooter";
 import { ExpandableBody } from "@/components/ExpandableBody";
 import { PrototypeEmbed } from "@/components/PrototypeEmbed";
 import {
@@ -776,6 +777,7 @@ export default function CaseStudyPage() {
 
         <div id="outcome" hidden />
       </main>
+      <SiteFooter />
     </>
   );
 }
