@@ -2924,57 +2924,6 @@
   background: #d9dfe3;
 }
 
-/* Stepper jump placeholder */
-.ul-screen-skel {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  padding: 150px 24px 0;
-  box-sizing: border-box;
-  background: #eaf5fd;
-  animation: cr-skel-fade 160ms ease both;
-}
-.ul-screen-skel__icon {
-  width: 72px;
-  height: 72px;
-  border-radius: 20px;
-}
-.ul-screen-skel__title {
-  width: 240px;
-  height: 22px;
-  border-radius: 12px;
-}
-.ul-screen-skel__title--short {
-  width: 170px;
-}
-.ul-screen-skel__search {
-  width: 100%;
-  height: 48px;
-  margin-top: 18px;
-  border-radius: 14px;
-}
-.ul-screen-skel__card {
-  width: 100%;
-  height: 150px;
-  border-radius: 18px;
-}
-.ul-screen-skel__cta {
-  width: 100%;
-  height: 48px;
-  border-radius: 14px;
-}
-@keyframes cr-skel-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
 
 /* Shimmer — clipped to bone radius; transform only */
 .cr-skel__bone::after {

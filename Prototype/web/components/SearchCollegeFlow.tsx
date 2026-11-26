@@ -118,7 +118,11 @@ export default function SearchCollegeFlow({
   /** Visual focus — lags one frame on open so motion runs from home poses */
   const [focused, setFocused] = useState(() => scene === "results");
   /** Results “fetch” — Paper skeleton for 2s (skipped on demo jump remount) */
-  const [resultsLoading, setResultsLoading] = useState(false);
+  const [resultsLoading, setResultsLoading] = useState(
+    () => scene === "results" && recVariant === "recommendation" && !reduce,
+  );
+  /** Stepper jump to Search college — keyboard opens, then the demo query types itself */
+  const autoTypeRef = useRef(scene === "search" && !reduce);
   /** Results header (title + back) — hide on scroll down, show on scroll up */
   const [resultsHeader, setResultsHeader] = useState(true);
   /** Bumps when returning from SignUp so Framer drag elastic remounts cleanly */
@@ -334,6 +338,25 @@ export default function SearchCollegeFlow({
     },
     [demoQuery, focused, phase, query, recVariant, reduce, stopTyping],
   );
+
+  /* Mounted straight onto Results (stepper jump): run the 2s skeleton, then cards */
+  useEffect(() => {
+    if (!resultsLoading || resultsTimerRef.current != null) return;
+    resultsTimerRef.current = window.setTimeout(() => {
+      setResultsLoading(false);
+      resultsTimerRef.current = null;
+    }, 2000);
+  }, [resultsLoading]);
+
+  /* Mounted onto Search (stepper jump): once the keyboard is up, type the demo query */
+  useEffect(() => {
+    if (!autoTypeRef.current || !focused || phase !== "search") return;
+    const t = window.setTimeout(() => {
+      autoTypeRef.current = false;
+      startTyping();
+    }, MOVE_S * 1000 + 150);
+    return () => window.clearTimeout(t);
+  }, [focused, phase, startTyping]);
 
   /** Enter → college results (cards or not-mapped empty) */
   const onSearchEnter = useCallback(() => {

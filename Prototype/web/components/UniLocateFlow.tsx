@@ -11,10 +11,11 @@ import PrototypeStageCard, {
 import SearchCollegeFlow, {
   type SearchRecVariant,
 } from "@/components/SearchCollegeFlow";
-import MapFirstTime from "@/components/screens/MapFirstTime";
+import MapFirstTime, {
+  resetCampusMapIntro,
+} from "@/components/screens/MapFirstTime";
 import SignUp from "@/components/screens/SignUp";
 import OfflineScreen from "@/components/ui/OfflineScreen";
-import ScreenSkeleton from "@/components/ui/ScreenSkeleton";
 import { COLLEGE_RESULTS, type CollegeResult } from "@/lib/collegeResults";
 import { DemoMotionProvider } from "@/lib/demoMotion";
 import type { PrototypeStepId } from "@/lib/prototypeSteps";
@@ -59,9 +60,6 @@ export default function UniLocateFlow() {
   /** Bump to remount map / college when jumping via stepper */
   const [jumpKey, setJumpKey] = useState(0);
   const [motionOn, setMotionOn] = useState(true);
-  /** Brief placeholder when a screen is opened from the stepper */
-  const [skeleton, setSkeleton] = useState(false);
-  const skeletonTimer = useRef<number>(0);
   const [soundOn, setSoundOn] = useState(true);
   const [searchRecVariant, setSearchRecVariant] =
     useState<SearchRecVariant>("recommendation");
@@ -172,11 +170,7 @@ export default function UniLocateFlow() {
   );
 
   const jumpTo = useCallback((id: PrototypeStepId) => {
-    if (motionOn) {
-      setSkeleton(true);
-      window.clearTimeout(skeletonTimer.current);
-      skeletonTimer.current = window.setTimeout(() => setSkeleton(false), 700);
-    }
+    if (id === "map-idle") resetCampusMapIntro();
     /* Signed-in has no auth gate — send Sign up jumps to college home */
     if (id === "signup" && signedIn) {
       setDemoStep("college-home");
@@ -209,7 +203,7 @@ export default function UniLocateFlow() {
       );
       setJumpKey((k) => k + 1);
     }
-  }, [mapCollege, signedIn, motionOn]);
+  }, [mapCollege, signedIn]);
 
   const onCollege = screen === "college";
   const authMode = screen === "login" ? "login" : "signup";
@@ -260,7 +254,6 @@ export default function UniLocateFlow() {
         >
           <MotionConfig reducedMotion={motionOn ? "never" : "always"}>
             <IPhoneFrame>
-              {skeleton ? <ScreenSkeleton /> : (<>
               <div
                 className={`ul-root-screen${onCollege ? "" : " ul-root-screen--parked"}`}
                 aria-hidden={!onCollege}
@@ -320,7 +313,6 @@ export default function UniLocateFlow() {
                   onCreateProfile={openSignup}
                 />
               ) : null}
-              </>)}
             </IPhoneFrame>
           </MotionConfig>
         </div>

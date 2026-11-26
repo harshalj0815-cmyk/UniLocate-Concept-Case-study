@@ -306,6 +306,11 @@ const MapLayers = memo(function MapLayers({
 /** Set once the Campus map loading sticker has played in this page session; later visits skip it */
 let campusMapIntroDone = false;
 
+/** Stepper jump to Campus map — play the loading sticker again */
+export function resetCampusMapIntro() {
+  campusMapIntroDone = false;
+}
+
 /** Map-FirstTime — campus map chrome around the existing floor HTML + nav logic */
 export default function MapFirstTime({
   collegeName,
