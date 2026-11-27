@@ -726,21 +726,10 @@ export default function CaseStudyPage() {
             </ExpandableBody>
           </div>
 
-          <figure className="section-visual section-visual--balloons">
-            <iframe
-              className="section-visual__embed section-visual__embed--balloons"
-              src="/balloon-hands.html?v=2"
-              title="Two hands holding balloons; one lets go of its balloon"
-              loading="lazy"
-              aria-hidden="true"
-              tabIndex={-1}
-            />
-          </figure>
-
           <figure className="section-visual section-visual--bars">
             <iframe
               className="section-visual__embed section-visual__embed--bars"
-              src="/prioritization-bars.html?v=1"
+              src="/prioritization-bars.html?v=2"
               title="Four bars rising and falling as priorities are traded off"
               loading="lazy"
               aria-hidden="true"

@@ -918,18 +918,6 @@ img {
   background: transparent;
 }
 
-/* —— Trade-offs: balloon hands, bare on the page background —— */
-.section-visual--balloons {
-  margin-top: 0;
-  overflow: hidden;
-  background: transparent;
-}
-
-.section-visual__embed--balloons {
-  aspect-ratio: 16 / 6;
-  background: var(--ul-bg);
-}
-
 .section-visual--bars {
   margin-top: 24px;
   overflow: hidden;
@@ -937,8 +925,13 @@ img {
 }
 
 .section-visual__embed--bars {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 7;
   background: var(--ul-bg);
+}
+
+/* Bars figure ends the section: its frame already has blank space at the bottom */
+#tradeoffs.case-section:not(#thumbnail) {
+  padding-bottom: 8px;
 }
 
 /* —— Target users: stat stickers (white rim, soft shadow, slight tilt) —— */
