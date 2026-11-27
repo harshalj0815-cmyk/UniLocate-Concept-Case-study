@@ -2,6 +2,7 @@ import Image from "next/image";
 import { CaseNav } from "@/components/CaseNav";
 import { DesignIterationsEmbed } from "@/components/DesignIterationsEmbed";
 import { SiteFooter } from "@/components/SiteFooter";
+import { BarsEmbed } from "@/components/BarsEmbed";
 import { ExpandableBody } from "@/components/ExpandableBody";
 import { PrototypeEmbed } from "@/components/PrototypeEmbed";
 import {
@@ -727,14 +728,7 @@ export default function CaseStudyPage() {
           </div>
 
           <figure className="section-visual section-visual--bars">
-            <iframe
-              className="section-visual__embed section-visual__embed--bars"
-              src="/prioritization-bars.html?v=5"
-              title="Four bars rising and falling as priorities are traded off"
-              loading="lazy"
-              aria-hidden="true"
-              tabIndex={-1}
-            />
+            <BarsEmbed />
           </figure>
         </section>
 

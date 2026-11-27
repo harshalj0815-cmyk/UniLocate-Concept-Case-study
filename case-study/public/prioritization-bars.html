@@ -43,8 +43,11 @@ function grow(o,y){var x=o.cx,E=o.e,hex=pts([[x,y-D],[x+HW,y],[x+HW,BB],[x,BB+D]
 el("rect",{x:-50,y:360,width:900,height:500,fill:"url(#fg)"},svg);
 bars.forEach(function(o,i){var c=ICONS[i],g=el("g",{},svg),a={x:-c[2]/2,y:-c[3]+P,width:c[2],height:c[3]};
  var b=BAD[o.hi?0:1],an=ANCH[i],bp={x:an[0]-b[1]/2,y:an[1]-b[2]/2,width:b[1],height:b[2],opacity:0};o.bb=el("image",Object.assign({href:b[3]},bp),g);el("image",Object.assign({href:c[0]},a),g);o.dl=el("image",Object.assign({href:c[1],opacity:0},a),g);o.bd=el("image",Object.assign({href:b[0]},bp),g);o.ig=g});
-var last=0;
-function frame(ms){var t=ms/1000,dt=Math.min(.05,(ms-(last||ms))/1000);last=ms;
+var last=0,t0=null;
+/* Parent page asks for a fresh run when the animation scrolls into view */
+function restart(){t0=null;last=0;bars.forEach(function(o){o.x=0;o.v=0;o.hp=undefined})}
+addEventListener("message",function(e){if(e.origin===location.origin&&e.data&&e.data.type==="ul-restart")restart()});
+function frame(ms){if(t0===null)t0=ms;var t=(ms-t0)/1000,dt=Math.min(.05,(ms-(last||ms))/1000);last=ms;
  bars.forEach(function(o,i){var k=bez((t-1.6-.08*i)/2.4),base=o.hi?305:135,amp=o.hi?14:10,h=230+(base-230)*k;
   if(!rm)h+=k*(amp*Math.sin(t*.6+o.ph)+amp*.3*Math.sin(t*1.1+o.ph*2));
   if(!rm&&dt>0){var vb=o.hp===undefined?0:(h-o.hp)/dt;o.v+=(-60*o.x-10.8*o.v+19*vb)*dt;o.x=Math.max(-8,Math.min(16,o.x+o.v*dt))}
