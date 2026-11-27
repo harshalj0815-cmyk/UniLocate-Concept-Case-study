@@ -15,6 +15,8 @@ const SECTIONS = [
   { id: "tradeoffs", label: "Trade-offs" },
   { id: "edge", label: "Edge cases" },
   { id: "iterations", label: "Design iterations" },
+  { id: "handoff", label: "Hand off" },
+  { id: "learnings", label: "Learnings" },
   { id: "outcome", label: "Outcome" },
 ] as const;
 

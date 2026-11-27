@@ -793,10 +793,16 @@ img {
     --journey-label-col: 6.5rem;
   }
 
+  /* Right-edge fade: a mask, so it blends into whatever is behind the table.
+     It fades out once the table is scrolled to its end. */
   .journey-table-scroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent 100%);
+    animation: journey-scroll-fade linear both;
+    animation-timeline: scroll(self inline);
   }
 
   .journey-table-rail {
@@ -833,6 +839,90 @@ img {
   .journey-table td {
     padding: 12px 10px;
     font-size: 12px;
+  }
+}
+
+/* —— Hand off: two sticker cards linking to Figma and FigJam —— */
+.handoff {
+  list-style: none;
+  margin: 0;
+  padding: 8px 4px 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.handoff-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  padding: 24px 24px 22px;
+  box-sizing: border-box;
+  background: #fff;
+  color: var(--ul-ink);
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.handoff-card:hover {
+  transform: translateY(-3px);
+}
+
+.handoff-card:focus-visible {
+  outline: 3px solid var(--ul-blue);
+  outline-offset: 4px;
+}
+
+.handoff-card__eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ul-blue);
+}
+
+.handoff-card__title {
+  font-size: clamp(22px, 2.6vw, 28px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.handoff-card__body {
+  font-size: 15px;
+  line-height: 1.45;
+  color: #5a5a5a;
+}
+
+.handoff-card__cta {
+  margin-top: auto;
+  padding-top: 14px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .handoff {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .handoff-card {
+    transition: none;
+  }
+}
+
+/* Fade on the right while there is more to scroll, gone at the end */
+@keyframes journey-scroll-fade {
+  from {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent 100%);
+  }
+  to {
+    -webkit-mask-image: linear-gradient(to right, #000 100%, #000 100%);
+    mask-image: linear-gradient(to right, #000 100%, #000 100%);
   }
 }
 
@@ -932,6 +1022,30 @@ img {
 /* Bars figure ends the section: its frame already has blank space at the bottom */
 #tradeoffs.case-section:not(#thumbnail) {
   padding-bottom: 8px;
+}
+
+/* Learnings: portrait photo shown as a centered sticker, not full column width */
+.learnings-figure {
+  width: 100%;
+  margin: 40px 0 0;
+  aspect-ratio: 920 / 416;
+}
+
+.learnings-figure .section-visual__img {
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 35%;
+}
+
+@media (max-width: 900px) {
+  .learnings-figure {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+/* Directly under the iterations board, so it does not need the full section gap */
+#handoff.case-section:not(#thumbnail) {
+  padding-top: 16px;
 }
 
 /* —— Target users: stat stickers (white rim, soft shadow, slight tilt) —— */
@@ -1383,6 +1497,13 @@ img {
 
   .interview-bubbles__affinity-item:nth-child(n) {
     transform: none;
+  }
+
+  /* Square notes are too tall for one-line-per-card phones: size to the text */
+  .interview-bubbles__affinity-item {
+    aspect-ratio: auto;
+    min-height: 0;
+    padding: 16px 16px 18px;
   }
 }
 

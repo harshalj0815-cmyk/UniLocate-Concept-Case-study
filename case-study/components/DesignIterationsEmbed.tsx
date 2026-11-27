@@ -35,7 +35,18 @@ export function DesignIterationsEmbed() {
   useEffect(() => {
     const iframe = iframeRef.current;
     if (!iframe) return;
-    const run = () => attachStickerCursor(iframe);
+    /* The frame's own height message can arrive before this listener exists, and the
+       frame then keeps its 1100px default. Same-origin, so read the real height here too. */
+    const measure = () => {
+      const doc = iframe.contentDocument;
+      if (!doc) return;
+      const h = Math.ceil(doc.documentElement.scrollHeight);
+      if (h > 0) setHeight(h);
+    };
+    const run = () => {
+      attachStickerCursor(iframe);
+      measure();
+    };
     iframe.addEventListener("load", run);
     run();
     return () => iframe.removeEventListener("load", run);
@@ -83,7 +94,7 @@ export function DesignIterationsEmbed() {
     <iframe
       ref={iframeRef}
       className="section-visual__embed section-visual__embed--iterations"
-      src="/design-iterations.html?v=3"
+      src="/design-iterations.html?v=4"
       title="Design iterations: every version tried, one component at a time"
       loading="lazy"
       scrolling="no"

@@ -39,6 +39,22 @@ const EDGE_TEXT = [
   { title: "No internet", body: "The screen says \u201cYou\u2019re offline. Saved campus maps still work without a connection.\u201d The Use Offline Maps button appears only if the student has signed up and saved a map." },
 ];
 
+/* Hand-off files: the Figma design file and the FigJam research board */
+const HANDOFF_LINKS = [
+  {
+    eyebrow: "Figma",
+    title: "Design",
+    body: "UniLocate Rework: the design file.",
+    href: "https://www.figma.com/design/AylCl5rDvMwaj4NilQsv8D/UniLocate-Rework?node-id=7-34&t=grRN7vMg829mVkHL-1",
+  },
+  {
+    eyebrow: "FigJam",
+    title: "Research",
+    body: "UniLocate Research (Rework): the research board.",
+    href: "https://www.figma.com/board/q8OZGkzdqLC4C1xYqRfQgi/UniLocate-Research--Rework-?node-id=0-1&t=KeScy81Clwof57pP-1",
+  },
+];
+
 const SITE_URL = "https://unilocate-case-study.vercel.app";
 
 /* Machine-readable summary of the case study. Mirrors the visible page. */
@@ -50,7 +66,7 @@ const JSON_LD = {
     "Concept case study for UniLocate, an indoor campus navigator for students on a first visit. Activation design: skip sign-up, get a route in 3 taps, QR checkpoints for offline navigation.",
   url: `${SITE_URL}/`,
   mainEntityOfPage: `${SITE_URL}/`,
-  image: `${SITE_URL}/og-image.jpg`,
+  image: `${SITE_URL}/og-image.jpg?v=2`,
   inLanguage: "en",
   isAccessibleForFree: true,
   author: {
@@ -105,7 +121,7 @@ export default function CaseStudyPage() {
             <div className="thumbnail__frame sticker squircle">
               <Image
                 className="thumbnail__img"
-                src="/thumbnail.webp"
+                src="/thumbnail.webp?v=2"
                 alt={`${TITLE}. Hero of the concept case study: phone showing an indoor campus map route, with a student sticker figure on the path.`}
                 width={2240}
                 height={1258}
@@ -430,26 +446,39 @@ export default function CaseStudyPage() {
                 <li>
                   An{" "}
                   <mark className="mark">always-on wing colour layer</mark> that
-                  paints every wing a different colour so sections stay visible.
+                  gives each building its own colour and border every wing by
+                  default.
                   <br />
-                  <strong>Not Selected:</strong> too many colours on the map
-                  would make the path harder to read, not clearer.
+                  <strong>Not Selected:</strong> students use this map when
+                  they are already nervous, and showing every wing at once could
+                  overwhelm or confuse them.
+                </li>
+                <li>
+                  An{" "}
+                  <mark className="mark">index listing</mark> that matches each
+                  colour to a wing or building, instead of filters.
+                  <br />
+                  <strong>Not Selected:</strong> students would have to look up
+                  a colour in the list and then find it on the map, which costs
+                  more time and adds friction.
                 </li>
                 <li>
                   A{" "}
-                  <mark className="mark">static offline map download</mark> so the
-                  path still works when indoor signal drops.
+                  <mark className="mark">static offline map download</mark>: a
+                  plain map without live navigation, so the path still works
+                  when indoor signal drops.
                   <br />
-                  <strong>Not Selected:</strong> colleges already place static
-                  maps at a few points, and students still get lost.
+                  <strong>Not Selected:</strong> navigating indoors with GPS
+                  alone isn&apos;t possible, and colleges already have static
+                  maps that often add to the confusion.
                 </li>
                 <li>
                   <mark className="mark">Sign-up first</mark> before search and
                   route, so the account is ready from the first visit.
                   <br />
-                  <strong>Not Selected:</strong> the moment someone opens the
-                  app is usually time pressure, so they need to use the product
-                  first, not set up an account.
+                  <strong>Not Selected:</strong> the situation wasn&apos;t
+                  suitable for sign-up, and it is a better opportunity to let
+                  students see the value of the app before asking for anything.
                 </li>
               </ul>
             </ExpandableBody>
@@ -458,17 +487,18 @@ export default function CaseStudyPage() {
           <figure className="section-visual">
             <Image
               className="section-visual__img"
-              src="/ideas-explored.webp"
-              alt="Three phone mockups from ideation: a map with an always-on wing colour overlay, a sign-up first screen, and a static offline floor plan."
+              src="/ideas-explored.webp?v=2"
+              alt="Four rejected ideas from ideation, each with a phone mockup: an always-on wing colour map, a colour index listing of wings and buildings, a plain static offline map, and a sign-up first screen."
               width={1840}
-              height={1076}
+              height={4857}
               draggable={false}
               sizes="(max-width: 1120px) 100vw, 1120px"
             />
             <figcaption className="sr-only">
-              Ideas explored visual. Phone mockups for the rejected directions:
-              wing colour layer on the map, sign-up before route, and a static
-              offline campus plan.
+              Ideas explored visual. Phone mockups for the four rejected
+              directions: wing colour layer on the map, a colour index listing
+              instead of filters, a plain static offline map, and sign-up before
+              route.
             </figcaption>
           </figure>
 
@@ -862,6 +892,104 @@ export default function CaseStudyPage() {
               Design iterations: the CTA button, chips, icons, college result
               cards, floor stepper, and the landing, map and sign-up screens,
               each shown across the versions tried.
+            </figcaption>
+          </figure>
+        </section>
+
+        <section
+          id="handoff"
+          className="case-section"
+          aria-labelledby="handoff-title"
+        >
+          <div className="case-section--prose">
+            <p className="section-kicker">12. Hand off</p>
+            <h2 id="handoff-title" className="section-title">
+              Design and research files
+            </h2>
+            <ExpandableBody>
+              <p className="section-body">
+                The design file and the research board, for anyone who wants to
+                look past the prototype.
+              </p>
+            </ExpandableBody>
+          </div>
+
+          <ul className="handoff" aria-label="Design and research files">
+            {HANDOFF_LINKS.map((h) => (
+              <li key={h.href}>
+                <a
+                  className="handoff-card sticker squircle"
+                  href={h.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="handoff-card__eyebrow">{h.eyebrow}</span>
+                  <span className="handoff-card__title">{h.title}</span>
+                  <span className="handoff-card__body">{h.body}</span>
+                  <span className="handoff-card__cta" aria-hidden="true">
+                    Open file ↗
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section
+          id="learnings"
+          className="case-section"
+          aria-labelledby="learnings-title"
+        >
+          <div className="case-section--prose">
+            <p className="section-kicker">13. Learnings</p>
+            <h2 id="learnings-title" className="section-title">
+              What I took from this
+            </h2>
+          </div>
+
+          <div className="case-section--prose">
+            <ol className="section-list">
+              <li>
+                <mark className="mark">Iterating pays off most on the screens that matter.</mark>{" "}
+                Fitting the map on screen took three to four iterations, and so
+                did the first screen a new user sees.
+              </li>
+              <li>
+                <mark className="mark">Small details change how a design feels.</mark>{" "}
+                A button that scales down on click or an elastic effect on
+                scroll costs little, but it makes the app feel responsive.
+              </li>
+              <li>
+                <mark className="mark">A small issue can become an opportunity.</mark>{" "}
+                Students being nervous on their first day meant sign-up first
+                was wrong, but it also gave a chance to show the app&apos;s value
+                before asking for anything.
+              </li>
+              <li>
+                <mark className="mark">Numbers add weight.</mark> Besides the
+                survey data, I found and estimated the TAM, which shows the size
+                of the opportunity.
+              </li>
+              <li>
+                <mark className="mark">Presentation matters as much as the design itself.</mark>{" "}
+                How the case study looks and how clearly I explain each decision
+                both affect whether a reader understands the work.
+              </li>
+            </ol>
+          </div>
+
+          <figure className="section-visual learnings-figure sticker squircle">
+            <Image
+              className="section-visual__img"
+              src="/learnings.webp?v=2"
+              alt="Photo of a laptop showing the UniLocate app icon being drawn in Figma, with the UniLocate wordmark outlined on the right of the screen."
+              width={768}
+              height={760}
+              draggable={false}
+              sizes="(max-width: 900px) 100vw, 920px"
+            />
+            <figcaption className="sr-only">
+              Designing the UniLocate app icon in Figma, on a laptop.
             </figcaption>
           </figure>
         </section>

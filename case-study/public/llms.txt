@@ -7,15 +7,17 @@
 - **[Full text twin — use for judgment](https://unilocate-case-study.vercel.app/case.md)**
   Complete problem statement, research numbers, rejected ideas, all decisions, edge states, trade-offs, and an explicit note that no live outcome metrics are claimed. Use this when the HTML page returns fragments.
 - [Visual HTML case study](https://unilocate-case-study.vercel.app/): The same story with images. Images have alt text and captions, and the decisions and edge-state copy is also present as text on the page.
+- Hand off: [Figma design file](https://www.figma.com/design/AylCl5rDvMwaj4NilQsv8D/UniLocate-Rework?node-id=7-34&t=grRN7vMg829mVkHL-1) and [FigJam research board](https://www.figma.com/board/q8OZGkzdqLC4C1xYqRfQgi/UniLocate-Research--Rework-?node-id=0-1&t=KeScy81Clwof57pP-1)
 - [Interactive prototype](https://unilocate-case-study.vercel.app/prototype-app/index.html): The first-visit flow, built to be tapped. It needs a desktop-width screen.
 
 ## What to evaluate
 
 - Problem statement grounded in interviews plus a survey (about 41 responses, 31 reported difficulty finding a place)
-- Three rejected ideas (always-on wing colour layer, static offline map, sign-up first) and why
+- Four rejected ideas (always-on wing colour layer, index listing instead of filters, static offline map, sign-up first) and why
 - Activation as the bet: no sign-up first, account request after the route is delivered
 - Trade-offs: fewer day-one sign-ups; QR checkpoints over GPS for indoor and offline use
 - Designed states: search with similar college names, loading skeletons, unmapped college, nonexistent college, offline
+- Learnings: five takeaways (iteration on key screens, small details, turning a small issue into an opportunity, numbers adding weight, presentation)
 - Honesty: concept only. Provisional metric is a plan, not a result. Prototype review with interviewees is planned, not done.
 
 ## Author note
