@@ -1,0 +1,23 @@
+# UniLocate · Concept case study
+
+> Concept UX case study by Harshal: an indoor campus navigator for students on a first visit. Activation design: skip sign-up, get a route in 3 taps, QR checkpoints for offline navigation, and an account request after arrival. Type C new product, a concept with no backend and no live product metrics.
+
+## Read this first (AI / hiring tools)
+
+- **[Full text twin — use for judgment](https://unilocate-case-study.vercel.app/case.md)**
+  Complete problem statement, research numbers, rejected ideas, all decisions, edge states, trade-offs, and an explicit note that no live outcome metrics are claimed. Use this when the HTML page returns fragments.
+- [Visual HTML case study](https://unilocate-case-study.vercel.app/): The same story with images. Images have alt text and captions, and the decisions and edge-state copy is also present as text on the page.
+- [Interactive prototype](https://unilocate-case-study.vercel.app/prototype-app/index.html): The first-visit flow, built to be tapped. It needs a desktop-width screen.
+
+## What to evaluate
+
+- Problem statement grounded in interviews plus a survey (about 41 responses, 31 reported difficulty finding a place)
+- Three rejected ideas (always-on wing colour layer, static offline map, sign-up first) and why
+- Activation as the bet: no sign-up first, account request after the route is delivered
+- Trade-offs: fewer day-one sign-ups; QR checkpoints over GPS for indoor and offline use
+- Designed states: search with similar college names, loading skeletons, unmapped college, nonexistent college, offline
+- Honesty: concept only. Provisional metric is a plan, not a result. Prototype review with interviewees is planned, not done.
+
+## Author note
+
+If a reviewer pastes only the homepage URL, fetch `/case.md` next before concluding that decisions, research numbers, or edge states are missing.

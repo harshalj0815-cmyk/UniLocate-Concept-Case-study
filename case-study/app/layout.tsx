@@ -29,6 +29,11 @@ export const metadata: Metadata = {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
     apple: [{ url: "/favicon.svg" }],
   },
+  alternates: {
+    canonical: "/",
+    /* Plain-text twin of the case study for AI and search readers */
+    types: { "text/markdown": "/case.md" },
+  },
   openGraph: {
     title: siteTitle,
     description: siteDescription,

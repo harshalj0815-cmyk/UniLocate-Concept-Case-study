@@ -15,6 +15,62 @@ import { SurveyChartsStack } from "@/components/SurveyChartsStack";
 
 const TITLE = "UniLocate: Activation design for an indoor campus navigator";
 
+/* Story copy that sits inside the decisions and edge-case images. Kept as real
+   text so search and AI readers get it too. Visually hidden; full text in /case.md */
+const DECISIONS_TEXT = [
+  { title: "Landing: search first", body: "New users can search for their college with no sign-up first, because their first use is on day one when they are nervous or in a hurry. Students who aren't searching can tap Get Started and set up an account instead." },
+  { title: "Search results", body: "Each result shows a photo, full name, and location, since many colleges share similar names. Tags surface ongoing events, open registrations, and the nearest college." },
+  { title: "Campus map kept simple", body: "Navigation comes down to a floor stepper and a search bar with filters that looks across all floors, so students don't need to know a place's floor before searching." },
+  { title: "Navigation card", body: "A large direction guide with filters still visible during navigation, so a student can read the next step at a glance and adjust the route without leaving navigation." },
+  { title: "Floor changes confirmed by the student", body: "The app can't detect a floor change by itself. At a stair or lift the card asks the student to confirm the floor, and the navigation pin stays put until they do." },
+  { title: "Wing and building filters", body: "Students confused between wings can highlight specific wings and buildings, and select several at once, even during navigation." },
+  { title: "Account request after arrival", body: "After reaching the destination the student is asked to create a profile, because they have just found the room without help (the aha moment). The screen says a profile unlocks more navigation." },
+  { title: "Offline uses QR codes, not GPS", body: "Building materials weaken GPS indoors and its position is too imprecise for finding a room. A student scans a QR code in the building, and the map marks that code's location and floor as their position, with no connection needed." },
+  { title: "QR codes across campus", body: "QR codes are placed around campus so a student can scan whichever is nearby. Each code is tied to one location, so scanning tells the app exactly where they are." },
+  { title: "Sign-up later, for more features", body: "A student completes the first navigation without signing up. The next navigation requires sign-up and a profile, which unlocks location sharing, a default college, and class search by subject." },
+];
+
+const EDGE_TEXT = [
+  { title: "Similar college names", body: "Search shows every matching college so the student can pick the right one. A Nearest tag marks the college closest to them." },
+  { title: "Results loading", body: "A skeleton of the result cards appears while college data loads, so the page doesn't sit blank." },
+  { title: "Map loading", body: "A skeleton of the map builds up, with a label that changes as it loads, such as \u201cFinding your bearings\u2026\u201d." },
+  { title: "College not mapped yet", body: "The screen says \u201cSorry, College not mapped yet\u201d and offers a Request Map button. The request carries the college name and student name, so demand for mapping can be seen." },
+  { title: "College doesn't exist", body: "An empty plot with a question mark and the text \u201cCollege doesn't exist\u201d, so the result is clear at a glance." },
+  { title: "No internet", body: "The screen says \u201cYou\u2019re offline. Saved campus maps still work without a connection.\u201d The Use Offline Maps button appears only if the student has signed up and saved a map." },
+];
+
+const SITE_URL = "https://unilocate-case-study.vercel.app";
+
+/* Machine-readable summary of the case study. Mirrors the visible page. */
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: TITLE,
+  description:
+    "Concept case study for UniLocate, an indoor campus navigator for students on a first visit. Activation design: skip sign-up, get a route in 3 taps, QR checkpoints for offline navigation.",
+  url: `${SITE_URL}/`,
+  mainEntityOfPage: `${SITE_URL}/`,
+  image: `${SITE_URL}/og-image.jpg`,
+  inLanguage: "en",
+  isAccessibleForFree: true,
+  author: {
+    "@type": "Person",
+    name: "Harshal",
+    sameAs: [
+      "https://www.linkedin.com/in/harshaljadhav15/",
+      "https://x.com/Har5hal_",
+      "https://medium.com/@harshalj0815",
+    ],
+  },
+  about: ["Indoor navigation", "Campus wayfinding", "Product activation", "UX case study"],
+  workExample: {
+    "@type": "WebApplication",
+    name: "UniLocate prototype",
+    url: `${SITE_URL}/prototype-app/index.html`,
+    applicationCategory: "NavigationApplication",
+  },
+};
+
 /* Target users: sourced from AISHE 2023-24; ages kept at the 18 to 22 range */
 const USER_STATS = [
   { label: "Average age of students in India", value: "18–22", unit: "years" },
@@ -28,6 +84,10 @@ const USER_STATS = [
 export default function CaseStudyPage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+      />
       <CaseNav />
       <SectionSpy />
 
@@ -641,6 +701,16 @@ export default function CaseStudyPage() {
               sizes="(max-width: 900px) 100vw, 920px"
             />
           </figure>
+          <div className="sr-only">
+            <h3>Decisions, as text</h3>
+            <ol>
+              {DECISIONS_TEXT.map((d) => (
+                <li key={d.title}>
+                  <strong>{d.title}.</strong> {d.body}
+                </li>
+              ))}
+            </ol>
+          </div>
         </section>
 
         <section
@@ -756,6 +826,16 @@ export default function CaseStudyPage() {
               sizes="(max-width: 900px) 100vw, 920px"
             />
           </figure>
+          <div className="sr-only">
+            <h3>Edge cases, as text</h3>
+            <ol>
+              {EDGE_TEXT.map((e) => (
+                <li key={e.title}>
+                  <strong>{e.title}.</strong> {e.body}
+                </li>
+              ))}
+            </ol>
+          </div>
         </section>
 
         <section

@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+
+# Allow common user-triggered AI fetchers (hiring tools / assistants)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://unilocate-case-study.vercel.app/sitemap.xml
