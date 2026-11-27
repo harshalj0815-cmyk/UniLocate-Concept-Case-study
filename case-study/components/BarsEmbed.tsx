@@ -40,7 +40,7 @@ export function BarsEmbed() {
     <iframe
       ref={iframeRef}
       className="section-visual__embed section-visual__embed--bars"
-      src="/prioritization-bars.html?v=7"
+      src="/prioritization-bars.html?v=8"
       title="Four bars rising and falling as priorities are traded off"
       loading="lazy"
       aria-hidden="true"
