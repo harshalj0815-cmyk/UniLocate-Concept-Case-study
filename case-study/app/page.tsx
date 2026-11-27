@@ -697,21 +697,30 @@ export default function CaseStudyPage() {
             <ExpandableBody>
               <ul className="section-list">
                 <li>
-                  I let students navigate without an account instead of asking
-                  them to sign up first, because interviews and the survey
-                  showed they were nervous and anxious. The trade-off was fewer
-                  sign-ups on day one, which was acceptable because the metric
-                  is activation, and sign-up is only deferred to their next
-                  navigation.
+                  I let students navigate{" "}
+                  <mark className="mark">without an account instead</mark> of
+                  asking them <mark className="mark">to sign up first</mark>,
+                  because interviews and the survey showed{" "}
+                  <mark className="mark">they were nervous and anxious</mark>.
+                  The trade-off was{" "}
+                  <mark className="mark">fewer sign-ups on day one</mark>, which
+                  was acceptable because the metric is activation, and sign-up
+                  is only deferred to their next navigation.
                 </li>
                 <li>
-                  I chose QR scanning at intervals over real-time GPS because
-                  GPS is too imprecise indoors, and offline mode can&apos;t
-                  combine it with Wi-Fi signals the way online mode can. The
-                  trade-off was extra friction in offline navigation, and I
-                  expect fewer people to use offline mode. That was acceptable
-                  because accuracy matters more than speed: a wrong location
-                  hurts a student more than a scan does.
+                  I chose QR{" "}
+                  <mark className="mark">scanning at intervals</mark> over
+                  real-time GPS because{" "}
+                  <mark className="mark">GPS is too imprecise indoors</mark>,
+                  and offline mode can&apos;t combine it with Wi-Fi signals the
+                  way online mode can. The trade-off was{" "}
+                  <mark className="mark">
+                    extra friction in offline navigation
+                  </mark>
+                  , and I expect fewer people to use offline mode. That was
+                  acceptable because{" "}
+                  <mark className="mark">accuracy matters more than speed</mark>
+                  : a wrong location hurts a student more than a scan does.
                 </li>
               </ul>
             </ExpandableBody>
@@ -722,6 +731,17 @@ export default function CaseStudyPage() {
               className="section-visual__embed section-visual__embed--balloons"
               src="/balloon-hands.html?v=2"
               title="Two hands holding balloons; one lets go of its balloon"
+              loading="lazy"
+              aria-hidden="true"
+              tabIndex={-1}
+            />
+          </figure>
+
+          <figure className="section-visual section-visual--bars">
+            <iframe
+              className="section-visual__embed section-visual__embed--bars"
+              src="/prioritization-bars.html?v=1"
+              title="Four bars rising and falling as priorities are traded off"
               loading="lazy"
               aria-hidden="true"
               tabIndex={-1}

@@ -930,6 +930,17 @@ img {
   background: var(--ul-bg);
 }
 
+.section-visual--bars {
+  margin-top: 24px;
+  overflow: hidden;
+  background: transparent;
+}
+
+.section-visual__embed--bars {
+  aspect-ratio: 16 / 10;
+  background: var(--ul-bg);
+}
+
 /* —— Target users: stat stickers (white rim, soft shadow, slight tilt) —— */
 .stat-stickers {
   list-style: none;
