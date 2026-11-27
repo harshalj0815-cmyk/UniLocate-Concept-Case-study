@@ -729,7 +729,7 @@ export default function CaseStudyPage() {
           <figure className="section-visual section-visual--bars">
             <iframe
               className="section-visual__embed section-visual__embed--bars"
-              src="/prioritization-bars.html?v=4"
+              src="/prioritization-bars.html?v=5"
               title="Four bars rising and falling as priorities are traded off"
               loading="lazy"
               aria-hidden="true"

@@ -6,6 +6,7 @@ body{display:flex;align-items:flex-end;justify-content:center}
 .wrap{position:relative;width:min(94vw,760px)}
 .wrap:before{content:"";position:absolute;inset:-16% -24%;pointer-events:none;background-image:linear-gradient(rgba(47,123,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(47,123,255,.3) 1px,transparent 1px),linear-gradient(rgba(47,123,255,.14) 1px,transparent 1px),linear-gradient(90deg,rgba(47,123,255,.14) 1px,transparent 1px);background-size:50px 50px,50px 50px,10px 10px,10px 10px;-webkit-mask-image:radial-gradient(ellipse 50% 43% at 50% 38%,#000 25%,transparent 100%);mask-image:radial-gradient(ellipse 50% 43% at 50% 38%,#000 25%,transparent 100%)}
 svg{position:relative;display:block;width:100%;height:auto;overflow:visible}
+body::after{content:"";position:fixed;top:0;left:0;right:0;height:26vh;z-index:10;pointer-events:none;background:linear-gradient(to bottom,#F5F5F7 0%,rgba(245,245,247,0) 100%)}
 </style></head><body><div class="wrap">
 <svg id="s" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
 <defs>
