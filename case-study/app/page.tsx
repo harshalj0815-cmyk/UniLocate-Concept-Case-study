@@ -981,10 +981,10 @@ export default function CaseStudyPage() {
           <figure className="section-visual learnings-figure sticker squircle">
             <Image
               className="section-visual__img"
-              src="/learnings.webp?v=2"
-              alt="Photo of a laptop showing the UniLocate app icon being drawn in Figma, with the UniLocate wordmark outlined on the right of the screen."
-              width={768}
-              height={760}
+              src="/learnings.webp?v=4"
+              alt="Close-up of the UniLocate app icon being drawn in Figma on a laptop screen, with the UniLocate wordmark outlined on the right."
+              width={1024}
+              height={598}
               draggable={false}
               sizes="(max-width: 900px) 100vw, 920px"
             />
